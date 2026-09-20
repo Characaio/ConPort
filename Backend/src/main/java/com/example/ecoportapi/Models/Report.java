@@ -47,7 +47,7 @@ public class Report {
 
     @ElementCollection
     @Column(name = "ImagensRelacionadas", nullable = false)
-    private List<String> ImagensRelacionadas;
+    private List<String> ImagensAnexadas;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false)
@@ -73,17 +73,17 @@ public class Report {
     public String getDescricao() { return Descricao; }
     public void setDescricao(String descricao) { Descricao = descricao; }
 
-    public LocalDate getDataDoOcorrido() { return DataDoOcorrido; }
-    public void setDataDoOcorrido(LocalDate dataDoOcorrido) { DataDoOcorrido = dataDoOcorrido; }
+    public LocalDateTime getDataDoOcorrido() { return DataDoOcorrido; }
+    public void setDataDoOcorrido(LocalDateTime dataDoOcorrido) { DataDoOcorrido = dataDoOcorrido; }
 
     public String getLocal() { return Local; }
     public void setLocal(String local) { Local = local; }
 
-    public LocalDate getDataDaAnalisa() { return DataDaAnalise; }
-    public void setDataDaAnalisa(LocalDate dataDaAnalise) { DataDaAnalise = dataDaAnalise; }
+    public LocalDateTime getDataDaAnalisa() { return DataDaAnalise; }
+    public void setDataDaAnalisa(LocalDateTime dataDaAnalise) { DataDaAnalise = dataDaAnalise; }
 
-    public List<String> getImagensRelacionadas() { return ImagensRelacionadas; }
-    public void setImagensRelacionadas(List<String> imagensRelacionadas) { ImagensRelacionadas = imagensRelacionadas; }
+    public List<String> getImagensRelacionadas() { return ImagensAnexadas; }
+    public void setImagensRelacionadas(List<String> imagensRelacionadas) { ImagensAnexadas = imagensRelacionadas; }
 
     public StatusReport getStatus() { return Status; }
     public void setStatus(StatusReport status) { Status = status; }

@@ -1,6 +1,7 @@
 package com.example.ecoportapi.Repositories;
 
 import com.example.ecoportapi.DTOs.Response.ReportExpandidoDTO;
+import com.example.ecoportapi.DTOs.Response.ReportResumidoDTO;
 import com.example.ecoportapi.Models.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,9 +21,22 @@ public interface ReportRepository extends JpaRepository<Report,Long> {
         r.Usuario.Nome,
         s.Nome,
         r.DataDaAnalise
-        ) FROM report r
+        ) FROM Report r
         LEFT JOIN r.Supervisor s
-        WHERE r.Unidade.Id = :unidadeId
+        WHERE r.Id = :reportId
     """)
-    public ReportExpandidoDTO PegarReportCompleto(@Param("unidadeId") Long unidadeId);
+    public ReportExpandidoDTO PegarReportCompleto(@Param("reportId") Long reportId);
+
+    @Query("""
+    SELECT new com.example.ecoportapi.DTOs.ReportResumidoDTO(
+        r.Id,
+        r.Tipo,
+        r.Local,
+        r.DataDoOcorrido,
+        r.Status
+        ) FROM Report r
+        WHERE r.Id = :reportId
+            
+    """)
+    public ReportResumidoDTO PegarReportResumido(@Param("reportId") Long reportId);
 }

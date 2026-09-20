@@ -17,18 +17,20 @@ public record ReportExpandidoDTO(
         String SupervisorNome,
         String DataDaAnalise
 ) {
-    public ReportExpandidoDTO(Report report){
-        this.Id = report.getId();
-        this.Tipo = report.getTipo().name();
-        this.Status = report.getStatus().name();
-        this.DataDoOcorrido = report.getDataDoOcorrido().toString();
-        this.Local = report.getLocal();
-        this.Descricao = report.getDescricao();
-        this.ImagensNomes = report.getImagensRelacionadas();
-        this.UsuarioNome = report.getUsuario().getNome();
-        this.UnidadeNome = report.getUnidade().getNome();
-        this.SupervisorNome = report.getSupervisor().getUsuario().getNome();
-        this.DataDaAnalise = report.getDataDaAnalisa().toString();
+    public ReportExpandidoDTO(Report report) {
+        this(
+                report.getId(),
+                report.getTipo().name(),
+                report.getStatus().name(),
+                report.getDataDoOcorrido().toString(),
+                report.getLocal(),
+                report.getDescricao(),
+                report.getImagensRelacionadas(),
+                report.getUsuario().getNome(),
+                report.getUnidade().getNome(),
+                report.getSupervisor().getUsuario().getNome(),
+                report.getDataDaAnalisa().toString()
+        );
 
 
     }

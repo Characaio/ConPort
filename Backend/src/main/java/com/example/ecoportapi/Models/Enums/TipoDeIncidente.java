@@ -3,7 +3,7 @@ package com.example.ecoportapi.Models.Enums;
 public enum TipoDeIncidente {
     QUEIMADA("Queimada"),
     ANIMAL_FERIDO("Animal Ferido"),
-    ANIMAL_EXOTICO("Animal Exotico"),
+    ANIMAL_EXOTICO("Animal Exótico"),
     POLUICAO("Poluição"),
     DESMATAMENTO("Desmatamento");
 

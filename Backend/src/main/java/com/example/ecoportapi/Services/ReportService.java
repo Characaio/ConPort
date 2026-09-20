@@ -2,7 +2,12 @@ package com.example.ecoportapi.Services;
 
 
 import com.example.ecoportapi.DTOs.Request.ReportCreateDTO;
+import com.example.ecoportapi.DTOs.Request.ReportStatusAnalise;
 import com.example.ecoportapi.DTOs.Response.ReportExpandidoDTO;
+import com.example.ecoportapi.DTOs.Response.ReportResumidoDTO;
+import com.example.ecoportapi.Exceptions.ReportNaoEncontrado;
+import com.example.ecoportapi.Exceptions.UnidadeNaoEncontrada;
+import com.example.ecoportapi.Exceptions.UsuarioNaoEncontrado;
 import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Models.Enums.TipoDeIncidente;
 import com.example.ecoportapi.Models.Report;
@@ -16,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class ReportService {
@@ -33,30 +39,41 @@ public class ReportService {
     public ReportExpandidoDTO PegarReportCompleto(Long id){
         return reportRepository.PegarReportCompleto(id);
     }
+    public ReportResumidoDTO PegarReportResumido(Long id){
+        return reportRepository.PegarReportResumido(id);
+    }
 
     public ResponseEntity<?> PostarReport(ReportCreateDTO reportDTO){
-        Report report = new Report();
+        Report report = CriarReport(reportDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(reportRepository.save(report));
+    }
 
+    public ResponseEntity<?> PostarAnalise(Long id, ReportStatusAnalise reportStatusAnalise){
+        Report report = reportRepository.findById(id)
+                .orElseThrow(() -> new ReportNaoEncontrado("Report Não Encontrado"));
+
+        report.setStatus(StatusReport.StringParaTipo(reportStatusAnalise.Status()));
+        report.setDataDaAnalisa(LocalDateTime.now());
+
+        return ResponseEntity.ok().build();
+    }
+    private Report CriarReport(ReportCreateDTO reportDTO){
+        Report report = new Report();
         UnidadeDeConservacao unidade = unidadeRepository.findById(reportDTO.UnidadeId())
-                .orElseThrow();
+                .orElseThrow(() -> new UnidadeNaoEncontrada("Unidade não encontrada"));
 
         Usuario usuario = usuarioRepository.findById(reportDTO.UsuarioId())
-                .orElseThrow();
+                .orElseThrow(() -> new UsuarioNaoEncontrado("Usuario não encontrado"));
 
         report.setUnidade(unidade);
         report.setUsuario(usuario);
         report.setDescricao(reportDTO.Descricao());
         report.setTipo(TipoDeIncidente.StringParaTipo(reportDTO.Tipo()));
-        report.setDataDoOcorrido(LocalDate.now());
+        report.setDataDoOcorrido(LocalDateTime.now());
         report.setLocal(reportDTO.Local());
         report.setImagensRelacionadas(reportDTO.ImagensAnexadas());
         report.setStatus(StatusReport.PENDENTE);
 
-        reportRepository.save(report);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(reportRepository.save(report));
-
-
-
+        return report;
     }
 }

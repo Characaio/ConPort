@@ -18,6 +18,9 @@ public class UnidadeDeConservacao {
     @Column(name = "Localizacao", nullable = false)
     private String Localizacao;
 
+    @Column(name = "Bioma", nullable = false)
+    private String Bioma;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "TipoDeUnidade", nullable = false)
     private TipoDeUnidade TipoDeUnidade;
@@ -97,6 +100,9 @@ public class UnidadeDeConservacao {
 
     public String getLocalizacao() { return Localizacao; }
     public void setLocalizacao(String localizacao) { Localizacao = localizacao; }
+
+    public String getBioma() { return Bioma; }
+    public void setBioma(String bioma) { Bioma = bioma; }
 
     public TipoDeUnidade getTipoDeUnidade() { return TipoDeUnidade; }
     public void setTipoDeUnidade(TipoDeUnidade tipoDeUnidade) { TipoDeUnidade = tipoDeUnidade; }

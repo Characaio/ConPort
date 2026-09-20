@@ -1,8 +1,29 @@
 package com.example.ecoportapi.Models.Enums;
 
+import javax.crypto.SealedObject;
+
 public enum StatusReport {
-    PENDENTE,
-    SOB_AVALIACAO,
-    NEGADO,
-    ACEITO
+    PENDENTE("Pendente"),
+    SOB_AVALIACAO("Sob avaliação"),
+    NEGADO("Negado"),
+    ACEITO("Aceito");
+
+    private final String TipoPuro;
+
+    StatusReport(String TipoPuro){
+        this.TipoPuro = TipoPuro;
+    }
+
+    public static StatusReport StringParaTipo(String tipoPuro){
+
+        for(StatusReport tipo : values()){
+            if (tipo.TipoPuro.equalsIgnoreCase(tipoPuro.trim())){
+                return tipo;
+            }
+        }
+        throw new IllegalArgumentException(
+                "Tipo de status inválido " + tipoPuro
+        );
+
+    }
 }
