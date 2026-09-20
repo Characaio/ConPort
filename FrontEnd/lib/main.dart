@@ -15,6 +15,7 @@ class Conport extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Conport',
       theme: ThemeData(
+        fontFamily: 'Montserrat',
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.green,
           brightness: Brightness.light,

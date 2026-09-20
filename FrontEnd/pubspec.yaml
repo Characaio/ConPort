@@ -35,6 +35,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   material_symbols_icons: ^4.2960.0
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+  geolocator: ^14.0.3
 
 dev_dependencies:
   flutter_test:
@@ -78,6 +81,10 @@ flutter:
     - family: Quicksand
       fonts:
         - asset: assets/fonts/Quicksand-VariableFont_wght.ttf
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-Italic-VariableFont_wght.ttf
+        - asset: assets/fonts/Montserrat-VariableFont_wght.ttf
   # fonts:
   #   - family: Schyler
   #     fonts:
