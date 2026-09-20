@@ -2,10 +2,32 @@ package com.example.ecoportapi.Controllers;
 
 //Começar a trabalhar
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.example.ecoportapi.DTOs.Request.ReportCreateDTO;
+import com.example.ecoportapi.DTOs.Response.ReportExpandidoDTO;
+import com.example.ecoportapi.Services.ReportService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/report")
+@RequestMapping("/reports")
 public class ReportController {
+
+    private final ReportService reportService;
+
+    public ReportController(ReportService reportService) {
+        this.reportService = reportService;
+    }
+
+    @GetMapping("/{id}")
+    public ReportExpandidoDTO PegarReportCompleto(@PathVariable Long id){
+        return reportService.PegarReportCompleto(id);
+    }
+
+    @PostMapping()
+    public ResponseEntity<?> PostarReport(@RequestBody ReportCreateDTO reportDTO){
+
+        return reportService.PostarReport(reportDTO);
+    }
 }

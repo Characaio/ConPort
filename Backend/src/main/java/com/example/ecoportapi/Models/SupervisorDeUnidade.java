@@ -3,10 +3,12 @@ package com.example.ecoportapi.Models;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "SupervisorDeUnidade")
 public class SupervisorDeUnidade {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id")
     private Long Id;
 
     @ManyToOne
@@ -25,4 +27,5 @@ public class SupervisorDeUnidade {
 
     public UnidadeDeConservacao getUnidade() { return Unidade; }
     public void setUnidade(UnidadeDeConservacao unidade) { Unidade = unidade; }
+
 }

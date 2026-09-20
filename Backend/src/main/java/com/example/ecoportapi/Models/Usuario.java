@@ -1,38 +1,42 @@
 package com.example.ecoportapi.Models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "Usuario")
 public class Usuario {
-    @Column(nullable = false)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id")
     private Long Id;
 
-    @Column(nullable = false)
+    @Column(name = "Nome", nullable = false)
     private String Nome;
 
-    @Column(nullable = false)
+    @Column(name = "DataNasc", nullable = false)
     private LocalDate DataNasc;
 
-    @Column(nullable = false)
+    @Column(name = "Email", nullable = false)
     private String Email;
 
-    @Column(nullable = false)
+    @Column(name = "Senha", nullable = false)
     private String Senha;
 
-    @Column(nullable = false)
+    @Column(name = "Confiavel", nullable = false)
     private boolean Confiavel;
 
-    @Column(nullable = false)
+    @Column(name = "XP", nullable = false)
     private int XP;
 
-    @Column(nullable = false)
+    @Column(name = "Level", nullable = false)
     private int Level;
 
-    @Column(nullable = false)
+    @Column(name = "Moedas", nullable = false)
     private int Moedas;
+
 
     public Long getId() { return Id; }
     public void setId(Long id) { Id = id; }
@@ -60,6 +64,4 @@ public class Usuario {
 
     public int getMoedas() { return Moedas; }
     public void setMoedas(int moedas) { Moedas = moedas; }
-
-
 }
