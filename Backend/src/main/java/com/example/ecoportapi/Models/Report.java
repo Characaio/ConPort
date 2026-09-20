@@ -5,49 +5,61 @@ import com.example.ecoportapi.Models.Enums.TipoDeIncidente;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Table(name = "Report")
 public class Report {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Id")
     private Long Id;
 
     @ManyToOne
-    @JoinColumn(name = "usuario_id", nullable = false)
+    @JoinColumn(name = "Unidade",nullable = false)
+    private UnidadeDeConservacao Unidade;
+
+    @ManyToOne
+    @JoinColumn(name = "Usuario", nullable = false)
     private Usuario Usuario;
 
     @OneToOne
-    @JoinColumn(name = "supervisor_id", nullable = false)
+    @JoinColumn(name = "Supervisor", nullable = true)
     private SupervisorDeUnidade Supervisor;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "Tipo", nullable = false)
     private TipoDeIncidente Tipo;
 
-    @Column(nullable = false)
+    @Column(name = "Descricao", nullable = false)
     private String Descricao;
 
-    @Column(nullable = false)
-    private LocalDate DataDoOcorrido;
+    @Column(name = "DataDoOcorrido", nullable = false)
+    private LocalDateTime DataDoOcorrido;
 
-    @Column(nullable = false)
+    @Column(name = "Local", nullable = false)
     private String Local;
 
-    @Column(nullable = true)
-    private LocalDate DataDaAnalise;
+    @Column(name = "DataDaAnalise", nullable = true)
+    private LocalDateTime DataDaAnalise;
 
     @ElementCollection
+    @Column(name = "ImagensRelacionadas", nullable = false)
     private List<String> ImagensRelacionadas;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "Status", nullable = false)
     private StatusReport Status;
 
 
     public Long getId() { return Id; }
     public void setId(Long id) { Id = id; }
+
+    public UnidadeDeConservacao getUnidade() { return Unidade; }
+    public void setUnidade(UnidadeDeConservacao unidade) { this.Unidade = unidade; }
+
 
     public Usuario getUsuario() { return Usuario; }
     public void setUsuario(Usuario usuario) { this.Usuario = usuario; }
@@ -68,7 +80,7 @@ public class Report {
     public void setLocal(String local) { Local = local; }
 
     public LocalDate getDataDaAnalisa() { return DataDaAnalise; }
-    public void setDataDaAnalisa(LocalDate dataDaAnalisa) { DataDaAnalise = dataDaAnalisa; }
+    public void setDataDaAnalisa(LocalDate dataDaAnalise) { DataDaAnalise = dataDaAnalise; }
 
     public List<String> getImagensRelacionadas() { return ImagensRelacionadas; }
     public void setImagensRelacionadas(List<String> imagensRelacionadas) { ImagensRelacionadas = imagensRelacionadas; }
