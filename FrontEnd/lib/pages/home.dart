@@ -1,0 +1,50 @@
+import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
+class Home extends StatelessWidget {
+  const Home({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Row(
+              children: [
+                Image(
+                  image: AssetImage('assets/images/ConportLogo.png'),
+                  width: 48,
+                ),
+                Text(
+                  "Conport",
+                  style: TextStyle(
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Quicksand',
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  Symbols.local_fire_department,
+                  color: Colors.orange,
+                  size: 32,
+                ),
+                const SizedBox(width: 8.0),
+                Text(
+                  "14",
+                  style: TextStyle(
+                    color: Colors.orange,
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
