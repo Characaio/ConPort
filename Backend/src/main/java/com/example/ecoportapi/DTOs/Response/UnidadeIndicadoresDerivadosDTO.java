@@ -1,6 +1,6 @@
 package com.example.ecoportapi.DTOs.Response;
 
-public record IndicadoresDerivadosDTO(
+public record UnidadeIndicadoresDerivadosDTO(
         Double IntegridadeTerritorial,
         Integer CorredoresNecessarios,
         Double ConectividadeEcologica,

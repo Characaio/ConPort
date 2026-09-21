@@ -1,8 +1,10 @@
 package com.example.ecoportapi.DTOs.Response;
 
-import com.example.ecoportapi.DTOs.Response.IndicadoresDerivadosDTO;
+import com.example.ecoportapi.Models.Enums.TipoDeUnidade;
 
-public record UnidadeStatusGeralBaseDTO(
+import java.time.LocalTime;
+
+public record UnidadeDadosGeraisDTO(
         Long Id,
         String Nome,
         String Localizacao,
@@ -12,9 +14,9 @@ public record UnidadeStatusGeralBaseDTO(
         //XX:XX até YY:YY
         //Com X sendo o horario de abertura e Y sendo o horario de fechamento
         //Ambos seguem a formatação e HORA:MINUTO
-        String HoraDeAbertura,
-        String HoraDeFechamento,
-        String TipoDeUnidade,
+        LocalTime HoraDeAbertura,
+        LocalTime HoraDeFechamento,
+        TipoDeUnidade TipoDeUnidade,
 
         Double AreaTotal,
         Double AreaRegularizada,

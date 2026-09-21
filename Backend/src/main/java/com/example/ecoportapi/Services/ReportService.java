@@ -37,7 +37,10 @@ public class ReportService {
     }
 
     public ReportExpandidoDTO PegarReportCompleto(Long id){
-        return reportRepository.PegarReportCompleto(id);
+        Report report = reportRepository.findById(id)
+                .orElseThrow(() -> new ReportNaoEncontrado("Report Nao Encontrado"));
+
+        return new ReportExpandidoDTO(report);
     }
     public ReportResumidoDTO PegarReportResumido(Long id){
         return reportRepository.PegarReportResumido(id);

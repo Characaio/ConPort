@@ -22,11 +22,11 @@ public class UnidadeService {
         this.indicadoresService = indicadoresService;
     }
 
-    private IndicadoresDerivadosDTO CalcularIndicadores(UnidadeStatusGeralBaseDTO StatusGeralBaseDTO){
+    private UnidadeIndicadoresDerivadosDTO CalcularIndicadores(UnidadeDadosGeraisDTO StatusGeralBaseDTO){
         Integer CorredoresNecessarios = indicadoresService.CalcularCorredoresNecessarios(
                 StatusGeralBaseDTO.AreaTotal(),StatusGeralBaseDTO.AreaBasePorCorredor()
         );
-        IndicadoresDerivadosDTO indicadoresDerivadosDTO = new IndicadoresDerivadosDTO(
+        UnidadeIndicadoresDerivadosDTO indicadoresDerivadosDTO = new UnidadeIndicadoresDerivadosDTO(
                 indicadoresService.CalcularIntegridadeTerritorial(
                         StatusGeralBaseDTO.AreaRegularizada(),StatusGeralBaseDTO.AreaTotal()
                 ),
@@ -70,9 +70,9 @@ public class UnidadeService {
     }
 
     public UnidadeStatusPrincipalDTO PegarStatusPrincipal(Long id){
-        UnidadeStatusGeralBaseDTO StatusGeralBaseDTO = unidadeRepository.PegarStatusGeral(id);
+        UnidadeDadosGeraisDTO StatusGeralBaseDTO = unidadeRepository.PegarStatusGeral(id);
         Integer QuantDeReports = unidadeRepository.PegarQuantDeReports(id);
-        IndicadoresDerivadosDTO indicadoresDerivadosDTO = CalcularIndicadores(StatusGeralBaseDTO);
+        UnidadeIndicadoresDerivadosDTO indicadoresDerivadosDTO = CalcularIndicadores(StatusGeralBaseDTO);
 
         return new UnidadeStatusPrincipalDTO(
                 unidadeRepository.PegarStatusPrincipal(id),
@@ -81,9 +81,9 @@ public class UnidadeService {
     }
 
     public UnidadeStatusGeralDTO PegarStatusGeral(Long id){
-        UnidadeStatusGeralBaseDTO StatusGeralBaseDTO = unidadeRepository.PegarStatusGeral(id);
+        UnidadeDadosGeraisDTO StatusGeralBaseDTO = unidadeRepository.PegarStatusGeral(id);
         Integer QuantDeReports = unidadeRepository.PegarQuantDeReports(id);
-        IndicadoresDerivadosDTO indicadoresDerivadosDTO = CalcularIndicadores(StatusGeralBaseDTO);
+        UnidadeIndicadoresDerivadosDTO indicadoresDerivadosDTO = CalcularIndicadores(StatusGeralBaseDTO);
 
         return new UnidadeStatusGeralDTO(
                 StatusGeralBaseDTO,

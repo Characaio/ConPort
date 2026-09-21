@@ -1,7 +1,6 @@
 package com.example.ecoportapi.Repositories;
 
 import com.example.ecoportapi.DTOs.Response.*;
-import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Models.UnidadeDeConservacao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +11,7 @@ import java.util.List;
 public interface UnidadeRepository extends JpaRepository<UnidadeDeConservacao,Long> {
 
     @Query("""
-    SELECT new com.example.ecoportapi.DTOs.Response.UnidadeStatusPrincipalBaseDTO(
+    SELECT new com.example.ecoportapi.DTOs.Response.UnidadeInformacoesDTO(
         u.Id,
         u.Nome,
         u.Telefone,
@@ -23,20 +22,20 @@ public interface UnidadeRepository extends JpaRepository<UnidadeDeConservacao,Lo
     FROM UnidadeDeConservacao u
     WHERE u.Id = :unidadeId
     """)
-    public UnidadeStatusPrincipalBaseDTO PegarStatusPrincipal(@Param("unidadeId") Long unidadeId);
+    public UnidadeInformacoesDTO PegarStatusPrincipal(@Param("unidadeId") Long unidadeId);
 
     @Query("""
-    SELECT new com.example.ecoportapi.DTOs.Response.UnidadeStatusGeralBaseDTO(
+    SELECT new com.example.ecoportapi.DTOs.Response.UnidadeDadosGeraisDTO(
                 u.Id,u.Nome,u.Localizacao,u.Bioma,u.Telefone,u.HoraDeAbertura,u.HoraDeFechamento,
                 u.TipoDeUnidade,u.AreaTotal,u.AreaRegularizada,u.AreaPreservada,
                 u.AreaMonitorada,u.AreaBasePorCorredor, u.PontosMonitorados, u.PontosPrevistos,
-                u.QuantidadeCorredores, u.QuantEspecies,u.QuantEspeciesEsperadas,
+                u.QuantidadeCorredores, u.QuantidadeEspecies,u.QuantidadeEspeciesEsperadas,
                 u.QualidadeAgua,u.QualidadeSolo,u.GestaoResiduos
         )
         FROM UnidadeDeConservacao u
         WHERE u.Id = :unidadeId
     """)
-    public UnidadeStatusGeralBaseDTO PegarStatusGeral(@Param("unidadeId") Long unidadeId);
+    public UnidadeDadosGeraisDTO PegarStatusGeral(@Param("unidadeId") Long unidadeId);
 
 
     //No futuro, mudar o status para ser um parametro, isso permite uma analise mais detalhada

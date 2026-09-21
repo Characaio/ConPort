@@ -9,27 +9,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ReportRepository extends JpaRepository<Report,Long> {
 
-    @Query("""
-    SELECT new com.example.ecoportapi.DTOs.Response.ReportExpandidoDTO(
-        r.Id,
-        r.Tipo,
-        r.Status,
-        r.DataDoOcorrido,
-        r.Local,
-        r.Descricao,
-        r.ImagensNomes,
-        r.Usuario.Nome,
-        r.Unidade.Nome,
-        s.Usuario.Nome,
-        r.DataDaAnalise
-        ) FROM Report r
-        LEFT JOIN r.Supervisor s
-        WHERE r.Id = :reportId
-    """)
-    public ReportExpandidoDTO PegarReportCompleto(@Param("reportId") Long reportId);
+
 
     @Query("""
     SELECT new com.example.ecoportapi.DTOs.Response.ReportResumidoDTO(

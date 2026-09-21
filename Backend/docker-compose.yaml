@@ -1,0 +1,35 @@
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: conport-postgres
+    environment:
+      POSTGRES_DB: conport
+      POSTGRES_USER: conport
+      POSTGRES_PASSWORD: conport
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - conport-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: conport-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/conport
+      SPRING_DATASOURCE_USERNAME: conport
+      SPRING_DATASOURCE_PASSWORD: conport
+    depends_on:
+      - postgres
+    networks:
+      - conport-network
+
+volumes:
+  postgres-data:
+
+networks:
+  conport-network:
