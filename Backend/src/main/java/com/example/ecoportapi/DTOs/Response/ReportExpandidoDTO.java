@@ -1,35 +1,40 @@
 package com.example.ecoportapi.DTOs.Response;
 
+import com.example.ecoportapi.Models.Enums.StatusReport;
+import com.example.ecoportapi.Models.Enums.TipoDeIncidente;
 import com.example.ecoportapi.Models.Report;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record ReportExpandidoDTO(
         Long Id,
-        String Tipo,
-        String Status,
-        String DataDoOcorrido,
+        TipoDeIncidente Tipo,
+        StatusReport Status,
+        LocalDateTime DataDoOcorrido,
         String Local,
         String Descricao,
-        List<String> ImagensNomes,
+        List<String> ImagensAnexadas,
         String UsuarioNome,
         String UnidadeNome,
         String SupervisorNome,
-        String DataDaAnalise
+        LocalDateTime DataDaAnalise
 ) {
     public ReportExpandidoDTO(Report report) {
         this(
                 report.getId(),
-                report.getTipo().name(),
-                report.getStatus().name(),
-                report.getDataDoOcorrido().toString(),
+                report.getTipo(),
+                report.getStatus(),
+                report.getDataDoOcorrido(),
                 report.getLocal(),
                 report.getDescricao(),
-                report.getImagensRelacionadas(),
+                report.getImagensAnexadas(),
                 report.getUsuario().getNome(),
                 report.getUnidade().getNome(),
-                report.getSupervisor().getUsuario().getNome(),
-                report.getDataDaAnalisa().toString()
+                report.getSupervisor() != null
+                        ? report.getSupervisor().getUsuario().getNome()
+                        : null,
+                report.getDataDaAnalisa()
         );
 
 

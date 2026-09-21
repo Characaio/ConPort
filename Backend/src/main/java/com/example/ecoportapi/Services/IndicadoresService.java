@@ -6,11 +6,11 @@ import org.springframework.stereotype.Service;
 public class IndicadoresService {
 
     public Double CalcularIntegridadeTerritorial(Double AreaRegularizada,Double AreaTotal){
-        return (AreaRegularizada/AreaTotal)/100f;
+        return (AreaRegularizada / AreaTotal) * 100;
     }
 
     public Double CalcularConectividadeEcologica(int QuantCorredores, Integer QuantCorredoresNecessarios){
-        return (double) ((QuantCorredores/QuantCorredoresNecessarios) * 100f);
+        return ((double) QuantCorredores / QuantCorredoresNecessarios) * 100;
     }
 
     public Double CalcularQualidadeAmbiental(Double QualidadeAgua,Double QualidadeSolo,Double GestaoResiduos){
@@ -25,10 +25,13 @@ public class IndicadoresService {
         return (AreaFiscalizada/AreaTotal) * 100;
     }
     public Double CalcularMonitoramento(Integer PontosMonitorados, Integer PontosPrevistos){
-        return (double) ((PontosMonitorados/PontosPrevistos) * 100f);
+        return  ((double) PontosMonitorados / PontosPrevistos) * 100;
     }
     public Double CalcularResposta(Integer IncidentesConfirmados, Integer IncidenteTratados){
-        return (double) ((IncidenteTratados/IncidentesConfirmados) * 100f);
+        if (IncidentesConfirmados == 0){
+            return 100.0;
+        }
+        return  ((double) IncidenteTratados/IncidentesConfirmados) * 100;
     }
 
     public Double CalcularFiscalizacao(Double Cobertura, Double Monitoramento, Double Resposta){
@@ -36,7 +39,7 @@ public class IndicadoresService {
     }
 
     public Double CalcularBiodiversidade(int QuantEspecies,int QuantEspeciesEsperadas){
-        return (double) ((QuantEspecies/QuantEspeciesEsperadas) * 100f);
+        return  ((double) QuantEspecies/QuantEspeciesEsperadas) * 100;
     }
 
     public Integer CalcularCorredoresNecessarios(Double AreaTotal, Double AreaBasePorCorredor){

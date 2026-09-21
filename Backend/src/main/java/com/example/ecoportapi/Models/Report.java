@@ -25,7 +25,7 @@ public class Report {
     @JoinColumn(name = "Usuario", nullable = false)
     private Usuario Usuario;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "Supervisor", nullable = true)
     private SupervisorDeUnidade Supervisor;
 
@@ -46,7 +46,7 @@ public class Report {
     private LocalDateTime DataDaAnalise;
 
     @ElementCollection
-    @Column(name = "ImagensRelacionadas", nullable = false)
+    @Column(name = "ImagensAnexadas", nullable = false)
     private List<String> ImagensAnexadas;
 
     @Enumerated(EnumType.STRING)
@@ -82,8 +82,8 @@ public class Report {
     public LocalDateTime getDataDaAnalisa() { return DataDaAnalise; }
     public void setDataDaAnalisa(LocalDateTime dataDaAnalise) { DataDaAnalise = dataDaAnalise; }
 
-    public List<String> getImagensRelacionadas() { return ImagensAnexadas; }
-    public void setImagensRelacionadas(List<String> imagensRelacionadas) { ImagensAnexadas = imagensRelacionadas; }
+    public List<String> getImagensAnexadas() { return ImagensAnexadas; }
+    public void setImagensAnexadas(List<String> imagensAnexadas) { ImagensAnexadas = imagensAnexadas; }
 
     public StatusReport getStatus() { return Status; }
     public void setStatus(StatusReport status) { Status = status; }

@@ -133,7 +133,7 @@ public class UnidadeDeConservacao {
     public void setPontosMonitorados(Integer pontosMonitorados){PontosMonitorados = pontosMonitorados; }
 
     public Integer getPontosPrevistos() {return PontosPrevistos;}
-    public void setPontosPrevistos(Integer pontosMonitorados){PontosPrevistos = pontosMonitorados; }
+    public void setPontosPrevistos(Integer pontosPrevistos){PontosPrevistos = pontosPrevistos; }
 
     public Integer getQuantidadeEspecies() { return QuantidadeEspecies; }
     public void setQuantidadeEspecies(Integer quantidadeEspecies) { QuantidadeEspecies = quantidadeEspecies; }

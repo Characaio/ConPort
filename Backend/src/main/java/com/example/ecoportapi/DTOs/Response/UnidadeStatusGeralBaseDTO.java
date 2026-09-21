@@ -23,8 +23,6 @@ public record UnidadeStatusGeralBaseDTO(
         Double AreaBasePorCorredor,
         Integer PontosMonitorados,
         Integer PontosPrevistos,
-        Integer IncidentesConfirmados,
-        Integer IncidentesTratados,
         Integer QuantCorredores,
         Integer QuantEspecies,
         Integer QuantEspeciesEsperadas,

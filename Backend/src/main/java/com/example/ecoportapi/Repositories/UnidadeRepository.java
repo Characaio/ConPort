@@ -12,18 +12,13 @@ import java.util.List;
 public interface UnidadeRepository extends JpaRepository<UnidadeDeConservacao,Long> {
 
     @Query("""
-    SELECT new com.example.ecoportapi.DTOs.UnidadeStatusPrincipalBaseDTO(
+    SELECT new com.example.ecoportapi.DTOs.Response.UnidadeStatusPrincipalBaseDTO(
+        u.Id,
         u.Nome,
         u.Telefone,
         u.TipoDeUnidade,
         u.HoraDeAbertura,
-        u.HoraDeFechamento,
-        u.IntegridadeTerritorial,
-        u.ConectividadeEcologica,
-        u.QualidadeAmbiental,
-        u.PreservacaoLocal,
-        u.Fiscalizacao,
-        u.Biodiversidade
+        u.HoraDeFechamento
     )
     FROM UnidadeDeConservacao u
     WHERE u.Id = :unidadeId
@@ -31,13 +26,13 @@ public interface UnidadeRepository extends JpaRepository<UnidadeDeConservacao,Lo
     public UnidadeStatusPrincipalBaseDTO PegarStatusPrincipal(@Param("unidadeId") Long unidadeId);
 
     @Query("""
-    SELECT new com.exmaple.ecoportapi.DTOs.Response.UnidadeStatusGeralBaseDTO(
+    SELECT new com.example.ecoportapi.DTOs.Response.UnidadeStatusGeralBaseDTO(
                 u.Id,u.Nome,u.Localizacao,u.Bioma,u.Telefone,u.HoraDeAbertura,u.HoraDeFechamento,
                 u.TipoDeUnidade,u.AreaTotal,u.AreaRegularizada,u.AreaPreservada,
-                u.AreaMonitorada,u.AreaBasePorCorredor, u.PontosMonitorado, u.PontosPrevistos,
-                u.IncidentesConfirmados,u.IncidentesTratados, u.QuantCorredores, u.QuantEspecies,
-                u.QuantEspeciesEsperadas, u.QualidadeAgua,u.QualidadeSolo,u.GestaoResidduos
-        )   
+                u.AreaMonitorada,u.AreaBasePorCorredor, u.PontosMonitorados, u.PontosPrevistos,
+                u.QuantidadeCorredores, u.QuantEspecies,u.QuantEspeciesEsperadas,
+                u.QualidadeAgua,u.QualidadeSolo,u.GestaoResiduos
+        )
         FROM UnidadeDeConservacao u
         WHERE u.Id = :unidadeId
     """)
@@ -48,7 +43,7 @@ public interface UnidadeRepository extends JpaRepository<UnidadeDeConservacao,Lo
     @Query("""
     SELECT COUNT(r)
     FROM Report r
-    WHERE r.Unidade.Id = :unidadeId AND r.Status = 'ACEITO'
+    WHERE r.Unidade.Id = :unidadeId
     """)
     public Integer PegarQuantDeReports(@Param("unidadeId") Long unidadeId);
 

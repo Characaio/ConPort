@@ -23,7 +23,7 @@ public interface ReportRepository extends JpaRepository<Report,Long> {
         r.ImagensNomes,
         r.Usuario.Nome,
         r.Unidade.Nome,
-        s.Nome,
+        s.Usuario.Nome,
         r.DataDaAnalise
         ) FROM Report r
         LEFT JOIN r.Supervisor s
@@ -32,7 +32,7 @@ public interface ReportRepository extends JpaRepository<Report,Long> {
     public ReportExpandidoDTO PegarReportCompleto(@Param("reportId") Long reportId);
 
     @Query("""
-    SELECT new com.example.ecoportapi.DTOs.ResponseReportResumidoDTO(
+    SELECT new com.example.ecoportapi.DTOs.Response.ReportResumidoDTO(
         r.Id,
         r.Tipo,
         r.Local,

@@ -30,12 +30,15 @@ public class CriadorDeValoresMock implements CommandLineRunner {
             unidade.setLocalizacao("Santa Bárbara d'Oeste - SP");
             //unidade.setLocalizacao("Rua Lisboa Filho, 765, Jardim Charles Manoel, Santa Barbara D'oeste, Brasil");
             unidade.setTipoDeUnidade(TipoDeUnidade.PARQUE_NACIONAL);
+            unidade.setBioma("Mata Atlântica");
 
             unidade.setAreaTotal(4820.50);
             unidade.setAreaRegularizada(4380.20);
             unidade.setAreaPreservada(4215.80);
             unidade.setAreaMonitorada(3890.00);
-            unidade.setAreaComConectividade(2750.00);
+
+            unidade.setPontosMonitorados(42);
+            unidade.setPontosPrevistos(50);
 
             unidade.setAreaBasePorCorredor(500.0);
             unidade.setQuantidadeCorredores(8);
@@ -51,7 +54,7 @@ public class CriadorDeValoresMock implements CommandLineRunner {
             unidade.setHoraAbertura(LocalTime.of(8, 0));
             unidade.setHoraFechamento(LocalTime.of(17, 0));
 
-
+            unidadeRepository.save(unidade);
         }
     }
 }

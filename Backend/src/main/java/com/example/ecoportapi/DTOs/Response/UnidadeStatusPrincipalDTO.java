@@ -2,6 +2,7 @@ package com.example.ecoportapi.DTOs.Response;
 
 
 public record UnidadeStatusPrincipalDTO(
+        Long Id,
         String Nome,
         String Telefone,
         String TipoDeUnidade,
@@ -25,6 +26,7 @@ public record UnidadeStatusPrincipalDTO(
             int QuantReports,
             IndicadoresDerivadosDTO indicadores){
         this(
+                base.Id(),
                 base.Nome(),
                 base.Telefone(),
                 base.TipoDeUnidade(),

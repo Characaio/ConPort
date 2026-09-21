@@ -21,8 +21,7 @@ public record UnidadeStatusGeralDTO(
         Double AreaBasePorCorredor,
         Integer PontosMonitorados,
         Integer PontosPrevistos,
-        Integer IncidentesConfirmados,
-        Integer IncidentesTratados,
+
         Integer QuantCorredores,
         Integer QuantEspecies,
         Integer QuantEspeciesEsperadas,
@@ -60,8 +59,6 @@ public record UnidadeStatusGeralDTO(
 
                 base.PontosMonitorados(),
                 base.PontosPrevistos(),
-                base.IncidentesConfirmados(),
-                base.IncidentesTratados(),
 
                 base.QuantCorredores(),
 

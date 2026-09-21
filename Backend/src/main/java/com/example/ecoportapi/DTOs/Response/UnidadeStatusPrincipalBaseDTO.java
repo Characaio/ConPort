@@ -2,6 +2,7 @@ package com.example.ecoportapi.DTOs.Response;
 
 
 public record UnidadeStatusPrincipalBaseDTO(
+        Long Id,
         String Nome,
         String Telefone,
         String TipoDeUnidade,

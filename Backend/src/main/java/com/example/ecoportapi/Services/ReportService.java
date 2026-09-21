@@ -54,6 +54,8 @@ public class ReportService {
 
         report.setStatus(StatusReport.StringParaTipo(reportStatusAnalise.Status()));
         report.setDataDaAnalisa(LocalDateTime.now());
+        report.setSupervisor(null);
+        reportRepository.save(report);
 
         return ResponseEntity.ok().build();
     }
@@ -69,9 +71,9 @@ public class ReportService {
         report.setUsuario(usuario);
         report.setDescricao(reportDTO.Descricao());
         report.setTipo(TipoDeIncidente.StringParaTipo(reportDTO.Tipo()));
-        report.setDataDoOcorrido(LocalDateTime.now());
+        report.setDataDoOcorrido(LocalDateTime.parse(reportDTO.DataDoOcorrido()));
         report.setLocal(reportDTO.Local());
-        report.setImagensRelacionadas(reportDTO.ImagensAnexadas());
+        report.setImagensAnexadas(reportDTO.ImagensAnexadas());
         report.setStatus(StatusReport.PENDENTE);
 
         return report;
