@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:conport/widgets/topbar.dart';
+import 'package:conport/widgets/homemap.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -11,47 +12,19 @@ class Home extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            child: Row(
-              children: [
-                Image(
-                  image: AssetImage('assets/images/ConportLogo.png'),
-                  width: 48,
-                ),
-                Text(
-                  "Conport",
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontSize: 24.0,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Quicksand',
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  Symbols.local_fire_department,
-                  color: Colors.orange,
-                  size: 32,
-                  weight: 500.0,
-                ),
-                const SizedBox(width: 8.0),
-                Text(
-                  "14",
-                  style: TextStyle(
-                    color: Colors.orange,
-                    fontSize: 20.0,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Symbols.account_circle,
-                    size: 32,
-                    weight: 1000.0,
-                    fill: 1,
-                  ),
-                ),
-              ],
+            child: Topbar(),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(color: Colors.green, width: 1.5),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16.0),
+                child: SizedBox(height: 300, child: HomeMap()),
+              ),
             ),
           ),
         ],
