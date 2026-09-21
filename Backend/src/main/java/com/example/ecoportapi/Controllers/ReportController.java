@@ -31,10 +31,6 @@ public class ReportController {
         return reportService.PegarReportResumido(id);
     }
 
-
-
-    //criar rota do report resumido
-
     @PostMapping("/{id}/analise")
     public ResponseEntity<?> PostarAnalise(@PathVariable Long id, @RequestBody ReportStatusAnalise reportStatusAnalise){
         return reportService.PostarAnalise(id, reportStatusAnalise);

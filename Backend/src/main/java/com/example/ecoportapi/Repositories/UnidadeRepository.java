@@ -1,8 +1,7 @@
 package com.example.ecoportapi.Repositories;
 
-import com.example.ecoportapi.DTOs.Response.ReportResumidoDTO;
-import com.example.ecoportapi.DTOs.Response.UnidadeStatusGeralDTO;
-import com.example.ecoportapi.DTOs.Response.UnidadeStatusPrincipalDTO;
+import com.example.ecoportapi.DTOs.Response.*;
+import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Models.UnidadeDeConservacao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +12,12 @@ import java.util.List;
 public interface UnidadeRepository extends JpaRepository<UnidadeDeConservacao,Long> {
 
     @Query("""
-    SELECT new com.example.ecoportapi.DTOs.UnidadeStatusPrincipalDTO(
+    SELECT new com.example.ecoportapi.DTOs.UnidadeStatusPrincipalBaseDTO(
+        u.Nome,
+        u.Telefone,
+        u.TipoDeUnidade,
+        u.HoraDeAbertura,
+        u.HoraDeFechamento,
         u.IntegridadeTerritorial,
         u.ConectividadeEcologica,
         u.QualidadeAmbiental,
@@ -24,37 +28,38 @@ public interface UnidadeRepository extends JpaRepository<UnidadeDeConservacao,Lo
     FROM UnidadeDeConservacao u
     WHERE u.Id = :unidadeId
     """)
-    public UnidadeStatusPrincipalDTO PegarStatusPrincipal(@Param("unidadeId") Long unidadeId);
+    public UnidadeStatusPrincipalBaseDTO PegarStatusPrincipal(@Param("unidadeId") Long unidadeId);
 
     @Query("""
-    SELECT new com.exmaple.ecoportapi.DTOs.UnidadeStatusGeralDTO(
+    SELECT new com.exmaple.ecoportapi.DTOs.Response.UnidadeStatusGeralBaseDTO(
+                u.Id,u.Nome,u.Localizacao,u.Bioma,u.Telefone,u.HoraDeAbertura,u.HoraDeFechamento,
                 u.TipoDeUnidade,u.AreaTotal,u.AreaRegularizada,u.AreaPreservada,
-                u.AreaMonitorada,u.QuantCorredores,u.QuantEspecies,u.QuantEspeciesEsperadas,
-                u.QualidadeAgua,u.QualidadeSolo,u.GestaoResiduos,
-        
-                u.IntegridadeTerritorial,u.ConectividadeEcologica,
-                u.QualidadeAmbiental,u.PreservacaoLocal,
-                u.Fiscalizacao,u.Biodiversidade
+                u.AreaMonitorada,u.AreaBasePorCorredor, u.PontosMonitorado, u.PontosPrevistos,
+                u.IncidentesConfirmados,u.IncidentesTratados, u.QuantCorredores, u.QuantEspecies,
+                u.QuantEspeciesEsperadas, u.QualidadeAgua,u.QualidadeSolo,u.GestaoResidduos
         )   
         FROM UnidadeDeConservacao u
         WHERE u.Id = :unidadeId
     """)
-    public UnidadeStatusGeralDTO PegarStatusGeral(@Param("unidadeId") Long unidadeId);
+    public UnidadeStatusGeralBaseDTO PegarStatusGeral(@Param("unidadeId") Long unidadeId);
+
+
+    //No futuro, mudar o status para ser um parametro, isso permite uma analise mais detalhada
+    @Query("""
+    SELECT COUNT(r)
+    FROM Report r
+    WHERE r.Unidade.Id = :unidadeId AND r.Status = 'ACEITO'
+    """)
+    public Integer PegarQuantDeReports(@Param("unidadeId") Long unidadeId);
 
     @Query("""
-        SELECT new com.example.ecoportapi.DTOs.ReportResumidoDTO(
+        SELECT new com.example.ecoportapi.DTOs.Response.ReportResumidoDTO(
             r.Id,
             r.Tipo,
-            r.Status,
-            r.DataDoOcorrido,
             r.Local,
-            r.Descricao,
-            r.ImagensRelacionadas,
-            r.Usuario.Nome,
-            s.Nome,
-            r.DataDaAnalise
+            r.DataDoOcorrido,
+            r.Status
             ) FROM Report r
-            LEFT JOIN r.Supervisor s
             WHERE r.Unidade.Id = :unidadeId
     """)
     public List<ReportResumidoDTO> PegarReportsDaUnidade(@Param("unidadeId") Long unidadeId);

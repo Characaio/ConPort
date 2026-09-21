@@ -6,7 +6,9 @@ public enum StatusReport {
     PENDENTE("Pendente"),
     SOB_AVALIACAO("Sob avaliação"),
     NEGADO("Negado"),
-    ACEITO("Aceito");
+    ACEITO("Aceito"),
+    EM_TRATAMENTO("Em tratamento"),
+    TRATADO("Tratado");
 
     private final String TipoPuro;
 

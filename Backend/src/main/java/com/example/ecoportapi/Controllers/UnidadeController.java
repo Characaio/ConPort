@@ -20,7 +20,6 @@ import java.util.List;
 @RequestMapping("/unidade")
 public class UnidadeController {
 
-    @Autowired
     private final UnidadeService unidadeService;
 
     public UnidadeController(UnidadeService unidadeService) {

@@ -2,6 +2,10 @@ package com.example.ecoportapi.Models;
 
 import com.example.ecoportapi.Models.Enums.TipoDeUnidade;
 import jakarta.persistence.*;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "UnidadeDeConservacao")
@@ -20,6 +24,16 @@ public class UnidadeDeConservacao {
 
     @Column(name = "Bioma", nullable = false)
     private String Bioma;
+
+    //Telefone guardado de forma bruta, a mascara deve ser aplicada no FrontEnd
+    @Column(name = "Telefone",nullable = false)
+    private String Telefone;
+
+    @Column(name = "HoraDeAbertura",nullable = false)
+    private LocalTime HoraDeAbertura;
+
+    @Column(name = "HoraDeFechamento")
+    private LocalTime HoraDeFechamento;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "TipoDeUnidade", nullable = false)
@@ -41,8 +55,15 @@ public class UnidadeDeConservacao {
     @Column(name = "AreaMonitorada", nullable = false)
     private Double AreaMonitorada;
 
-    @Column(name = "AreaComConectividade", nullable = false)
-    private Double AreaComConectividade;
+    @Column(name = "AreaBasePorCorredor", nullable = false)
+    private Double AreaBasePorCorredor;
+
+    @Column(name = "PontosMonitorados", nullable = false)
+    private Integer PontosMonitorados;
+
+    @Column(name = "PontosPrevistos", nullable = false)
+    private Integer PontosPrevistos;
+
 
     @Column(name = "QuantidadeCorredores", nullable = false)
     private Integer QuantidadeCorredores;
@@ -66,32 +87,6 @@ public class UnidadeDeConservacao {
     private Double GestaoResiduos;
 
 
-    //Indicadores Principais de status
-    //Alguns desses indicadores serão derivados dos indicadores internos
-    //Esses serão so status principais da unidade
-    @Column(name = "IntegridadeTerritorial", nullable = false)
-    private Double IntegridadeTerritorial;
-
-    @Column(name = "ConectividadeEcologica", nullable = false)
-    private Double ConectividadeEcologica;
-
-    @Column(name = "QualidadeAmbiental", nullable = false)
-    private Double QualidadeAmbiental;
-
-    @Column(name = "PreservacaoLocal", nullable = false)
-    private Double PreservacaoLocal;
-
-    //Informações sobre os dois proximos indicadores
-    //Eles serão transformados em Alto/Medio/Baixo ao chegar no FrontEnd
-    //O valor em porcentagem será acessivel na tela de mais informacoes sobre a unidade
-    //Isso é para simplificar o consumo de informações do usuario
-    @Column(name = "Fiscalizacao", nullable = false)
-    private Double Fiscalizacao;
-
-    @Column(name = "Biodiversidade", nullable = false)
-    private Double Biodiversidade;
-
-
     public Long getId() { return Id; }
     public void setId(Long id) { Id = id; }
 
@@ -103,6 +98,15 @@ public class UnidadeDeConservacao {
 
     public String getBioma() { return Bioma; }
     public void setBioma(String bioma) { Bioma = bioma; }
+
+    public String getTelefone(){ return Telefone; }
+    public void setTelefone(String telefone){ Telefone = telefone; }
+
+    public LocalTime getHoraAbertura(){ return HoraDeAbertura; }
+    public void setHoraAbertura(LocalTime horaAbertura){ HoraDeAbertura = horaAbertura; }
+
+    public LocalTime getHoraFechamento(){ return HoraDeFechamento ; }
+    public void setHoraFechamento(LocalTime horaFechamento){ HoraDeFechamento = horaFechamento; }
 
     public TipoDeUnidade getTipoDeUnidade() { return TipoDeUnidade; }
     public void setTipoDeUnidade(TipoDeUnidade tipoDeUnidade) { TipoDeUnidade = tipoDeUnidade; }
@@ -119,11 +123,17 @@ public class UnidadeDeConservacao {
     public Double getAreaMonitorada() { return AreaMonitorada; }
     public void setAreaMonitorada(Double areaMonitorada) { AreaMonitorada = areaMonitorada; }
 
-    public Double getAreaComConectividade() { return AreaComConectividade; }
-    public void setAreaComConectividade(Double areaComConectividade) { AreaComConectividade = areaComConectividade; }
+    public Double getAreaBasePorCorredor() { return AreaBasePorCorredor; }
+    public void setAreaBasePorCorredor(Double areaBasePorCorredor) { AreaBasePorCorredor = areaBasePorCorredor; }
 
     public Integer getQuantidadeCorredores() { return QuantidadeCorredores; }
     public void setQuantidadeCorredores(Integer quantidadeCorredores) { QuantidadeCorredores = quantidadeCorredores; }
+
+    public Integer getPontosMonitorados() {return PontosMonitorados;}
+    public void setPontosMonitorados(Integer pontosMonitorados){PontosMonitorados = pontosMonitorados; }
+
+    public Integer getPontosPrevistos() {return PontosPrevistos;}
+    public void setPontosPrevistos(Integer pontosMonitorados){PontosPrevistos = pontosMonitorados; }
 
     public Integer getQuantidadeEspecies() { return QuantidadeEspecies; }
     public void setQuantidadeEspecies(Integer quantidadeEspecies) { QuantidadeEspecies = quantidadeEspecies; }
@@ -140,21 +150,4 @@ public class UnidadeDeConservacao {
     public Double getGestaoResiduos() { return GestaoResiduos; }
     public void setGestaoResiduos(Double gestaoResiduos) { GestaoResiduos = gestaoResiduos; }
 
-    public Double getIntegridadeTerritorial() { return IntegridadeTerritorial; }
-    public void setIntegridadeTerritorial(Double integridadeTerritorial) { IntegridadeTerritorial = integridadeTerritorial; }
-
-    public Double getConectividadeEcologica() { return ConectividadeEcologica; }
-    public void setConectividadeEcologica(Double conectividadeEcologica) { ConectividadeEcologica = conectividadeEcologica; }
-
-    public Double getQualidadeAmbiental() { return QualidadeAmbiental; }
-    public void setQualidadeAmbiental(Double qualidadeAmbiental) { QualidadeAmbiental = qualidadeAmbiental; }
-
-    public Double getPreservacaoLocal() { return PreservacaoLocal; }
-    public void setPreservacaoLocal(Double preservacaoLocal) { PreservacaoLocal = preservacaoLocal; }
-
-    public Double getFiscalizacao() { return Fiscalizacao; }
-    public void setFiscalizacao(Double fiscalizacao) { Fiscalizacao = fiscalizacao; }
-
-    public Double getBiodiversidade() { return Biodiversidade; }
-    public void setBiodiversidade(Double biodiversidade) { Biodiversidade = biodiversidade; }
 }
