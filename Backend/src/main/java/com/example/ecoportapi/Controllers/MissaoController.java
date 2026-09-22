@@ -23,7 +23,7 @@ public class MissaoController {
         return ResponseEntity.ok(missaoService.PegarMissao(Id));
     }
 
-    @GetMapping("/{id}/progresso")
+    @PostMapping("/{id}/progresso")
     public ResponseEntity<?> ProgredirMissao(
             @PathVariable Long id, @RequestBody ProgressoDTO progressoDTO){
         return ResponseEntity.ok(missaoService.ProgredirMissao(id,progressoDTO));
