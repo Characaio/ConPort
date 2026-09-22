@@ -52,7 +52,9 @@ class Topbar extends StatelessWidget {
           ),
         ),
         IconButton(
-          onPressed: () {},
+          onPressed: () {
+            PageLoader.go(context, PageLoader.profile);
+          },
           icon: Icon(Symbols.account_circle, size: 32, weight: 1000.0, fill: 1),
         ),
       ],

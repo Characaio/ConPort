@@ -5,6 +5,7 @@ import 'package:conport/pages/dtrepo.dart';
 import 'package:conport/pages/myrepo.dart';
 import 'package:conport/pages/reports.dart';
 import 'package:conport/pages/dtunit.dart';
+import 'package:conport/pages/profile.dart';
 
 class PageLoader {
   static const String home = '/';
@@ -12,6 +13,7 @@ class PageLoader {
   static const String myreports = '/myreports';
   static const String report = '/report';
   static const String unit = '/unit';
+  static const String profile = '/profile';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -31,6 +33,9 @@ class PageLoader {
         return MaterialPageRoute(
           builder: (_) => UnidadeDetalhes(unidade: unidadeMock),
         );
+
+      case profile:
+        return MaterialPageRoute(builder: (_) => const Profile());
 
       default:
         return MaterialPageRoute(builder: (_) => const Home());

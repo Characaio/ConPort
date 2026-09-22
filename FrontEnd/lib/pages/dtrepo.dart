@@ -268,26 +268,6 @@ class Dtrepo extends StatelessWidget {
                           ),
 
                           const SizedBox(height: 28),
-
-                          // Botão
-                          SizedBox(
-                            width: double.infinity,
-                            height: 48,
-                            child: ElevatedButton.icon(
-                              onPressed:
-                                  () {}, // navigator.pop removido pois crashava o app
-                              icon: const Icon(Symbols.arrow_back),
-                              label: const Text('Voltar'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: colors.primary,
-                                foregroundColor: colors.onPrimary,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),

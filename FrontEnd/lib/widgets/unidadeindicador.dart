@@ -17,7 +17,7 @@ class UnidadeIndicador extends StatelessWidget {
           child: Text(
             texto,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.w300,
               color: Colors.white,
             ),

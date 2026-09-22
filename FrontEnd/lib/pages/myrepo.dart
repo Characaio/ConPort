@@ -1,3 +1,4 @@
+import 'package:conport/core/navigation/page_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:conport/widgets/topbar.dart';
@@ -42,7 +43,7 @@ class Myrepo extends StatelessWidget {
                         hasImage: true,
                         colors: colors,
                         onTap: () {
-                          // TODO: abrir Dtrepo
+                          PageLoader.go(context, PageLoader.report);
                         },
                       ),
 
@@ -274,4 +275,3 @@ class _ReportCard extends StatelessWidget {
     }
   }
 }
-

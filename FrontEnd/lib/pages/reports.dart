@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:conport/widgets/topbar.dart';
+import 'package:conport/core/navigation/page_loader.dart';
 
 class Reports extends StatefulWidget {
   const Reports({super.key});
@@ -230,6 +231,7 @@ class _ReportsState extends State<Reports> {
                           child: ElevatedButton.icon(
                             onPressed: () {
                               _enviarReport();
+                              PageLoader.go(context, PageLoader.myreports);
                             },
                             icon: const Icon(Symbols.send, fill: 1),
                             label: const Text(

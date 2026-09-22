@@ -40,6 +40,8 @@ dependencies:
   geolocator: ^14.0.3
   flutter_map_vector_tiles: ^2.9.0
 
+  http: ^1.5.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
