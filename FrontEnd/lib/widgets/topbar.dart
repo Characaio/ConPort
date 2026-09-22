@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:conport/core/navigation/page_loader.dart';
 
 class Topbar extends StatelessWidget {
   final bool hasLogo;
@@ -28,10 +29,12 @@ class Topbar extends StatelessWidget {
         if (hasReturn)
           IconButton(
             icon: Icon(Symbols.arrow_left_alt),
-            onPressed: () {},
-          ), // TODO: implementar sistema de return
+            onPressed: () {
+              PageLoader.back(context);
+            },
+          ),
 
-        if (text != "") Text(text, style: TextStyle(fontSize: 24.0)),
+        if (text != "") Text(text, style: TextStyle(fontSize: 20.0)),
         const Spacer(),
         Icon(
           Symbols.local_fire_department,

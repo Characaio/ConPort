@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:conport/core/theme/app_theme.dart';
-import 'package:conport/pages/home.dart';
-import 'package:conport/pages/myrepo.dart';
-import 'package:conport/pages/dtrepo.dart';
+import 'package:conport/core/navigation/page_loader.dart';
 
 void main() {
   runApp(const Conport());
@@ -20,16 +18,8 @@ class Conport extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.light,
-      home: const PageLoader(),
+      initialRoute: PageLoader.home,
+      onGenerateRoute: PageLoader.generateRoute,
     );
-  }
-}
-
-class PageLoader extends StatelessWidget {
-  const PageLoader({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Myrepo();
   }
 }
