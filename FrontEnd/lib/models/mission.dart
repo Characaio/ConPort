@@ -85,7 +85,7 @@ class Mission {
 
       status: parseStatus(
         json['StatusDeMissao']?.toString() ??
-            json['statusDeMissao']?.toString(),
+        json['statusDeMissao']?.toString(),
       ),
 
       goal: json['Meta'] ?? json['meta'] ?? 1,
