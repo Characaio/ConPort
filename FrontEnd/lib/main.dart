@@ -1,7 +1,7 @@
-import 'package:conport/pages/dtrepo.dart';
 import 'package:flutter/material.dart';
+import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/pages/home.dart';
-import 'package:conport/pages/Myrepo.dart';
+import 'package:conport/pages/myrepo.dart';
 import 'package:conport/pages/dtrepo.dart';
 
 void main() {
@@ -17,14 +17,9 @@ class Conport extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Conport',
-      theme: ThemeData(
-        fontFamily: 'Montserrat',
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.light,
       home: const PageLoader(),
     );
   }
@@ -35,6 +30,6 @@ class PageLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dtrepo();
+    return Myrepo();
   }
 }

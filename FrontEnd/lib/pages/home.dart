@@ -9,13 +9,14 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
             Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-              child: Topbar(),
+              child: Topbar(hasLogo: true, hasReturn: false, text: ""),
             ),
 
             Padding(
@@ -23,7 +24,7 @@ class Home extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16.0),
-                  border: Border.all(color: Colors.green, width: 1.5),
+                  border: Border.all(color: colors.primary, width: 1.5),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16.0),
@@ -36,7 +37,7 @@ class Home extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.green,
+                  color: colors.primary,
                   borderRadius: BorderRadius.circular(16.0),
                 ),
                 child: ClipRRect(

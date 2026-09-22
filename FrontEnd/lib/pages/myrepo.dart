@@ -1,328 +1,277 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:conport/widgets/topbar.dart';
 
 class Myrepo extends StatelessWidget {
-  const Myrepo ({super.key});
+  const Myrepo({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Scaffold(
-          body:Stack(
-            children: [
-              Positioned(
-                    top:20, left:20,
-                    child: IconButton(
-                        icon: Icon(Icons.arrow_back),
-                        onPressed: () { 
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 8.0,
+              horizontal: 16.0,
+            ),
+            child: Topbar(
+              hasLogo: false,
+              hasReturn: true,
+              text: 'Meus reports',
+            ),
+          ),
 
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 850),
+                  child: Column(
+                    children: [
+                      _ReportCard(
+                        title: 'Animal ferido',
+                        location: 'Jardim Europa',
+                        date: '08/08/2026 14:30',
+                        status: 'Incidente resolvido',
+                        statusColor: Colors.green,
+                        statusIcon: Symbols.check_circle,
+                        hasImage: true,
+                        colors: colors,
+                        onTap: () {
+                          // TODO: abrir Dtrepo
                         },
-                    ),
-                ),
-                Positioned(top:22, left: 110,
-                    child: Text('Meus Reports',
-                    style: TextStyle(
-                    fontSize:24,
-                    ),
-                    ),
-                ), 
-                Positioned(top:100, left: 125,
-                  child: 
-                  Container(
-                    width: 300,height:150,
-                    decoration: BoxDecoration( 
-                      color: Colors.white.withValues(alpha: 1.5),
-                      border: Border.all(
-                        color: Colors.black,
-                        width: 2,
                       ),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                        child:Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                            children:[
-                          Padding(
-                            padding: EdgeInsets.only(left:8),                            
-                          child:
-                          Text(
-                            'Animal ferido' ,
-                            style: TextStyle(color: Colors.black,fontSize:20),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Icon(
-                              Symbols.explore,
-                              size: 24,
-                              weight: 500,
-                              fill: 1,
-                            ), 
-                          SizedBox(width:5),                                              
-                          Text(                           
-                            'Jardim Europa',                           
-                            style: TextStyle(color: Colors.black,
-                            fontSize:20),
-                          ),
-                        ],
-                      ),
-                      
-                          Row(                       
-                            children: [
-                              Icon(
-                                Symbols.calendar_month,
-                                size:24,
-                                weight: 500,
-                                fill: 1,
-                              ),                              
-                              Text(
-                                '08/08/2026 14:30',
-                                style:TextStyle(color: Colors.black,
-                                fontSize:16
-                                ),
-                              ),                                                     
-                            ],
-                          ),
-                SizedBox(height:10),
-                Row(
-                  children: [
-                    Icon(
-                      Symbols.check,
-                        size: 22,
-                        weight: 500,
-                        fill: 1,
-                        ),
 
-                        SizedBox(width: 5),
-                            Text(
-                            'Incidente resolvido',
-                                style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(children: [
-                      Icon(
-                        Symbols.image,
-                        size: 22,
-                        weight:500,
-                        fill:1,
+                      const SizedBox(height: 12),
+
+                      _ReportCard(
+                        title: 'Poluição',
+                        location: 'Avenida São Paulo',
+                        date: '16/02/2025 22:15',
+                        status: 'Incidente pendente',
+                        statusColor: Colors.orange,
+                        statusIcon: Symbols.pending,
+                        hasImage: true,
+                        colors: colors,
+                        onTap: () {
+                          // TODO: abrir Dtrepo
+                        },
                       ),
-                      SizedBox(width:5),
-                      Text('Imagem anexada',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          ),
-                        )
-                      ],
-                    ),
-                  ],
+
+                      const SizedBox(height: 12),
+
+                      _ReportCard(
+                        title: '...',
+                        location: '...',
+                        date: '../../.... ..:..',
+                        status: '...',
+                        statusColor: colors.onSurfaceVariant,
+                        statusIcon: Symbols.pending,
+                        hasImage: false,
+                        colors: colors,
+                        onTap: () {
+                          // TODO: abrir Dtrepo
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-                Positioned(top:280, left: 125,
-                  child: 
-                  Container(
-                    width: 300,height:150,
-                    decoration: BoxDecoration( 
-                      color: Colors.white.withValues(alpha: 1.5),
-                      border: Border.all(
-                        color: Colors.black,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                        child:Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                            children:[
-                          Padding(
-                            padding: EdgeInsets.only(left:8),                            
-                          child:
-                          Text(
-                            'poluição' ,
-                            style: TextStyle(color: Colors.black,fontSize:20),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Icon(
-                              Symbols.explore,
-                              size: 24,
-                              weight: 500,
-                              fill: 1,
-                            ), 
-                          SizedBox(width:5),                                              
-                          Text(                           
-                            'avenida são paulo',                           
-                            style: TextStyle(color: Colors.black,
-                            fontSize:20),
-                          ),
-                        ],
-                      ),
-                      
-                          Row(                       
-                            children: [
-                              Icon(
-                                Symbols.calendar_month,
-                                size:24,
-                                weight: 500,
-                                fill: 1,
-                              ),                              
-                              Text(
-                                '16/02/2025 22:15',
-                                style:TextStyle(color: Colors.black,
-                                fontSize:16
-                                ),
-                              ),                                                     
-                            ],
-                          ),
-                SizedBox(height:10),
-                Row(
-                  children: [
-                    Icon(
-                      Symbols.pending,
-                        size: 22,
-                        weight: 500,
-                        fill: 1,
-                        ),
-
-                        SizedBox(width: 5),
-                            Text(
-                            'Incidente pendente',
-                                style: TextStyle(
-                                color: Colors.yellow,
-                                fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(children: [
-                      Icon(
-                        Symbols.image,
-                        size: 22,
-                        weight:500,
-                        fill:1,
-                      ),
-                      SizedBox(width:5),
-                      Text('Imagem anexada',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          ),
-                        )
-                      ],
-                    ),
-                  ],
-                ),   
-              ),
-            ),
-              Positioned(top:460, left: 125,
-                  child: 
-                  Container(
-                    width: 300,height:150,
-                    decoration: BoxDecoration( 
-                      color: Colors.white.withValues(alpha: 1.5),
-                      border: Border.all(
-                        color: Colors.black,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                        child:Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                            children:[
-                          Padding(
-                            padding: EdgeInsets.only(left:8),                            
-                          child:
-                          Text(
-                            '...' ,
-                            style: TextStyle(color: Colors.black,fontSize:20),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Icon(
-                              Symbols.explore,
-                              size: 24,
-                              weight: 500,
-                              fill: 1,
-                            ), 
-                          SizedBox(width:5),                                              
-                          Text(                           
-                            '...',                           
-                            style: TextStyle(color: Colors.black,
-                            fontSize:20),
-                          ),
-                        ],
-                      ),
-                      
-                          Row(                       
-                            children: [
-                              Icon(
-                                Symbols.calendar_month,
-                                size:24,
-                                weight: 500,
-                                fill: 1,
-                              ),                              
-                              Text(
-                                '../../.... ..:..',
-                                style:TextStyle(color: Colors.black,
-                                fontSize:16
-                                ),
-                              ),                                                     
-                            ],
-                          ),
-                SizedBox(height:10),
-                Row(
-                  children: [
-                    Icon(
-                      Symbols.pending,
-                        size: 22,
-                        weight: 500,
-                        fill: 1,
-                        ),
-
-                        SizedBox(width: 5),
-                            Text(
-                            '...',
-                                style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(children: [
-                      Icon(
-                        Symbols.image,
-                        size: 22,
-                        weight:500,
-                        fill:1,
-                      ),
-                      SizedBox(width:5),
-                      Text('...',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          ),
-                        )
-                      ],
-                    ),
-                  ],
-                ),   
-              ),                                                  
-            ),
-                
-                Positioned(top: 20, right: 100,
-                child:
-                 IconButton(
-          onPressed: () {},
-          icon: Icon(Symbols.account_circle, size: 32, weight: 1000.0, fill: 1,),
-                ),         
-              ),
-            ],         
-          )
-        );
-      }
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+class _ReportCard extends StatelessWidget {
+  final String title;
+  final String location;
+  final String date;
+  final String status;
+  final Color statusColor;
+  final IconData statusIcon;
+  final bool hasImage;
+  final ColorScheme colors;
+  final VoidCallback onTap;
+
+  const _ReportCard({
+    required this.title,
+    required this.location,
+    required this.date,
+    required this.status,
+    required this.statusColor,
+    required this.statusIcon,
+    required this.hasImage,
+    required this.colors,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: colors.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.primary, width: 1.5),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Cabeçalho
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: colors.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      _getReportIcon(title),
+                      color: colors.onPrimaryContainer,
+                      size: 25,
+                      fill: 1,
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        Row(
+                          children: [
+                            Icon(
+                              Symbols.explore,
+                              size: 17,
+                              color: colors.onSurfaceVariant,
+                              fill: 1,
+                            ),
+
+                            const SizedBox(width: 5),
+
+                            Expanded(
+                              child: Text(
+                                location,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: colors.onSurfaceVariant),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Icon(Symbols.chevron_right, color: colors.onSurfaceVariant),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Informações
+              Row(
+                children: [
+                  Icon(
+                    Symbols.calendar_month,
+                    size: 20,
+                    color: colors.onSurfaceVariant,
+                    fill: 1,
+                  ),
+
+                  const SizedBox(width: 7),
+
+                  Text(date, style: Theme.of(context).textTheme.bodyMedium),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              // Status
+              Row(
+                children: [
+                  Icon(statusIcon, size: 20, color: statusColor, fill: 1),
+
+                  const SizedBox(width: 7),
+
+                  Expanded(
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              if (hasImage) ...[
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    Icon(
+                      Symbols.image,
+                      size: 20,
+                      color: colors.onSurfaceVariant,
+                      fill: 1,
+                    ),
+
+                    const SizedBox(width: 7),
+
+                    Text(
+                      'Imagem anexada',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getReportIcon(String title) {
+    switch (title.toLowerCase()) {
+      case 'animal ferido':
+        return Symbols.pets;
+
+      case 'poluição':
+        return Symbols.cloud;
+
+      default:
+        return Symbols.report;
+    }
+  }
+}
+

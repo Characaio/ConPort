@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 class UnidadeIndicador extends StatelessWidget {
   final IconData? simbolo;

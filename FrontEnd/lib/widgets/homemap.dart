@@ -102,6 +102,7 @@ class _HomeMapState extends State<HomeMap> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return FutureBuilder<vt.Style>(
       future: _styleFuture,
       builder: (context, snapshot) {
@@ -177,12 +178,15 @@ class _HomeMapState extends State<HomeMap> {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.75),
+                          color: colors.surface.withValues(alpha: 0.75),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text(
+                        child: Text(
                           '© OpenFreeMap · OpenStreetMap',
-                          style: TextStyle(fontSize: 10, color: Colors.black87),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: colors.onSurface,
+                          ),
                         ),
                       ),
                     ),
@@ -197,7 +201,7 @@ class _HomeMapState extends State<HomeMap> {
                 onPressed: () {
                   _determinePosition();
                 },
-                child: const Icon(Icons.my_location),
+                child: Icon(Icons.my_location, color: colors.primary),
               ),
             ),
           ],

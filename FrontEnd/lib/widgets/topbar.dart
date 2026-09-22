@@ -2,22 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class Topbar extends StatelessWidget {
-  const Topbar({super.key});
+  final bool hasLogo;
+  final bool hasReturn;
+  final String text;
+
+  Topbar({required this.hasLogo, required this.hasReturn, required this.text});
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Image(image: AssetImage('assets/images/ConportLogo.png'), width: 48),
-        Text(
-          "Conport",
-          style: TextStyle(
-            color: Colors.green,
-            fontSize: 24.0,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Quicksand',
+        if (hasLogo) ...[
+          Image(image: AssetImage('assets/images/ConportLogo.png'), width: 48),
+          Text(
+            "Conport",
+            style: TextStyle(
+              color: colors.primary,
+              fontSize: 24.0,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Quicksand',
+            ),
           ),
-        ),
+        ],
+        if (hasReturn)
+          IconButton(
+            icon: Icon(Symbols.arrow_left_alt),
+            onPressed: () {},
+          ), // TODO: implementar sistema de return
+
+        if (text != "") Text(text, style: TextStyle(fontSize: 24.0)),
         const Spacer(),
         Icon(
           Symbols.local_fire_department,
