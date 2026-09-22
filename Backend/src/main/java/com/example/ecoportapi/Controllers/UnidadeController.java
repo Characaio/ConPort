@@ -2,28 +2,33 @@ package com.example.ecoportapi.Controllers;
 
 //Começar o trabalho
 
+import com.example.ecoportapi.DTOs.Request.ReportCreateDTO;
 import com.example.ecoportapi.DTOs.Response.ReportResumidoDTO;
 import com.example.ecoportapi.DTOs.Response.UnidadeStatusGeralDTO;
 import com.example.ecoportapi.DTOs.Response.UnidadeStatusPrincipalDTO;
+import com.example.ecoportapi.Services.ReportService;
 import com.example.ecoportapi.Services.UnidadeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 
-//http://localhost:8080/unidade/5/statusPrincipal
+
+///URL/unidade/5/statusPrincipal
 @RestController
 @RequestMapping("/unidade")
 public class UnidadeController {
 
     private final UnidadeService unidadeService;
-
-    public UnidadeController(UnidadeService unidadeService) {
+    private final ReportService reportService;
+    public UnidadeController(UnidadeService unidadeService, ReportService reportService) {
         this.unidadeService = unidadeService;
+        this.reportService = reportService;
     }
 
     @GetMapping("/{id}/statusPrincipal")
@@ -40,6 +45,19 @@ public class UnidadeController {
     public List<ReportResumidoDTO> PegarReportsDaUnidade(@PathVariable Long id){
         return unidadeService.PegarReportsDaUnidade(id);
     }
+    @PostMapping(
+            value = "/{id}/criarReport",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<?> PostarReport(
+            @RequestPart("reportDTO") ReportCreateDTO reportDTO,
+            @RequestPart(value = "imagens",required = false) List<MultipartFile> imagens,
+            @PathVariable Long id
+    ) throws IOException {
+        return reportService.PostarReport(reportDTO,imagens,id);
+    }
+
+
 
 
 }

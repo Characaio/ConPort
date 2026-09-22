@@ -25,11 +25,14 @@ services:
       SPRING_DATASOURCE_PASSWORD: conport
     depends_on:
       - postgres
+    volumes:
+      - uploads:/app/uploads
     networks:
       - conport-network
 
 volumes:
   postgres-data:
+  uploads:
 
 networks:
   conport-network:

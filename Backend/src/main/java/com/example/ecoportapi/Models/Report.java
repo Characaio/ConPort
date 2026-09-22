@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -39,15 +40,15 @@ public class Report {
     @Column(name = "DataDoOcorrido", nullable = false)
     private LocalDateTime DataDoOcorrido;
 
-    @Column(name = "Local", nullable = false)
-    private String Local;
-
     @Column(name = "DataDaAnalise", nullable = true)
     private LocalDateTime DataDaAnalise;
 
+    @Column(name = "MotivoDaNegacao", nullable = true)
+    private String MotivoDaNegacao;
+
     @ElementCollection
-    @Column(name = "ImagensAnexadas", nullable = false)
-    private List<String> ImagensAnexadas;
+    @Column(name = "ImagensAnexadas", nullable = true)
+    private List<String> ImagensAnexadas = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false)
@@ -76,11 +77,11 @@ public class Report {
     public LocalDateTime getDataDoOcorrido() { return DataDoOcorrido; }
     public void setDataDoOcorrido(LocalDateTime dataDoOcorrido) { DataDoOcorrido = dataDoOcorrido; }
 
-    public String getLocal() { return Local; }
-    public void setLocal(String local) { Local = local; }
-
     public LocalDateTime getDataDaAnalisa() { return DataDaAnalise; }
     public void setDataDaAnalisa(LocalDateTime dataDaAnalise) { DataDaAnalise = dataDaAnalise; }
+
+    public String getMotivoDaNegacao() { return MotivoDaNegacao; }
+    public void setMotivoDaNegacao(String motivoDaNegacao) { MotivoDaNegacao = motivoDaNegacao; }
 
     public List<String> getImagensAnexadas() { return ImagensAnexadas; }
     public void setImagensAnexadas(List<String> imagensAnexadas) { ImagensAnexadas = imagensAnexadas; }

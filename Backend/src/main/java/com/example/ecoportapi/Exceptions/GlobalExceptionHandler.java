@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.IOException;
+
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -45,6 +47,14 @@ public class GlobalExceptionHandler {
                 .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
+    @ExceptionHandler(SupervisorNaoEncontrado.class)
+    public ResponseEntity<String> SupervisorNaoEncontrado(SupervisorNaoEncontrado exception){
+        erroLoggerService.registrarErro(exception);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> IllegalArgumentException(IllegalArgumentException exception){
         erroLoggerService.registrarErro(exception);
@@ -55,6 +65,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<String> NullPointerException(NullPointerException exception){
+        erroLoggerService.registrarErro(exception);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<String> IOException(IOException exception){
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

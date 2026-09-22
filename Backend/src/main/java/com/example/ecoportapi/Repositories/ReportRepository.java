@@ -19,12 +19,10 @@ public interface ReportRepository extends JpaRepository<Report,Long> {
     SELECT new com.example.ecoportapi.DTOs.Response.ReportResumidoDTO(
         r.Id,
         r.Tipo,
-        r.Local,
         r.DataDoOcorrido,
         r.Status
         ) FROM Report r
         WHERE r.Id = :reportId
-            
     """)
     public ReportResumidoDTO PegarReportResumido(@Param("reportId") Long reportId);
 

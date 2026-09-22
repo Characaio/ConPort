@@ -36,8 +36,5 @@ public class ReportController {
         return reportService.PostarAnalise(id, reportStatusAnalise);
     }
 
-    @PostMapping()
-    public ResponseEntity<?> PostarReport(@RequestBody ReportCreateDTO reportDTO){
-        return reportService.PostarReport(reportDTO);
-    }
+
 }

@@ -1,10 +1,28 @@
 package com.example.ecoportapi.Models.Enums;
 
 public enum TipoMissao {
-    RECICLAR,
-    PLANTAR,
-    REUTILIZAR
-    /*Ao expandir o projeto, possivelmente adicionar uma missão de doação, seja de item ou de dinheiro
-    Essa ideia será extremamente final devida a sua complexidade
-     */
+    RECICLAR("Reciclar"),
+    PLANTAR("Plantar"),
+    REUTILIZAR("Reutilizar");
+
+    private final String TipoPuro;
+
+    TipoMissao(String TipoPuro){
+        this.TipoPuro = TipoPuro;
+    }
+
+    public static TipoMissao StringParaTipo(String tipoPuro){
+
+        for(TipoMissao tipo : values()){
+            if (tipo.TipoPuro.equalsIgnoreCase(tipoPuro.trim())){
+                return tipo;
+            }
+        }
+        throw new IllegalArgumentException(
+                "Tipo de missa" +
+                        " inválido " + tipoPuro
+        );
+
+    }
 }
+

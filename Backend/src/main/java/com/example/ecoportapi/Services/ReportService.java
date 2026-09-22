@@ -19,9 +19,13 @@ import com.example.ecoportapi.Repositories.UsuarioRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class ReportService {
@@ -29,11 +33,13 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final UnidadeRepository unidadeRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ImagensService imagensService;
 
-    public ReportService(ReportRepository reportRepository, UnidadeRepository unidadeRepository, UsuarioRepository usuarioRepository) {
+    public ReportService(ReportRepository reportRepository, UnidadeRepository unidadeRepository, UsuarioRepository usuarioRepository, ImagensService imagensService) {
         this.reportRepository = reportRepository;
         this.unidadeRepository = unidadeRepository;
         this.usuarioRepository = usuarioRepository;
+        this.imagensService = imagensService;
     }
 
     public ReportExpandidoDTO PegarReportCompleto(Long id){
@@ -46,8 +52,19 @@ public class ReportService {
         return reportRepository.PegarReportResumido(id);
     }
 
-    public ResponseEntity<?> PostarReport(ReportCreateDTO reportDTO){
-        Report report = CriarReport(reportDTO);
+    public ResponseEntity<?> PostarReport(
+            ReportCreateDTO reportDTO,
+            List<MultipartFile> imagens,
+            Long unidadeId) throws IOException {
+        Report report = CriarReport(reportDTO,unidadeId);
+        if (imagens != null){
+            List<String> imagensCaminho = new ArrayList<>();
+            for (MultipartFile imagem : imagens){
+                String caminho = imagensService.salvarImagem(imagem);
+                imagensCaminho.add(caminho);
+            }
+            report.setImagensAnexadas(imagensCaminho);
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(reportRepository.save(report));
     }
 
@@ -62,9 +79,9 @@ public class ReportService {
 
         return ResponseEntity.ok().build();
     }
-    private Report CriarReport(ReportCreateDTO reportDTO){
+    private Report CriarReport(ReportCreateDTO reportDTO,Long unidadeId){
         Report report = new Report();
-        UnidadeDeConservacao unidade = unidadeRepository.findById(reportDTO.UnidadeId())
+        UnidadeDeConservacao unidade = unidadeRepository.findById(unidadeId)
                 .orElseThrow(() -> new UnidadeNaoEncontrada("Unidade não encontrada"));
 
         Usuario usuario = usuarioRepository.findById(reportDTO.UsuarioId())
@@ -75,8 +92,6 @@ public class ReportService {
         report.setDescricao(reportDTO.Descricao());
         report.setTipo(TipoDeIncidente.StringParaTipo(reportDTO.Tipo()));
         report.setDataDoOcorrido(LocalDateTime.parse(reportDTO.DataDoOcorrido()));
-        report.setLocal(reportDTO.Local());
-        report.setImagensAnexadas(reportDTO.ImagensAnexadas());
         report.setStatus(StatusReport.PENDENTE);
 
         return report;

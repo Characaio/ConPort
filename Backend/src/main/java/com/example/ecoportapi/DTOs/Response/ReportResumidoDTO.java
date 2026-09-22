@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 public record ReportResumidoDTO(
     Long Id,
     TipoDeIncidente Tipo,
-    String Local,
     LocalDateTime DataDoOcorrido,
     StatusReport Status
 
