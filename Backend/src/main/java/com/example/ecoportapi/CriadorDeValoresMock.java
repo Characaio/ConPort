@@ -4,11 +4,9 @@ import com.example.ecoportapi.Exceptions.SupervisorNaoEncontrado;
 import com.example.ecoportapi.Exceptions.UnidadeNaoEncontrada;
 import com.example.ecoportapi.Exceptions.UsuarioNaoEncontrado;
 import com.example.ecoportapi.Models.*;
-import com.example.ecoportapi.Models.Enums.StatusMissao;
-import com.example.ecoportapi.Models.Enums.StatusReport;
-import com.example.ecoportapi.Models.Enums.TipoDeIncidente;
-import com.example.ecoportapi.Models.Enums.TipoDeUnidade;
+import com.example.ecoportapi.Models.Enums.*;
 import com.example.ecoportapi.Repositories.*;
+import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -174,28 +172,135 @@ public class CriadorDeValoresMock implements CommandLineRunner {
             report1.setMotivoDaNegacao("Report falso sobre a ocorrencia, a queimada era falsa");
 
             report2.setStatus(StatusReport.TRATADO);
-    }
 
-    public void CriarMissoes(){
-        if (missaoRepository.count() > 0) {
-            return;
-        }
-
-
-
+            reportRepository.saveAll(List.of(report1,report2));
     }
 
     private Missao criar(
-            String titulo,String descricao,
-            Integer xp,Integer moedas) {
+            Usuario usuario,
+            String titulo,
+            String descricao,
+            TipoMissao tipo,
+            int meta,
+            int recompensaXP,
+            int recompensaMoedas,
+            LocalDateTime inicio,
+            LocalDateTime fechamento
+    ) {
+
         Missao missao = new Missao();
 
+        missao.setUsuario(usuario);
         missao.setTitulo(titulo);
         missao.setDescricao(descricao);
-        missao.setXpRecompensa(xp);
-        missao.setMoedaRecompensa(moedas);
+        missao.setTipoDeMissao(tipo);
         missao.setStatusMissao(StatusMissao.DISPONIVEL);
+
+        missao.setMeta(meta);
+        missao.setProgresso(0);
+
+        missao.setXpRecompensa(recompensaXP);
+        missao.setMoedaRecompensa(recompensaMoedas);
+
+        missao.setTempoDeInicio(inicio);
+        missao.setTempoFechamento(fechamento);
+
         return missao;
+    }
+
+    @Transactional
+    public void CriarMissoes() {
+
+        Usuario usuario = usuarioRepository.findById(2L)
+                .orElseThrow(
+                        () -> new UsuarioNaoEncontrado("Usuario não encontrado")
+                );
+
+        LocalDateTime inicio = LocalDateTime.now();
+
+        // Prazo de 7 dias
+        LocalDateTime fechamento = inicio.plusDays(1);
+
+        //2 missões de recicar
+        Missao reciclar1 = criar(
+                usuario,
+                "Separar para Reciclar",
+                "Separe corretamente materiais recicláveis dos resíduos comuns e encaminhe-os para a coleta adequada.",
+                TipoMissao.RECICLAR,
+                5,
+                50,
+                30,
+                inicio,
+                fechamento
+        );
+        Missao reciclar2 = criar(
+                usuario,
+                "Reciclagem Consciente",
+                "Separe e encaminhe diferentes tipos de materiais recicláveis para a destinação correta.",
+                TipoMissao.RECICLAR,
+                10,
+                80,
+                50,
+                inicio,
+                fechamento
+        );
+
+        //2 missões de plantar
+        Missao plantar1 = criar(
+                usuario,
+                "Plante uma Nova Vida",
+                "Plante uma muda ou cuide de uma planta, contribuindo para o aumento da vegetação.",
+                TipoMissao.PLANTAR,
+                1,
+                60,
+                40,
+                inicio,
+                fechamento
+        );
+        Missao plantar2 = criar(
+                usuario,
+                "Pequeno Bosque",
+                "Plante e cuide de novas mudas em um espaço apropriado.",
+                TipoMissao.PLANTAR,
+                3,
+                120,
+                80,
+                inicio,
+                fechamento
+        );
+
+        //2 missões de reutilizar
+        Missao reutilizar1 = criar(
+                usuario,
+                "Dê uma Nova Utilidade",
+                "Reutilize um objeto que seria descartado, encontrando uma nova função para ele.",
+                TipoMissao.REUTILIZAR,
+                2,
+                50,
+                30,
+                inicio,
+                fechamento
+        );
+        Missao reutilizar2 = criar(
+                usuario,
+                "Menos Descarte",
+                "Encontre novas formas de utilizar objetos que normalmente seriam descartados.",
+                TipoMissao.REUTILIZAR,
+                5,
+                100,
+                70,
+                inicio,
+                fechamento
+        );
+
+        missaoRepository.saveAll(List.of(
+                reciclar1,
+                reciclar2,
+                plantar1,
+                plantar2,
+                reutilizar1,
+                reutilizar2
+        ));
     }
 
     @Override

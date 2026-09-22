@@ -1,5 +1,6 @@
 package com.example.ecoportapi.Services;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +33,7 @@ public class ImagensService {
                 .normalize();
     }
 
+    @Transactional
     public String salvarImagem(MultipartFile imagem) throws IOException {
 
         if (imagem.isEmpty()) {

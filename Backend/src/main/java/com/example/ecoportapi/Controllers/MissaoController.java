@@ -20,7 +20,7 @@ public class MissaoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> PegarMissão(@PathVariable Long Id){
-        return ResponseEntity.ok(PegarMissão(Id));
+        return ResponseEntity.ok(missaoService.PegarMissao(Id));
     }
 
     @GetMapping("/{id}/progresso")

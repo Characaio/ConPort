@@ -22,9 +22,16 @@ public class GlobalExceptionHandler {
         this.erroLoggerService = erroLoggerService;
     }
 
+    @ExceptionHandler(MissaoJaConcluida.class)
+    public ResponseEntity<String> MissaoJaConcluida(MissaoJaConcluida exception){
+        erroLoggerService.registrarErro(exception);
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+    }
 
-    @ExceptionHandler(UsuarioNaoEncontrado.class)
-    public ResponseEntity<String> UsuarioNaoEncontrado(UsuarioNaoEncontrado exception){
+    @ExceptionHandler(MissaoNaoEncontrada.class)
+    public ResponseEntity<String> MissaoNaoEncontrada(MissaoNaoEncontrada exception){
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
@@ -38,6 +45,23 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
+
+    @ExceptionHandler(RequisicaoInvalida.class)
+    public ResponseEntity<String> RequisicaoInvalida(RequisicaoInvalida exception){
+        erroLoggerService.registrarErro(exception);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Eu tenho q trabalhar melhor nisso aqui, ta merda gamer" + exception.getMessage() + "\n" + exception.getStackTrace());
+    }
+
+    @ExceptionHandler(UsuarioNaoEncontrado.class)
+    public ResponseEntity<String> UsuarioNaoEncontrado(UsuarioNaoEncontrado exception){
+        erroLoggerService.registrarErro(exception);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+    }
+
 
     @ExceptionHandler(UnidadeNaoEncontrada.class)
     public ResponseEntity<String> UnidadeNaoEncontrada(UnidadeNaoEncontrada exception){
@@ -63,13 +87,15 @@ public class GlobalExceptionHandler {
                 .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
+    /*
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<String> NullPointerException(NullPointerException exception){
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .status(HttpStatus.BAD_REQUEST)
                 .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
+    */
 
     @ExceptionHandler(IOException.class)
     public ResponseEntity<String> IOException(IOException exception){

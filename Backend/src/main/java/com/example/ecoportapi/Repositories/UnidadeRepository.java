@@ -50,7 +50,6 @@ public interface UnidadeRepository extends JpaRepository<UnidadeDeConservacao,Lo
         SELECT new com.example.ecoportapi.DTOs.Response.ReportResumidoDTO(
             r.Id,
             r.Tipo,
-            r.Local,
             r.DataDoOcorrido,
             r.Status
             ) FROM Report r

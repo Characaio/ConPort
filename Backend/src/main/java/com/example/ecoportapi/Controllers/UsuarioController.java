@@ -23,8 +23,8 @@ public class UsuarioController {
 
     @PostMapping("/{id}/missoes/gerar")
     public ResponseEntity<?> GerarMissoes(@PathVariable Long id){
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(missaoService.GerarMissoesNovas(id));
+
+        return ResponseEntity.ok("oq caralhas é pra ter aqui seu fdp");
 
 
     }

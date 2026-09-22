@@ -72,6 +72,8 @@ public class MissaoService {
         if (missao.getProgresso() >= missao.getMeta()){
             missao.setStatusMissao(StatusMissao.CONCLUIDA);
             entregarRecompensa(missao);
+        } else{
+            missao.setStatusMissao(StatusMissao.EM_ANDAMENTO);
         }
 
         missaoRepository.save(missao);
