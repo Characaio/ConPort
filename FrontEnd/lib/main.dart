@@ -1,5 +1,8 @@
+import 'package:conport/pages/dtrepo.dart';
 import 'package:flutter/material.dart';
 import 'package:conport/pages/home.dart';
+import 'package:conport/pages/Myrepo.dart';
+import 'package:conport/pages/dtrepo.dart';
 
 void main() {
   runApp(const Conport());
@@ -32,6 +35,6 @@ class PageLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Home();
+    return Dtrepo();
   }
 }
