@@ -15,21 +15,20 @@ enum StatusReport {
 
 class Report{
     final int id;
-    final TipoDeIncidente tipoDeIncidente;
-    final StatusReport statusReport;
-    final DateTime dataDoOcorrido,
-    final String descricao,
+    final TipoDeIncidente? tipoDeIncidente;
+    final StatusReport? statusReport;
+    final DateTime? dataDoOcorrido;
+    final String descricao;
     final List<String>? imagensAnexadas;
-    final String usuarioNome,
-    final String unidadeNome,
-    final String? supervisorNome,
-    final DateTime? dataDaAnalise
-
+    final String usuarioNome;
+    final String unidadeNome;
+    final String? supervisorNome;
+    final DateTime? dataDaAnalise;
 
     Report({
         required this.id,
-        required this.TipoDeIncidente,
-        required this.StatusReport,
+        required this.tipoDeIncidente,
+        required this.statusReport,
         required this.dataDoOcorrido,
         required this.descricao,
         this.imagensAnexadas,
@@ -40,7 +39,7 @@ class Report{
     });
 
     factory Report.fromJson(Map<String,dynamic> json){
-        TipoDeIncidente parseTipoIncidente(String? value){
+        TipoDeIncidente? parseTipoIncidente(String? value){
             switch(value?.toUpperCase()){
                 case 'QUEIMADA':
                     return TipoDeIncidente.QUEIMADA;
@@ -54,7 +53,7 @@ class Report{
                     return TipoDeIncidente.DESMATAMENTO;
             }
         }
-        StatusReport parseStatusReport(String? value){
+        StatusReport? parseStatusReport(String? value){
             switch(value?.toUpperCase()){
                 case 'PENDNTE':
                     return TipoDeIncidente.PENDNTE;
@@ -68,7 +67,10 @@ class Report{
                     return TipoDeIncidente.TRATADO;
             }
         }
-
+        DateTime? parseDate(dynamic value) {
+            if (value == null) return null;
+            return DateTime.tryParse(value.toString());
+        }
         return Report(
 
             id: json['Id'] ?? json['id'] ?? 0,
@@ -77,7 +79,19 @@ class Report{
 
             statusReport: parseStatusReport(json['StatusReport'] ?? json['statusReport']),
 
+            dataDoOcorrido: parseDate(json['DataDoOcorrido'] ?? json['dataDoOcorrido']),
+            
+            descricao: json['Descricao'] ?? json['descricao'] ?? "vazio games",
 
-        )
+            imagensAnexadas: json['ImagensAnexadas'] ?? json['imagensAnexadas'] ?? "null",
+
+            usuarioNome: json["UsuarioNome"] ?? json["usuarioNome"] ?? "null",
+
+            unidadeNome: json["UnidadeNome"] ?? json["usuarioNome"] ?? "null",
+
+            supervisorNome: json["SupervisorNome"] ?? json["usuarioNome"] ?? "null",
+
+            dataDaAnalise: parseDate(json["DataDaAnalise"] ?? json["dataDaAnalise"])
+        );
     }
 }

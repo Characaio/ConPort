@@ -1,7 +1,7 @@
 
 enum TipoDeUnidade {
    PARQUE_NACIONAL,
-   RESERVA_BIOLOGICA
+   RESERVA_BIOLOGICA,
    MONUMENTO_NATURAL,
 
    FLONA,
@@ -18,10 +18,10 @@ class Unidade{
     final String bioma;
     final String telefone;
 
-    final DateTime horaDeAbertura;
-    final DateTime horaDeFechamento;
+    final DateTime? horaDeAbertura;
+    final DateTime? horaDeFechamento;
 
-    final TipoDeUnidade tipoDaUnidade
+    final TipoDeUnidade tipoDaUnidade;
 
     final double areaTotal;
     final double areaRegularizada;
@@ -38,7 +38,7 @@ class Unidade{
     final double qualidadeSolo;
     final double gestaoResiduos;
     
-    final double? integridadeTerritorial,
+    final double? integridadeTerritorial;
     final int? corredoresNecessarios;
     final double? conectividadeEcologica;
     final double? qualidadeAmbiental;
@@ -47,50 +47,41 @@ class Unidade{
     final double? biodiversidade;
     
     const Unidade({
-    required this.id;
-    required this.nome;
-    required this.localizacao;
-    required this.bioma;
-    required this.telefone;
+    required this.id,
+    required this.nome,
+    required this.localizacao,
+    required this.bioma,
+    required this.telefone,
 
-    required this.horaDeAbertura;
-    required this.horaDeFechamento;
+    required this.horaDeAbertura,
+    required this.horaDeFechamento,
 
-    required this.tipoDaUnidade;
+    required this.tipoDaUnidade,
 
-    required this.areaTotal;
-    required this.areaRegularizada;
-    required this.areaPreservada;
-    required this.areaMonitorada;
-    required this.areaBasePorCorredor;
+    required this.areaTotal,
+    required this.areaRegularizada,
+    required this.areaPreservada,
+    required this.areaMonitorada,
+    required this.areaBasePorCorredor,
 
-    required this.pontosMonitorados;
-    required this.pontosPrevistos;
-    required this.quantidadeEspecies;
-    required this.quantidadeEspeciesEsperadas;
+    required this.pontosMonitorados,
+    required this.pontosPrevistos,
+    required this.quantidadeEspecies,
+    required this.quantidadeEspeciesEsperadas,
 
-    required this.qualidaAgua;
-    required this.qualidadeSolo;
-    required this.gestaoResiduos; 
+    required this.qualidaAgua,
+    required this.qualidadeSolo,
+    required this.gestaoResiduos,
 
     this.integridadeTerritorial,
-    this.corredoresNecessarios;
-    this.conectividadeEcologica;
-    this.qualidadeAmbiental;
-    this.preservacaoLocal;
-    this.fiscalizaocao;
-    this.biodiversidade; 
+    this.corredoresNecessarios,
+    this.conectividadeEcologica,
+    this.qualidadeAmbiental,
+    this.preservacaoLocal,
+    this.fiscalizaocao,
+    this.biodiversidade,
         
     });
-
-
-   PARQUE_NACIONAL,
-   RESERVA_BIOLOGICA
-   MONUMENTO_NATURAL,
-
-   FLONA,
-   RESERVA_EXTRATIVISTA,
-   RPPN
 
     factory Unidade.fromJson(Map<String,dynamic> json){
         TipoDeUnidade parseTipo(String? value){
@@ -108,7 +99,7 @@ class Unidade{
                 case 'RPPN':
                     return TipoDeUnidade.RPPN;
                 default:
-                    return TipoDaUnidade.DESCONHECIDO;
+                    return TipoDeUnidade.DESCONHECIDO;
             }
         }
 
@@ -131,7 +122,7 @@ class Unidade{
 
             horaDeAbertura: parseDate(json['HoraDeAbertura'] ?? json['horaDeAbertura']),
 
-            tipoDaUnidade: parseTipo(json['TipoDaUnidade'] ?? json['tipoDaUnidade'])
+            tipoDaUnidade: parseTipo(json['TipoDaUnidade'] ?? json['tipoDaUnidade']),
 
             horaDeFechamento: parseDate(json['HoraDeFechamento'] ?? json['horaDeFechamento']),
 
@@ -145,11 +136,11 @@ class Unidade{
 
             areaBasePorCorredor: json['AreaBasePorCorredor'] ?? json['areaBasePorCorredor'] ?? 'Area Base Por Corredor', 
 
-            pontosMonitorados: json['PontosMonitorados'] ?? json['pontosMonitorados'] ?? 'Pontos Monitorados'.
+            pontosMonitorados: json['PontosMonitorados'] ?? json['pontosMonitorados'] ?? 'Pontos Monitorados',
 
-            pontosPrevistos: json['PontosPrevistos'] ?? josn['pontosPrevistos'] ?? 'Pontos Previstos',
+            pontosPrevistos: json['PontosPrevistos'] ?? json['pontosPrevistos'] ?? 'Pontos Previstos',
 
-            quantidadeEspecies: josn['QuantidadeEspecies'] ?? josn['quantidadeEspecies'] ?? 'Quantidade Especies',
+            quantidadeEspecies: json['QuantidadeEspecies'] ?? json['quantidadeEspecies'] ?? 'Quantidade Especies',
 
             quantidadeEspeciesEsperadas: json['QuantidadeEspeciesEsperadas'] ?? json['quantidadeEspeciesEsperadas'] ?? 'Quantidade Especies Esperadas',
 
@@ -172,8 +163,6 @@ class Unidade{
             fiscalizaocao: json['Fiscalizacao'] ?? json['fiscalizacao'] ?? 'Fiscalizacao',
 
             biodiversidade: json['Biodiversidade'] ?? json['biodiversidade'] ?? 'Biodiversidade'
-
-
-        )
+        );
     }
 }
