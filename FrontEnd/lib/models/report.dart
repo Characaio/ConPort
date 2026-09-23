@@ -104,17 +104,20 @@ class Report{
 
             imagensAnexadas: json['ImagensAnexadas'] ?? json['imagensAnexadas'] ?? "null",
 
-            usuarioId: json["UsuarioId"] ?? json["usuarioId"] ?? "null",
+            usuarioId: json["UsuarioId"] ?? json["usuarioId"] ?? 0,
 
-            unidadeId: json["UnidadeId"] ?? json["unidadeId"] ?? "null",
+            unidadeId: json["UnidadeId"] ?? json["unidadeId"] ?? 0,
 
             usuarioNome: json["UsuarioNome"] ?? json["usuarioNome"] ?? "null",
 
-            unidadeNome: json["UnidadeNome"] ?? json["usuarioNome"] ?? "null",
+            unidadeNome: json["UnidadeNome"] ?? json["unidadeNome"] ?? "null",
 
-            supervisorNome: json["SupervisorNome"] ?? json["usuarioNome"] ?? "null",
+            supervisorNome: json["SupervisorNome"] ?? json["supervisorNome"] ?? "null",
 
-            dataDaAnalise: parseDate(json["DataDaAnalise"] ?? json["dataDaAnalise"])
-        );
+            dataDaAnalise:
+                  json["DataDaAnalise"] != null || json["dataDaAnalise"] != null
+                   ? parseDate(json["DataDaAnalise"] ?? json["dataDaAnalise"])
+                    : null,
+                     );
     }
 }

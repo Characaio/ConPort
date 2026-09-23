@@ -1,75 +1,145 @@
 import 'dart:convert';
-import 'package:conport/models/report.dart';
+
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:conport/models/report.dart';
 
+class ReportService {
+  final String UrlBase = 'http://localhost:8080';
 
-class ReportService{
-    final String UrlBase = "http://localhost:8080";
+  // ============================================================
+  // BUSCAR REPORT COMPLETO
+  // ============================================================
 
-    Future<Report> buscarReportCompleto(int id) async{
+  Future<Report> buscarReportCompleto(int id) async {
+    final url = Uri.parse(
+      '$UrlBase/reports/$id/completo',
+    );
 
-        final url = Uri.parse(
-            '$UrlBase/reports/$id/completo'
-        );
+    final response = await http.get(url);
 
-        final response = await http.get(url);
-        if (response.statusCode == 200) {
-            final json = jsonDecode(response.body);
-
-            return Report.fromJson(json);
-        }
-
-        if (response.statusCode == 404) {
-            throw Exception('Report não encontrado');
-        }
-        throw Exception('Erro ao Buscar Report: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      return Report.fromJson(
+        jsonDecode(response.body),
+      );
     }
 
-    Future<Report> buscarReportResumido(int id) async{
-
-        final url = Uri.parse(
-            '$UrlBase/reports/$id/resumido'
-        );
-
-        final response = await http.get(url);
-        if (response.statusCode == 200) {
-            final json = jsonDecode(response.body);
-
-            return Report.fromJson(json);
-        }
-
-        if (response.statusCode == 404) {
-            throw Exception('Report não encontrado');
-        }
-        throw Exception('Erro ao Buscar Report: ${response.statusCode}');
+    if (response.statusCode == 404) {
+      throw Exception('Report não encontrado');
     }
 
-    Future<Report> postarReport(int unidadeId, Report report) async{
+    throw Exception(
+      'Erro ao buscar Report: ${response.statusCode}',
+    );
+  }
 
-        final url = Uri.parse(
-            '$UrlBase/unidade/$unidadeId/criarReport'
-        );
+  // ============================================================
+  // BUSCAR REPORT RESUMIDO
+  // ============================================================
 
-        final request = http.MultipartRequest("Post", url);
+  Future<Report> buscarReportResumido(int id) async {
+    final url = Uri.parse(
+      '$UrlBase/reports/$id/resumido',
+    );
 
-        request.fields["Tipo"] = report.tipoDeIncidente.toString();
-        request.fields["Descricao"] = report.descricao;
-        request.fields["DataDoOcorrido"] = report.dataDoOcorrido.toIso8601String();
-        request.fields["UsuarioId"] = report.usuarioId.toString();
-        request.fields["UnidadeId"] = report.unidadeId.toString();
-        request.fields["StatusReport"] = report.statusReport.toString();
-        
-        final streamedResponse = await request.send();
+    final response = await http.get(url);
 
-        final response  = await http.Response.fromStream(streamedResponse);
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-            return Report.fromJson(jsonDecode(response.body));
-        }
-        throw Exception('Erro ao postar Report: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      return Report.fromJson(
+        jsonDecode(response.body),
+      );
     }
 
-    //Fazer a rota de analise depois, não utilizada para a demo
+    if (response.statusCode == 404) {
+      throw Exception('Report não encontrado');
+    }
 
+    throw Exception(
+      'Erro ao buscar Report: ${response.statusCode}',
+    );
+  }
+
+  // ============================================================
+  // CRIAR REPORT
+  // ============================================================
+
+  Future<Report> postarReport({
+    required int unidadeId,
+    required int usuarioId,
+    required String tipo,
+    required String descricao,
+    required DateTime dataDoOcorrido,
+    List<String> caminhosDasImagens = const [],
+  }) async {
+    final url = Uri.parse(
+      '$UrlBase/unidade/$unidadeId/criarReport',
+    );
+
+    final request = http.MultipartRequest(
+      'POST',
+      url,
+    );
+
+    // ----------------------------------------------------------
+    // DADOS DO REPORT
+    // ----------------------------------------------------------
+
+    final reportDTO = {
+      'Tipo': tipo,
+      'Descricao': descricao,
+      'ImagensAnexadas': [],
+      'DataDoOcorrido': dataDoOcorrido.toIso8601String(),
+      'UsuarioId': usuarioId,
+    };
+
+    request.files.add(
+      http.MultipartFile.fromString(
+        'reportDTO',
+        jsonEncode(reportDTO),
+        contentType: MediaType(
+          'application',
+          'json',
+        ),
+      ),
+    );
+
+    // ----------------------------------------------------------
+    // IMAGENS
+    // ----------------------------------------------------------
+
+    for (final caminho in caminhosDasImagens) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'imagens',
+          caminho,
+        ),
+      );
+    }
+
+    // ----------------------------------------------------------
+    // ENVIA PARA A API
+    // ----------------------------------------------------------
+
+    final streamedResponse = await request.send();
+
+    final response = await http.Response.fromStream(
+      streamedResponse,
+    );
+
+    // ----------------------------------------------------------
+    // RESPOSTA DA API
+    // ----------------------------------------------------------
+
+    if (response.statusCode == 200 ||
+        response.statusCode == 201) {
+      return Report.fromJson(
+        jsonDecode(response.body),
+      );
+    }
+
+    throw Exception(
+      'Erro ao postar Report: '
+      '${response.statusCode} - ${response.body}',
+    );
+  }
 }
-

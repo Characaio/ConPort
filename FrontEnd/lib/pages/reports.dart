@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:conport/widgets/topbar.dart';
+
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/services/reportService.dart';
 
 class Reports extends StatefulWidget {
   const Reports({super.key});
@@ -11,10 +12,19 @@ class Reports extends StatefulWidget {
 }
 
 class _ReportsState extends State<Reports> {
+  final ReportService _reportService = ReportService();
+
+  final TextEditingController localController =
+      TextEditingController();
+
+  final TextEditingController descricaoController =
+      TextEditingController();
+
   String opcaoSelecionada = '1';
 
-  final TextEditingController localController = TextEditingController();
-  final TextEditingController descricaoController = TextEditingController();
+  List<String> anexosSelecionados = [];
+
+  bool enviando = false;
 
   @override
   void dispose() {
@@ -23,282 +33,368 @@ class _ReportsState extends State<Reports> {
     super.dispose();
   }
 
+  // ============================================================
+  // ENVIAR REPORT
+  // ============================================================
+
+  Future<void> _enviarReport() async {
+    final descricao = descricaoController.text.trim();
+
+    if (descricao.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Informe uma descrição para o ocorrido',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final tipos = {
+      '1': 'Queimada',
+      '2': 'Animal Ferido',
+      '3': 'Desmatamento',
+      '4': 'Animal Exótico',
+      '5': 'Poluição',
+    };
+
+    final tipo = tipos[opcaoSelecionada];
+
+    if (tipo == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Selecione um tipo de ocorrência',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      enviando = true;
+    });
+
+    try {
+      final report = await _reportService.postarReport(
+        unidadeId: 1,
+        usuarioId: 1,
+        tipo: tipo,
+        descricao: descricao,
+        dataDoOcorrido: DateTime.now(),
+
+        // Por enquanto sem imagem.
+        // Depois podemos ligar o upload real.
+        caminhosDasImagens: [],
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Report ${report.id} enviado com sucesso!',
+          ),
+        ),
+      );
+
+      PageLoader.go(
+        context,
+        PageLoader.myreports,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Erro ao enviar report: $e',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          enviando = false;
+        });
+      }
+    }
+  }
+
+  // ============================================================
+  // TELA
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 8.0,
-              horizontal: 16.0,
-            ),
-            child: Topbar(
-              hasLogo: false,
-              hasReturn: true,
-              text: 'Criar Report',
-            ),
-          ),
+      backgroundColor: const Color(0xFFF5F5F5),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: 700,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ==================================================
+                  // TÍTULO
+                  // ==================================================
 
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 850),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: colors.primary, width: 1.5),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Cabeçalho
-                        Text(
-                          'Registrar ocorrência',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-
-                        const SizedBox(height: 6),
-
-                        Text(
-                          'Registre uma ocorrência ambiental observada em seu entorno.',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: colors.onSurfaceVariant),
-                        ),
-
-                        const SizedBox(height: 28),
-
-                        // Tipo
-                        _FieldTitle(
-                          icon: Symbols.category,
-                          title: 'Tipo do ocorrido',
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        DropdownButtonFormField<String>(
-                          initialValue: opcaoSelecionada,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: colors.surfaceContainerHighest,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: '1',
-                              child: Text('Queimada'),
-                            ),
-                            DropdownMenuItem(
-                              value: '2',
-                              child: Text('Animal ferido'),
-                            ),
-                            DropdownMenuItem(
-                              value: '3',
-                              child: Text('Desmatamento'),
-                            ),
-                            DropdownMenuItem(
-                              value: '4',
-                              child: Text('Animal exótico'),
-                            ),
-                            DropdownMenuItem(
-                              value: '5',
-                              child: Text('Poluição'),
-                            ),
-                          ],
-                          onChanged: (valor) {
-                            if (valor == null) return;
-
-                            setState(() {
-                              opcaoSelecionada = valor;
-                            });
-                          },
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Localização
-                        _FieldTitle(
-                          icon: Symbols.location_on,
-                          title: 'Localização',
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        TextField(
-                          controller: localController,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: colors.surfaceContainerHighest,
-                            hintText: 'Informe a localização do ocorrido',
-                            prefixIcon: const Icon(
-                              Symbols.location_on,
-                              fill: 1,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Descrição
-                        _FieldTitle(
-                          icon: Symbols.description,
-                          title: 'Descrição do ocorrido',
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        TextField(
-                          controller: descricaoController,
-                          minLines: 6,
-                          maxLines: 10,
-                          textCapitalization: TextCapitalization.sentences,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: colors.surfaceContainerHighest,
-                            hintText:
-                                'Descreva o que aconteceu, onde ocorreu e outras informações relevantes...',
-                            alignLabelWithHint: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Anexos
-                        _FieldTitle(icon: Symbols.attach_file, title: 'Anexos'),
-
-                        const SizedBox(height: 10),
-
-                        SizedBox(
-                          width: double.infinity,
-                          height: 120,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              // TODO: selecionar imagens/anexos
-                            },
-                            icon: const Icon(
-                              Symbols.add_photo_alternate,
-                              size: 28,
-                            ),
-                            label: const Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Adicionar anexos',
-                                  style: TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                                SizedBox(height: 4),
-                                Text('Adicione imagens da ocorrência'),
-                              ],
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: colors.primary,
-                              side: BorderSide(color: colors.outlineVariant),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 28),
-
-                        // Enviar
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              _enviarReport();
-                              PageLoader.go(context, PageLoader.myreports);
-                            },
-                            icon: const Icon(Symbols.send, fill: 1),
-                            label: const Text(
-                              'Enviar report',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: colors.primary,
-                              foregroundColor: colors.onPrimary,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                  const Text(
+                    'Novo Report',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
+
+                  const SizedBox(height: 8),
+
+                  const Text(
+                    'Informe os detalhes da ocorrência.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // ==================================================
+                  // TIPO
+                  // ==================================================
+
+                  const Text(
+                    'Tipo de ocorrência',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.grey.shade300,
+                      ),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: opcaoSelecionada,
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem(
+                            value: '1',
+                            child: Text('Queimada'),
+                          ),
+                          DropdownMenuItem(
+                            value: '2',
+                            child: Text('Animal ferido'),
+                          ),
+                          DropdownMenuItem(
+                            value: '3',
+                            child: Text('Desmatamento'),
+                          ),
+                          DropdownMenuItem(
+                            value: '4',
+                            child: Text('Animal exótico'),
+                          ),
+                          DropdownMenuItem(
+                            value: '5',
+                            child: Text('Poluição'),
+                          ),
+                        ],
+                        onChanged: enviando
+                            ? null
+                            : (value) {
+                                if (value == null) return;
+
+                                setState(() {
+                                  opcaoSelecionada = value;
+                                });
+                              },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ==================================================
+                  // LOCAL
+                  // ==================================================
+
+                  const Text(
+                    'Local da ocorrência',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  TextField(
+                    controller: localController,
+                    enabled: !enviando,
+                    decoration: InputDecoration(
+                      hintText: 'Informe o local da ocorrência',
+                      prefixIcon: const Icon(
+                        Symbols.location_on,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ==================================================
+                  // DESCRIÇÃO
+                  // ==================================================
+
+                  const Text(
+                    'Descrição',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  TextField(
+                    controller: descricaoController,
+                    enabled: !enviando,
+                    maxLines: 6,
+                    decoration: InputDecoration(
+                      hintText:
+                          'Descreva o que aconteceu...',
+                      alignLabelWithHint: true,
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ==================================================
+                  // ANEXOS
+                  // ==================================================
+
+                  const Text(
+                    'Anexos',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: enviando
+                          ? null
+                          : () {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Upload de imagens será conectado em seguida.',
+                                  ),
+                                ),
+                              );
+                            },
+                      icon: const Icon(
+                        Symbols.attach_file,
+                      ),
+                      label: const Text(
+                        'Adicionar anexos',
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 18,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // ==================================================
+                  // BOTÃO ENVIAR
+                  // ==================================================
+
+                  const SizedBox(height: 32),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed:
+                          enviando ? null : _enviarReport,
+                      icon: enviando
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(
+                              Symbols.send,
+                            ),
+                      label: Text(
+                        enviando
+                            ? 'Enviando...'
+                            : 'Enviar report',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 18,
+                        ),
+                        backgroundColor:
+                            const Color(0xFF2E7D32),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+                ],
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  void _enviarReport() {
-    final local = localController.text.trim();
-    final descricao = descricaoController.text.trim();
-
-    print('Tipo: $opcaoSelecionada');
-    print('Local: $local');
-    print('Descrição: $descricao');
-
-    // TODO:
-    // Fazer POST para a API.
-  }
-}
-
-class _FieldTitle extends StatelessWidget {
-  final IconData icon;
-  final String title;
-
-  const _FieldTitle({required this.icon, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Row(
-      children: [
-        Icon(icon, size: 21, color: colors.primary, fill: 1),
-
-        const SizedBox(width: 8),
-
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
-      ],
+      ),
     );
   }
 }
