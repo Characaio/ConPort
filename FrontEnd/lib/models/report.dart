@@ -15,11 +15,13 @@ enum StatusReport {
 
 class Report{
     final int id;
-    final TipoDeIncidente? tipoDeIncidente;
-    final StatusReport? statusReport;
-    final DateTime? dataDoOcorrido;
+    final TipoDeIncidente tipoDeIncidente;
+    final StatusReport statusReport;
+    final DateTime dataDoOcorrido;
     final String descricao;
     final List<String>? imagensAnexadas;
+    final int usuarioId;
+    final int unidadeId;
     final String usuarioNome;
     final String unidadeNome;
     final String? supervisorNome;
@@ -32,6 +34,8 @@ class Report{
         required this.dataDoOcorrido,
         required this.descricao,
         this.imagensAnexadas,
+        required this.usuarioId,
+        required this.unidadeId,
         required this.usuarioNome,
         required this.unidadeNome,
         this.supervisorNome,
@@ -39,7 +43,7 @@ class Report{
     });
 
     factory Report.fromJson(Map<String,dynamic> json){
-        TipoDeIncidente? parseTipoIncidente(String? value){
+        TipoDeIncidente parseTipoIncidente(String? value){
             switch(value?.toUpperCase()){
                 case 'QUEIMADA':
                     return TipoDeIncidente.QUEIMADA;
@@ -52,24 +56,35 @@ class Report{
                 case 'DESMATAMENTO':
                     return TipoDeIncidente.DESMATAMENTO;
             }
+            throw Exception("Alguma merda rolou rapaz");
         }
-        StatusReport? parseStatusReport(String? value){
+        StatusReport parseStatusReport(String? value){
             switch(value?.toUpperCase()){
                 case 'PENDNTE':
-                    return TipoDeIncidente.PENDNTE;
+                    return StatusReport.PENDNTE;
                 case 'SOB_AVALIACAO':
-                    return TipoDeIncidente.SOB_AVALIACAO;
+                    return StatusReport.SOB_AVALIACAO;
                 case 'NEGADO':
-                    return TipoDeIncidente.NEGADO;
+                    return StatusReport.NEGADO;
                 case 'EM_TRATAMENTO':
-                    return TipoDeIncidente.EM_TRATAMENTO;
+                    return StatusReport.EM_TRATAMENTO;
                 case 'TRATADO':
-                    return TipoDeIncidente.TRATADO;
+                    return StatusReport.TRATADO;
             }
+            throw Exception("Alguma merda rolou rapaz");
         }
-        DateTime? parseDate(dynamic value) {
-            if (value == null) return null;
-            return DateTime.tryParse(value.toString());
+        DateTime parseDate(dynamic value) {
+          if (value == null) {
+            throw FormatException('Data não informada');
+          }
+
+          final data = DateTime.tryParse(value.toString());
+
+          if (data == null) {
+            throw FormatException('Data inválida: $value');
+          }
+
+          return data;
         }
         return Report(
 
@@ -84,6 +99,10 @@ class Report{
             descricao: json['Descricao'] ?? json['descricao'] ?? "vazio games",
 
             imagensAnexadas: json['ImagensAnexadas'] ?? json['imagensAnexadas'] ?? "null",
+
+            usuarioId: json["UsuarioId"] ?? json["usuarioId"] ?? "null",
+
+            unidadeId: json["UnidadeId"] ?? json["unidadeId"] ?? "null",
 
             usuarioNome: json["UsuarioNome"] ?? json["usuarioNome"] ?? "null",
 
