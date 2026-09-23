@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/unidade.dart';
 
-class unidadeService{
+class UnidadeService{
 
     final String UrlBase = "http://localhost:8080";
 
@@ -65,7 +65,7 @@ class unidadeService{
             throw Exception("Unidade não encontrada");
         }
 
-        throw Exception("Erro ao buscar reports: ${response.statusCode}")
+        throw Exception("Erro ao buscar reports: ${response.statusCode}");
 
     }
 
