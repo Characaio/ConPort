@@ -23,9 +23,11 @@ public class UsuarioController {
 
     @PostMapping("/{id}/missoes/gerar")
     public ResponseEntity<?> GerarMissoes(@PathVariable Long id){
-
         return ResponseEntity.ok("oq caralhas é pra ter aqui seu fdp");
+    }
 
-
+    @GetMapping("{/{id}")
+    public ResponseEntity<?> PegarUsuario(@PathVariable Long id){
+        return ResponseEntity.ok(usuarioService.pegarUsuario(id));
     }
 }

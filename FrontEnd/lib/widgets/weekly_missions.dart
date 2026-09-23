@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:conport/models/mission.dart';
-import 'package:conport/services/mission_service.dart';
+import 'package:conport/services/missaoService.dart';
 
 class WeeklyMissions extends StatefulWidget {
   final int userLevel;
@@ -18,7 +18,7 @@ class WeeklyMissions extends StatefulWidget {
 }
 
 class _WeeklyMissionsState extends State<WeeklyMissions> {
-  final MissionService _service = MissionService();
+  final MissaoService _service = MissaoService();
 
   late Future<List<Mission>> _missionsFuture;
 
@@ -27,12 +27,12 @@ class _WeeklyMissionsState extends State<WeeklyMissions> {
   @override
   void initState() {
     super.initState();
-    _missionsFuture = _service.fetchWeeklyMissionsWithFallback();
+    _missionsFuture = _service.buscarMissoesDeUsuario([1,2,3]);
   }
 
   void _reload() {
     setState(() {
-      _missionsFuture = _service.fetchWeeklyMissionsWithFallback();
+      _missionsFuture = _service.buscarMissoesDeUsuario([1,2,3]);
     });
   }
 

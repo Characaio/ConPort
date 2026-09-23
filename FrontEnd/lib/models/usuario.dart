@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class Usuario{
     final int id;
     final String nome;
@@ -8,6 +10,11 @@ class Usuario{
     final int xp;
     final int level;
     final int moedas;
+    final int? reportsEnviados;
+    final int? reportsResolvidos;
+    final int? reportsRejeitados;
+    final int? reportsPendentes;
+    final int? missoesConcluidas
 
     const Usuario({
     required this.id,
@@ -19,7 +26,11 @@ class Usuario{
     required this.xp,
     required this.level,
     required this.moedas, 
-
+    this.reportsEnviados,
+    this.reportsResolvidos,
+    this.reportsRejeitados,
+    this.reportsPendentes,
+    this.missoesConcluidas
     });
 
     factory Usuario.fromJson(Map<String,dynamic> json){
@@ -40,8 +51,17 @@ class Usuario{
 
           level: json['Level'] ?? json['level'] ?? 'Level',
 
-          moedas: json['Moedas'] ?? json['moedas'] ?? 'Moedas'
+          moedas: json['Moedas'] ?? json['moedas'] ?? 'Moedas',
           
+          reportsEnviados: json['ReportsEnviados'] ?? json["reportsEnviados"] ?? 0,
+          
+          reportsResolvidos: json['ReportsResolvidos'] ?? json["reportsResolvidos"] ?? 0,
+
+          reportsRejeitados: json['ReportsRejeitados'] ?? json["reportsRejeitados"] ?? 0,
+
+          reportsPendentes: json['ReportsPendentes'] ?? json["reportsPendentes"] ?? 0,
+
+          missoesConcluidas: json["MissoesConcluidas"] ?? json["missoesConcluidas"] ?? 0
       );
 
     }

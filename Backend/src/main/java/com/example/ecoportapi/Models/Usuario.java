@@ -25,6 +25,12 @@ public class Usuario {
     @Column(name = "Senha", nullable = false)
     private String Senha;
 
+    @Column(name = "Estado", nullable = false)
+    private String Estado;
+
+    @Column(name = "Cidade", nullable = false)
+    private String Cidade;
+
     @Column(name = "Confiavel", nullable = false)
     private boolean Confiavel;
 
@@ -52,6 +58,12 @@ public class Usuario {
 
     public String getSenha() { return Senha; }
     public void setSenha(String senha) { Senha = senha; }
+
+    public String getEstado() { return Estado; }
+    public void setEstado(String estado) { Estado = estado; }
+
+    public String getCidade() { return Cidade; }
+    public void setCidade(String cidade) { Cidade = cidade; }
 
     public boolean isConfiavel() { return Confiavel; }
     public void setConfiavel(boolean confiavel) { Confiavel = confiavel; }
