@@ -2,7 +2,8 @@ import 'package:conport/core/navigation/page_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:conport/widgets/topbar.dart';
-
+import 'package:conport/services/unidadeService.dart';
+/*
 class ProfileData {
   final String username;
   final String estado;
@@ -48,12 +49,15 @@ final ProfileData profileMock = ProfileData(
   reportsRejeitados: 1,
   reportsPendentes: 1,
 );
+*/
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
+  
+  final UnidadeService unidadeService;
 
   @override
-  State<Profile> createState() => _ProfileState(perfil: profileMock);
+  State<Profile> createState() => _ProfileState(perfil: );
 }
 
 class _ProfileState extends State<Profile> {

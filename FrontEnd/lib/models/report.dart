@@ -19,6 +19,7 @@ class Report{
     final StatusReport statusReport;
     final DateTime dataDoOcorrido;
     final String descricao;
+    final String localizacao;
     final List<String>? imagensAnexadas;
     final int usuarioId;
     final int unidadeId;
@@ -33,6 +34,7 @@ class Report{
         required this.statusReport,
         required this.dataDoOcorrido,
         required this.descricao,
+        required this.localizacao,
         this.imagensAnexadas,
         required this.usuarioId,
         required this.unidadeId,
@@ -97,6 +99,8 @@ class Report{
             dataDoOcorrido: parseDate(json['DataDoOcorrido'] ?? json['dataDoOcorrido']),
             
             descricao: json['Descricao'] ?? json['descricao'] ?? "vazio games",
+
+            localizacao: json['Localizacao'] ?? json['localizacao'] ?? "fames",
 
             imagensAnexadas: json['ImagensAnexadas'] ?? json['imagensAnexadas'] ?? "null",
 
