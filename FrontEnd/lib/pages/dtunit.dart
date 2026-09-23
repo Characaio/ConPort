@@ -8,7 +8,7 @@ class UnidadeData {
   final String horario;
   final String telefone;
   final int incidentes;
-  final bool unidadePesquisa;
+  final String tipoUnidade;
 
   // Território
   final double areaTotal;
@@ -50,7 +50,7 @@ class UnidadeData {
     required this.horario,
     required this.telefone,
     required this.incidentes,
-    required this.unidadePesquisa,
+    required this.tipoUnidade,
 
     required this.areaTotal,
     required this.areaRegularizada,
@@ -89,7 +89,7 @@ final UnidadeData unidadeMock = UnidadeData(
   horario: 'Aberto até 21:00',
   telefone: '(19) 99999-9999',
   incidentes: 7,
-  unidadePesquisa: true,
+  tipoUnidade: "Unidade de Pesquisa",
 
   // Território
   areaTotal: 67,
@@ -242,9 +242,7 @@ class UnidadeDetalhes extends StatelessWidget {
 
                         _Indicator(
                           icon: Symbols.local_library,
-                          text: unidade.unidadePesquisa
-                              ? 'Unidade de Pesquisa'
-                              : 'Sem pesquisa',
+                          text: unidade.tipoUnidade,
                         ),
                       ],
                     ),

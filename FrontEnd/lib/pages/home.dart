@@ -6,14 +6,59 @@ import 'package:conport/widgets/unidadeindicador.dart';
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:conport/widgets/weekly_missions.dart';
 
+class HomeData {
+  final String nome;
+  final String horario;
+  final String telefone;
+  final double integridade;
+  final double conectividadeEcologica;
+  final String fiscalizacao;
+  final String diversidade;
+  final String poluicao;
+  final String preservacao;
+  final int incidentes;
+  final String tipoUnidade;
+
+  HomeData({
+    required this.nome,
+    required this.horario,
+    required this.telefone,
+    required this.integridade,
+    required this.conectividadeEcologica,
+    required this.fiscalizacao,
+    required this.diversidade,
+    required this.poluicao,
+    required this.preservacao,
+    required this.incidentes,
+    required this.tipoUnidade,
+  });
+}
+
+final HomeData homeMock = HomeData(
+  nome: "Unidade de Conservação X",
+  horario: "Aberto até às 21:00",
+  telefone: "(19) 99999-9999",
+  integridade: 67.5,
+  conectividadeEcologica: 42,
+  fiscalizacao: "Alta",
+  diversidade: "Alta",
+  poluicao: "Baixa",
+  preservacao: "Alta",
+  incidentes: 7,
+  tipoUnidade: "Unidade de Pesquisa",
+);
+
 class Home extends StatefulWidget {
   const Home({super.key});
 
   @override
-  State<Home> createState() => _HomeState();
+  State<Home> createState() => _HomeState(unidade: homeMock);
 }
 
 class _HomeState extends State<Home> {
+  final HomeData unidade;
+
+  _HomeState({required this.unidade});
   bool _missionsOpen = false;
 
   @override
@@ -79,23 +124,25 @@ class _HomeState extends State<Home> {
                                   children: [
                                     UnidadeIndicador(
                                       simbolo: Symbols.explore,
-                                      texto: 'Nome',
+                                      texto: unidade.nome,
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.schedule,
-                                      texto: 'Aberto até às 00:00',
+                                      texto: unidade.horario,
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.call,
-                                      texto: '(99) 99999-9999',
+                                      texto: unidade.telefone,
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.heart_check,
-                                      texto: 'Integridade: 00%',
+                                      texto:
+                                          "Integridade: ${unidade.integridade}%",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.sync_alt,
-                                      texto: 'Conectividade Ecológica: 00%',
+                                      texto:
+                                          "Conectividade Ecológica: ${unidade.conectividadeEcologica}%",
                                     ),
                                   ],
                                 ),
@@ -108,27 +155,31 @@ class _HomeState extends State<Home> {
                                   children: [
                                     UnidadeIndicador(
                                       simbolo: Symbols.siren,
-                                      texto: 'Fiscalização: Alta',
+                                      texto:
+                                          "Fiscalização ${unidade.fiscalizacao}",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.nest_eco_leaf,
-                                      texto: 'Diversidade: Alta',
+                                      texto:
+                                          "Diversidade: ${unidade.diversidade}",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.cloud_alert,
-                                      texto: 'Poluição: Baixa',
+                                      texto: "Poluição: ${unidade.poluicao}",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.forest,
-                                      texto: 'Preservação: Alta',
+                                      texto:
+                                          "Preservação: ${unidade.preservacao}",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.emergency_home,
-                                      texto: 'Incidentes: 0',
+                                      texto:
+                                          "Incidentes: ${unidade.incidentes}",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.local_library,
-                                      texto: 'Unidade de Pesquisa',
+                                      texto: unidade.tipoUnidade,
                                     ),
                                   ],
                                 ),
