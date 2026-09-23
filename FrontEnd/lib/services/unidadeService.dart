@@ -10,7 +10,7 @@ class UnidadeService{
 
     Future<Unidade> buscarStatusPrincipal(int id) async{
         final url = Uri.parse(
-            '${UrlBase}/unidade/$id/statusPrincipal'
+            '${UrlBase}/unidade/$id/statusGeral'
         );
 
         final response = await http.get(url);

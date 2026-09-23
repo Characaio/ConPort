@@ -2,7 +2,9 @@ package com.example.ecoportapi.DTOs.Response;
 
 
 import com.example.ecoportapi.Models.Enums.TipoDeUnidade;
-
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.time.LocalTime;
 
 public record UnidadeStatusGeralDTO(
@@ -73,15 +75,22 @@ public record UnidadeStatusGeralDTO(
                 base.QualidadeSolo(),
                 base.GestaoResiduos(),
 
-                indicadores.IntegridadeTerritorial(),
+                roundWithBigDecimal(indicadores.IntegridadeTerritorial(),2),
                 indicadores.CorredoresNecessarios(),
-                indicadores.ConectividadeEcologica(),
-                indicadores.QualidadeAmbiental(),
-                indicadores.PreservacaoLocal(),
-                indicadores.Fiscalizacao(),
-                indicadores.Biodiversidade()
+                roundWithBigDecimal(indicadores.ConectividadeEcologica(),2),
+                roundWithBigDecimal(indicadores.QualidadeAmbiental(),2),
+                roundWithBigDecimal(indicadores.PreservacaoLocal(),2),
+                roundWithBigDecimal(indicadores.Fiscalizacao(),2),
+                roundWithBigDecimal(indicadores.Biodiversidade(),2)
         );
 
     }
-
+    public static double roundWithBigDecimal(double value, int places) {
+        if (places < 0) {
+            throw new IllegalArgumentException("Decimal places must be non-negative.");
+        }
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP); // HALF_UP is standard rounding
+        return bd.doubleValue();
+    }
 }

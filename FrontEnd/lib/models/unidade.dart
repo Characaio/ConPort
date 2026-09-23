@@ -17,8 +17,8 @@ class Unidade {
   final String bioma;
   final String telefone;
 
-  final DateTime? horaDeAbertura;
-  final DateTime? horaDeFechamento;
+  final String? horaDeAbertura;
+  final String? horaDeFechamento;
 
   final TipoDeUnidade tipoDaUnidade;
 
@@ -37,6 +37,7 @@ class Unidade {
   final double qualidadeSolo;
   final double gestaoResiduos;
 
+  final int? corredoresExistentes;
   final int? quantReports;
   final double? integridadeTerritorial;
   final int? corredoresNecessarios;
@@ -45,6 +46,8 @@ class Unidade {
   final double? preservacaoLocal;
   final double? fiscalizaocao;
   final double? biodiversidade;
+  final String? fiscalizacaoEmString;
+  final String? biodiversidadeEmString;
 
   const Unidade({
     required this.id,
@@ -73,6 +76,8 @@ class Unidade {
     required this.qualidadeSolo,
     required this.gestaoResiduos,
 
+
+    this.corredoresExistentes,
     this.quantReports,
     this.integridadeTerritorial,
     this.corredoresNecessarios,
@@ -81,25 +86,25 @@ class Unidade {
     this.preservacaoLocal,
     this.fiscalizaocao,
     this.biodiversidade,
+    this.fiscalizacaoEmString,
+    this.biodiversidadeEmString
   });
 
   factory Unidade.fromJson(Map<String, dynamic> json) {
     TipoDeUnidade parseTipo(String? value) {
       switch (value?.toUpperCase()) {
-        case 'PARQUE NACIONAL':
+        case 'PARQUE_NACIONAL':
           return TipoDeUnidade.PARQUE_NACIONAL;
 
-        case 'RESERVA BIOLOGICA':
+        case 'RESERVA_BIOLOGICA':
           return TipoDeUnidade.RESERVA_BIOLOGICA;
 
-        case 'MONUMENTO NATURAL':
+        case 'MONUMENTO_NATURAL':
           return TipoDeUnidade.MONUMENTO_NATURAL;
 
         case 'FLONA':
           return TipoDeUnidade.FLONA;
-
         case 'RESERVA_EXTRATIVISTA':
-        case 'RESERVA EXTRATIVISTA':
           return TipoDeUnidade.RESERVA_EXTRATIVISTA;
 
         case 'RPPN':
@@ -110,9 +115,10 @@ class Unidade {
       }
     }
 
-    DateTime? parseDate(dynamic value) {
+    String? parseDate(dynamic value) {
       if (value == null) return null;
-      return DateTime.tryParse(value.toString());
+      final time = value.toString();
+      return time.substring(0,5);
     }
 
     double parseDouble(dynamic value) {
@@ -160,7 +166,19 @@ class Unidade {
 
       return null;
     }
+    
 
+    String? doubleParaString(double? porcentagem){
+      if (porcentagem == null) return null;
+      if (porcentagem >= 0 && porcentagem <= 33.3){
+        return "Baixo";
+      } else if (porcentagem > 33.3 && porcentagem <= 66.6){
+        return "Medio";
+      } else if (porcentagem > 66.6 && porcentagem <=100){
+        return "Alto";
+      }
+      return "Indefinido";
+    }
     int? parseNullableInt(dynamic value) {
       if (value == null) return null;
 
@@ -178,6 +196,7 @@ class Unidade {
 
       return null;
     }
+
 
     return Unidade(
       id: parseInt(json['Id'] ?? json['id']),
@@ -198,7 +217,7 @@ class Unidade {
         json['HoraDeFechamento'] ?? json['horaDeFechamento'],
       ),
 
-      tipoDaUnidade: parseTipo(json['TipoDaUnidade'] ?? json['tipoDaUnidade']),
+      tipoDaUnidade: parseTipo(json['TipoDeUnidade'] ?? json['tipoDeUnidade']),
 
       areaTotal: parseDouble(json['AreaTotal'] ?? json['areaTotal']),
 
@@ -278,6 +297,18 @@ class Unidade {
       biodiversidade: parseNullableDouble(
         json['Biodiversidade'] ?? json['biodiversidade'],
       ),
+      fiscalizacaoEmString: doubleParaString(parseNullableDouble(
+        json['Fiscalizacao'] ?? json['fiscalizacao'],
+      )),
+      biodiversidadeEmString: doubleParaString(parseNullableDouble(
+        json['Biodiversidade'] ?? json['biodiversidade'],
+      )),
+      corredoresExistentes: parseNullableInt(
+        json["CorredoresNecessarios"] ?? json["corredoresNecessarios"]
+      )
     );
+
+
+
   }
 }

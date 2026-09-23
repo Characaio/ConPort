@@ -119,9 +119,7 @@ class _HomeState extends State<Home> {
                                     UnidadeIndicador(
                                       simbolo: Symbols.schedule,
                                       texto:
-                                          unidade!.horaDeFechamento
-                                              ?.toIso8601String() ??
-                                          "Não informado",
+                                          "Aberto até: ${unidade!.horaDeFechamento}",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.call,
@@ -149,22 +147,22 @@ class _HomeState extends State<Home> {
                                     UnidadeIndicador(
                                       simbolo: Symbols.siren,
                                       texto:
-                                          "Fiscalização ${unidade!.fiscalizaocao}",
+                                          "Fiscalização ${unidade!.fiscalizacaoEmString}",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.nest_eco_leaf,
                                       texto:
-                                          "Diversidade: ${unidade!.biodiversidade}",
+                                          "Diversidade: ${unidade!.biodiversidadeEmString}",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.cloud_alert,
                                       texto:
-                                          "Poluição: ${unidade!.qualidadeAmbiental}",
+                                          "Qualidade Ambiental: ${unidade!.qualidadeAmbiental}%",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.forest,
                                       texto:
-                                          "Preservação: ${unidade!.preservacaoLocal}",
+                                          "Preservação: ${unidade!.preservacaoLocal}%",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.emergency_home,

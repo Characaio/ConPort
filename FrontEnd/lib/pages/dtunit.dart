@@ -1,156 +1,78 @@
+import 'package:conport/services/unidadeService.dart';
+import 'package:conport/services/usuarioService.dart';
+import 'package:conport/models/unidade.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:conport/widgets/topbar.dart';
 
-class UnidadeData {
-  // Dados básicos
-  final String nome;
-  final String horario;
-  final String telefone;
-  final int incidentes;
-  final String tipoUnidade;
 
-  // Território
-  final double areaTotal;
-  final double areaRegularizada;
-  final double areaMonitorada;
-  final double integridadeTerritorial;
+class UnidadeDetalhes extends StatefulWidget {
+  final int unidadeId;
+  final UnidadeService unidadeService;
 
-  // Preservação
-  final double areaPreservada;
-  final double preservacaoLocal;
-
-  // Fiscalização
-  final int pontosMonitorados;
-  final int pontosPrevistos;
-  final double fiscalizacao;
-
-  // Conectividade ecológica
-  final double areaBasePorCorredor;
-  final int quantCorredores;
-  final int corredoresNecessarios;
-  final double conectividadeEcologica;
-
-  // Biodiversidade
-  final int quantEspecies;
-  final int quantEspeciesEsperadas;
-  final double biodiversidade;
-
-  // Qualidade ambiental
-  final double qualidadeAgua;
-  final double qualidadeSolo;
-  final double gestaoResiduos;
-  final double qualidadeAmbiental;
-
-  // Fotos
-  final List<String> fotos;
-
-  const UnidadeData({
-    required this.nome,
-    required this.horario,
-    required this.telefone,
-    required this.incidentes,
-    required this.tipoUnidade,
-
-    required this.areaTotal,
-    required this.areaRegularizada,
-    required this.areaMonitorada,
-    required this.integridadeTerritorial,
-
-    required this.areaPreservada,
-    required this.preservacaoLocal,
-
-    required this.pontosMonitorados,
-    required this.pontosPrevistos,
-    required this.fiscalizacao,
-
-    required this.areaBasePorCorredor,
-    required this.quantCorredores,
-    required this.corredoresNecessarios,
-    required this.conectividadeEcologica,
-
-    required this.quantEspecies,
-    required this.quantEspeciesEsperadas,
-    required this.biodiversidade,
-
-    required this.qualidadeAgua,
-    required this.qualidadeSolo,
-    required this.gestaoResiduos,
-    required this.qualidadeAmbiental,
-
-    required this.fotos,
+  const UnidadeDetalhes({
+    super.key,
+    required this.unidadeId,
+    required this.unidadeService,
   });
+
+  @override
+  State<UnidadeDetalhes> createState() => _UnidadeDetalhesState();
 }
 
-// Mock
-final UnidadeData unidadeMock = UnidadeData(
-  nome: 'Unidade de Conservação X',
+class _UnidadeDetalhesState extends State<UnidadeDetalhes> {
+  Unidade? unidade;
 
-  horario: 'Aberto até 21:00',
-  telefone: '(19) 99999-9999',
-  incidentes: 7,
-  tipoUnidade: "Unidade de Pesquisa",
+  bool carregando = true;
+  String? erro;
 
-  // Território
-  areaTotal: 67,
-  areaRegularizada: 64,
-  areaMonitorada: 42,
-  integridadeTerritorial: 67,
+  @override
+  void initState() {
+    super.initState();
 
-  // Preservação
-  areaPreservada: 40,
-  preservacaoLocal: 59,
+    _carregarUnidade();
+  }
 
-  // Fiscalização
-  pontosMonitorados: 8,
-  pontosPrevistos: 12,
-  fiscalizacao: 75,
+  Future<void> _carregarUnidade() async {
+    final dados = await widget.unidadeService.buscarStatusGeral(
+      widget.unidadeId,
+    );
 
-  // Conectividade
-  areaBasePorCorredor: 10,
-  quantCorredores: 3,
-  corredoresNecessarios: 5,
-  conectividadeEcologica: 69,
+    if (!mounted) return;
 
-  // Biodiversidade
-  quantEspecies: 82,
-  quantEspeciesEsperadas: 100,
-  biodiversidade: 82,
-
-  // Qualidade ambiental
-  qualidadeAgua: 78,
-  qualidadeSolo: 84,
-  gestaoResiduos: 71,
-  qualidadeAmbiental: 78,
-
-  fotos: [
-    'https://images.unsplash.com/photo-1448375240586-882707db888b',
-    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e',
-    'https://images.unsplash.com/photo-1511497584788-876760111969',
-  ],
-);
-
-// Página
-class UnidadeDetalhes extends StatelessWidget {
-  final UnidadeData unidade;
-
-  const UnidadeDetalhes({super.key, required this.unidade});
+    setState(() {
+      unidade = dados;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
+    if (unidade == null) {
+      return const Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 28,
+            vertical: 16,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Topbar(
                 hasLogo: false,
                 hasReturn: true,
-                text: "Detalhes da unidade",
+                text: 'Detalhes da unidade',
               ),
 
               const SizedBox(height: 20),
@@ -158,8 +80,9 @@ class UnidadeDetalhes extends StatelessWidget {
               // =================================================
               // NOME DA UNIDADE
               // =================================================
+
               Text(
-                unidade.nome,
+                unidade!.nome,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w400,
@@ -171,13 +94,21 @@ class UnidadeDetalhes extends StatelessWidget {
               // =================================================
               // FOTOS
               // =================================================
-              _PhotoGallery(fotos: unidade.fotos),
+
+              _PhotoGallery(
+                fotos: [
+                  'https://images.unsplash.com/photo-1448375240586-882707db888b',
+                   'https://images.unsplash.com/photo-1441974231531-c6227db76b6e',
+                    'https://images.unsplash.com/photo-1511497584788-876760111969',
+                 ],
+              ),
 
               const SizedBox(height: 14),
 
               // =================================================
               // INDICADORES PRINCIPAIS
               // =================================================
+
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -186,27 +117,30 @@ class UnidadeDetalhes extends StatelessWidget {
                       children: [
                         _Indicator(
                           icon: Symbols.schedule,
-                          text: unidade.horario,
+                          text: unidade!.horaDeFechamento ?? "não informado",
                         ),
 
-                        _Indicator(icon: Symbols.call, text: unidade.telefone),
+                        _Indicator(
+                          icon: Symbols.call,
+                          text: unidade!.telefone,
+                        ),
 
                         _Indicator(
                           icon: Symbols.heart_check,
                           text:
-                              'Integridade: ${_percent(unidade.integridadeTerritorial)}',
+                              'Integridade: ${unidade!.integridadeTerritorial}%',
                         ),
 
                         _Indicator(
                           icon: Symbols.sync_alt,
                           text:
-                              'Conectividade Ecológica: ${_percent(unidade.conectividadeEcologica)}',
+                              'Conectividade Ecológica: ${unidade!.conectividadeEcologica}%',
                         ),
 
                         _Indicator(
                           icon: Symbols.siren,
                           text:
-                              'Fiscalização: ${_quality(unidade.fiscalizacao)}',
+                              'Fiscalização: ${unidade!.fiscalizaocao}%',
                         ),
                       ],
                     ),
@@ -220,29 +154,30 @@ class UnidadeDetalhes extends StatelessWidget {
                         _Indicator(
                           icon: Symbols.nest_eco_leaf,
                           text:
-                              'Diversidade: ${_quality(unidade.biodiversidade)}',
+                              'Diversidade: ${unidade!.biodiversidade}%',
                         ),
 
                         _Indicator(
                           icon: Symbols.cloud_alert,
                           text:
-                              'Qualidade Ambiental: ${_quality(unidade.qualidadeAmbiental)}',
+                              'Qualidade Ambiental: ${unidade!.qualidadeAmbiental}%',
                         ),
 
                         _Indicator(
                           icon: Symbols.forest,
                           text:
-                              'Preservação: ${_quality(unidade.preservacaoLocal)}',
+                              'Preservação: ${unidade!.preservacaoLocal}%',
                         ),
 
                         _Indicator(
                           icon: Symbols.emergency_home,
-                          text: 'Incidentes: ${unidade.incidentes}',
+                          text:
+                              'Incidentes: ${unidade!.quantReports}',
                         ),
 
                         _Indicator(
                           icon: Symbols.local_library,
-                          text: unidade.tipoUnidade,
+                          text: unidade!.tipoDaUnidade.toString(),
                         ),
                       ],
                     ),
@@ -255,19 +190,29 @@ class UnidadeDetalhes extends StatelessWidget {
               // =================================================
               // DIVISOR
               // =================================================
+
               Row(
                 children: [
-                  const Expanded(child: Divider()),
+                  const Expanded(
+                    child: Divider(),
+                  ),
 
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                    ),
                     child: Text(
                       'Todos os Dados',
-                      style: TextStyle(color: colors.onSurface, fontSize: 14),
+                      style: TextStyle(
+                        color: colors.onSurface,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
 
-                  const Expanded(child: Divider()),
+                  const Expanded(
+                    child: Divider(),
+                  ),
                 ],
               ),
 
@@ -276,22 +221,26 @@ class UnidadeDetalhes extends StatelessWidget {
               // =================================================
               // TERRITÓRIO
               // =================================================
+
               _DataSection(
                 title: 'Território',
                 icon: Symbols.terrain,
                 children: [
-                  _DataRow('Área total', '${_number(unidade.areaTotal)}km²'),
+                  _DataRow(
+                    'Área total',
+                    '${_number(unidade!.areaTotal)}km²',
+                  ),
                   _DataRow(
                     'Área regularizada',
-                    '${_number(unidade.areaRegularizada)}km²',
+                    '${_number(unidade!.areaRegularizada)}km²',
                   ),
                   _DataRow(
                     'Área monitorada',
-                    '${_number(unidade.areaMonitorada)}km²',
+                    '${_number(unidade!.areaMonitorada)}km²',
                   ),
                   _DataRow(
                     'Integridade territorial',
-                    _percent(unidade.integridadeTerritorial),
+                    _percent(unidade!.integridadeTerritorial),
                   ),
                 ],
               ),
@@ -299,17 +248,18 @@ class UnidadeDetalhes extends StatelessWidget {
               // =================================================
               // PRESERVAÇÃO
               // =================================================
+
               _DataSection(
                 title: 'Preservação',
                 icon: Symbols.forest,
                 children: [
                   _DataRow(
                     'Área preservada',
-                    '${_number(unidade.areaPreservada)}km²',
+                    '${_number(unidade!.areaPreservada)}km²',
                   ),
                   _DataRow(
                     'Preservação local',
-                    _percent(unidade.preservacaoLocal),
+                    _percent(unidade!.preservacaoLocal),
                   ),
                 ],
               ),
@@ -317,41 +267,49 @@ class UnidadeDetalhes extends StatelessWidget {
               // =================================================
               // FISCALIZAÇÃO
               // =================================================
+
               _DataSection(
                 title: 'Fiscalização',
                 icon: Symbols.siren,
                 children: [
                   _DataRow(
                     'Pontos monitorados',
-                    '${unidade.pontosMonitorados}',
+                    '${unidade!.pontosMonitorados}',
                   ),
-                  _DataRow('Pontos previstos', '${unidade.pontosPrevistos}'),
-                  _DataRow('Fiscalização', _percent(unidade.fiscalizacao)),
+                  _DataRow(
+                    'Pontos previstos',
+                    '${unidade!.pontosPrevistos}',
+                  ),
+                  _DataRow(
+                    'Fiscalização',
+                    _percent(unidade!.fiscalizaocao),
+                  ),
                 ],
               ),
 
               // =================================================
               // CONECTIVIDADE
               // =================================================
+
               _DataSection(
                 title: 'Conectividade Ecológica',
                 icon: Symbols.sync_alt,
                 children: [
                   _DataRow(
                     'Corredores necessários',
-                    '${unidade.corredoresNecessarios}',
+                    '${unidade!.corredoresNecessarios}',
                   ),
                   _DataRow(
                     'Quantidade de corredores',
-                    '${unidade.quantCorredores}',
+                    '${unidade!.corredoresExistentes}',
                   ),
                   _DataRow(
                     'Área por corredor',
-                    '${_number(unidade.areaBasePorCorredor)}km²',
+                    '${_number(unidade!.areaBasePorCorredor)}km²',
                   ),
                   _DataRow(
                     'Conectividade ecológica',
-                    _percent(unidade.conectividadeEcologica),
+                    _percent(unidade!.conectividadeEcologica),
                   ),
                 ],
               ),
@@ -359,44 +317,49 @@ class UnidadeDetalhes extends StatelessWidget {
               // =================================================
               // BIODIVERSIDADE
               // =================================================
+
               _DataSection(
                 title: 'Biodiversidade',
                 icon: Symbols.nest_eco_leaf,
                 children: [
                   _DataRow(
                     'Quantidade de espécies',
-                    '${unidade.quantEspecies}',
+                    '${unidade!.quantidadeEspecies}',
                   ),
                   _DataRow(
                     'Espécies esperadas',
-                    '${unidade.quantEspeciesEsperadas}',
+                    '${unidade!.quantidadeEspeciesEsperadas}',
                   ),
-                  _DataRow('Biodiversidade', _percent(unidade.biodiversidade)),
+                  _DataRow(
+                    'Biodiversidade',
+                    _percent(unidade!.biodiversidade),
+                  ),
                 ],
               ),
 
               // =================================================
               // QUALIDADE AMBIENTAL
               // =================================================
+
               _DataSection(
                 title: 'Qualidade Ambiental',
                 icon: Symbols.eco,
                 children: [
                   _DataRow(
                     'Qualidade da água',
-                    _percent(unidade.qualidadeAgua),
+                    _percent(unidade!.qualidaAgua),
                   ),
                   _DataRow(
                     'Qualidade do solo',
-                    _percent(unidade.qualidadeSolo),
+                    _percent(unidade!.qualidadeSolo),
                   ),
                   _DataRow(
                     'Gestão de resíduos',
-                    _percent(unidade.gestaoResiduos),
+                    _percent(unidade!.gestaoResiduos),
                   ),
                   _DataRow(
                     'Qualidade ambiental',
-                    _percent(unidade.qualidadeAmbiental),
+                    _percent(unidade!.qualidadeAmbiental),
                   ),
                 ],
               ),
@@ -417,7 +380,9 @@ class UnidadeDetalhes extends StatelessWidget {
 class _PhotoGallery extends StatelessWidget {
   final List<String> fotos;
 
-  const _PhotoGallery({required this.fotos});
+  const _PhotoGallery({
+    required this.fotos,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -430,7 +395,12 @@ class _PhotoGallery extends StatelessWidget {
           color: colors.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Center(child: Icon(Symbols.image, size: 48)),
+        child: const Center(
+          child: Icon(
+            Symbols.image,
+            size: 48,
+          ),
+        ),
       );
     }
 
@@ -438,7 +408,6 @@ class _PhotoGallery extends StatelessWidget {
       height: 180,
       child: Row(
         children: [
-          // Foto principal
           Expanded(
             flex: 5,
             child: _Photo(
@@ -452,14 +421,15 @@ class _PhotoGallery extends StatelessWidget {
 
           const SizedBox(width: 6),
 
-          // Fotos secundárias
           Expanded(
             flex: 1,
             child: Column(
               children: [
                 Expanded(
                   child: _Photo(
-                    url: fotos.length > 1 ? fotos[1] : fotos[0],
+                    url: fotos.length > 1
+                        ? fotos[1]
+                        : fotos[0],
                     radius: const BorderRadius.only(
                       topRight: Radius.circular(16),
                     ),
@@ -487,11 +457,18 @@ class _PhotoGallery extends StatelessWidget {
   }
 }
 
+// ============================================================
+// FOTO
+// ============================================================
+
 class _Photo extends StatelessWidget {
   final String url;
   final BorderRadius radius;
 
-  const _Photo({required this.url, required this.radius});
+  const _Photo({
+    required this.url,
+    required this.radius,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -506,7 +483,6 @@ class _Photo extends StatelessWidget {
         child: Image.network(
           url,
           fit: BoxFit.cover,
-
           errorBuilder: (context, error, stackTrace) {
             return Center(
               child: Icon(
@@ -530,7 +506,10 @@ class _Indicator extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _Indicator({required this.icon, required this.text});
+  const _Indicator({
+    required this.icon,
+    required this.text,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -539,11 +518,21 @@ class _Indicator extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 22),
+          Icon(
+            icon,
+            size: 22,
+          ),
 
           const SizedBox(width: 8),
 
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 15))),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 15,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -568,13 +557,19 @@ class _DataSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 10, bottom: 6),
+      padding: const EdgeInsets.only(
+        top: 10,
+        bottom: 6,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 21),
+              Icon(
+                icon,
+                size: 21,
+              ),
 
               const SizedBox(width: 7),
 
@@ -611,13 +606,21 @@ class _DataRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _DataRow(this.label, this.value);
+  const _DataRow(
+    this.label,
+    this.value,
+  );
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
-      child: Text('$label: $value', style: const TextStyle(fontSize: 13.5)),
+      child: Text(
+        '$label: $value',
+        style: const TextStyle(
+          fontSize: 13.5,
+        ),
+      ),
     );
   }
 }
@@ -626,7 +629,8 @@ class _DataRow extends StatelessWidget {
 // FORMATADORES
 // ============================================================
 
-String _percent(double value) {
+String _percent(double? value) {
+  if (value == null) return "erro";
   return '${value.toStringAsFixed(0)}%';
 }
 
@@ -649,3 +653,4 @@ String _quality(double value) {
 
   return 'Baixa';
 }
+

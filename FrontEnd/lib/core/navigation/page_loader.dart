@@ -33,7 +33,7 @@ class PageLoader {
 
       case unit:
         return MaterialPageRoute(
-          builder: (_) => UnidadeDetalhes(unidade: unidadeMock),
+          builder: (_) => UnidadeDetalhes(unidadeId:1, unidadeService: UnidadeService()),
         );
 
       case profile:
