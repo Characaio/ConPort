@@ -36,17 +36,20 @@ public class UsuarioService {
                 StatusReport.PENDENTE
         ));
 
-        Integer missoesConcluidas = missaoRepository.countMissoesConcluidas(usuarioId, StatusMissao.CONCLUIDA);
+        Integer missoesConcluidas = missaoRepository.countMissoesConcluidas(
+                usuarioId,
+                StatusMissao.CONCLUIDA);
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(
+
                         () -> new UsuarioNaoEncontrado("Usuario não encontrado")
                 );
 
         return new UsuarioDTO(
                 usuario,
                 reportsEnviados,reportsResolvidos,
-                reportsRejeitados,reportsPendentes);
+                reportsRejeitados,reportsPendentes, missoesConcluidas);
 
     }
 }

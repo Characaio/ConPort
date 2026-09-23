@@ -1,3 +1,5 @@
+import 'package:conport/services/usuarioService.dart';
+import 'package:conport/services/unidadeService.dart';
 import 'package:flutter/material.dart';
 
 import 'package:conport/pages/home.dart';
@@ -18,7 +20,7 @@ class PageLoader {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case home:
-        return MaterialPageRoute(builder: (_) => const Home());
+        return MaterialPageRoute(builder: (_) => const Home(unidadeId: 1, unidadeService: UnidadeService()));
 
       case reports:
         return MaterialPageRoute(builder: (_) => const Reports());
@@ -35,10 +37,10 @@ class PageLoader {
         );
 
       case profile:
-        return MaterialPageRoute(builder: (_) => const Profile());
+        return MaterialPageRoute(builder: (_) => const Profile(usuarioId: 2, usuarioService: UsuarioService()));
 
       default:
-        return MaterialPageRoute(builder: (_) => const Home());
+        return MaterialPageRoute(builder: (_) => const Home(unidadeId: 1, unidadeService: UnidadeService()));
     }
   }
 

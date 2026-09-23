@@ -38,6 +38,7 @@ class Unidade{
     final double qualidadeSolo;
     final double gestaoResiduos;
     
+    final int? quantReports;
     final double? integridadeTerritorial;
     final int? corredoresNecessarios;
     final double? conectividadeEcologica;
@@ -73,6 +74,7 @@ class Unidade{
     required this.qualidadeSolo,
     required this.gestaoResiduos,
 
+    this.quantReports,
     this.integridadeTerritorial,
     this.corredoresNecessarios,
     this.conectividadeEcologica,
@@ -149,6 +151,8 @@ class Unidade{
             qualidadeSolo: json['QualidadeSolo'] ?? json['qualidadeSolo'] ?? 'Qualidade Solo',
 
             gestaoResiduos: json['GestaoResiduos'] ?? json['gestaoResiduos'] ?? 'Gestao Residuos',
+
+            quantReports: json["QuantReports"] ?? json["quantReports"] ?? 0,
 
             integridadeTerritorial: json['IntegridadeTerritorial'] ?? json['integridadeTerritorial'] ?? 'Integridade Territorial',
 

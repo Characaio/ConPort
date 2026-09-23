@@ -11,15 +11,15 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query("""
         SELECT COUNT(r)
         FROM Report r
-        WHERE r.usuario.id = :usuarioId
+        WHERE r.Usuario.Id = :usuarioId
     """)
     long countReportsEnviados(Long usuarioId);
 
     @Query("""
         SELECT COUNT(r)
         FROM Report r
-        WHERE r.usuario.id = :usuarioId
-        AND r.status = :status
+        WHERE r.Usuario.Id = :usuarioId
+        AND r.Status = :status
     """)
     long countReportsByStatus(Long usuarioId, StatusReport status);
 }

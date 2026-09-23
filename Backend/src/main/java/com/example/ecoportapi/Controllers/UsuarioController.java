@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("usuarios")
+@RequestMapping("/usuarios")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
@@ -26,7 +26,7 @@ public class UsuarioController {
         return ResponseEntity.ok("oq caralhas é pra ter aqui seu fdp");
     }
 
-    @GetMapping("{/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<?> PegarUsuario(@PathVariable Long id){
         return ResponseEntity.ok(usuarioService.pegarUsuario(id));
     }

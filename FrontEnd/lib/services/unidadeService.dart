@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import '../models/unidade.dart';
 
 class UnidadeService{
-
+    const UnidadeService();
     final String UrlBase = "http://localhost:8080";
 
     Future<Unidade> buscarStatusPrincipal(int id) async{

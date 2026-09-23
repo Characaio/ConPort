@@ -9,10 +9,10 @@ import org.springframework.data.jpa.repository.Query;
 public interface MissaoRepository extends JpaRepository<Missao,Long> {
 
     @Query("""
-        SELECT COUNT(r)
-        FROM Report r
-        WHERE r.usuario.id = :usuarioId
-        AND r.status = :statusMissao
+        SELECT COUNT(m)
+        FROM Missao m
+        WHERE m.Usuario.Id = :usuarioId
+        AND m.StatusMissao = :statusMissao
     """)
     Integer countMissoesConcluidas(Long usuarioId, StatusMissao statusMissao);
 }

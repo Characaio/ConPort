@@ -1,8 +1,9 @@
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/models/usuario.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:conport/widgets/topbar.dart';
-import 'package:conport/services/unidadeService.dart';
+import 'package:conport/services/usuarioService.dart';
 /*
 class ProfileData {
   final String username;
@@ -52,21 +53,51 @@ final ProfileData profileMock = ProfileData(
 */
 
 class Profile extends StatefulWidget {
-  const Profile({super.key});
+  const Profile({
+    super.key,
+    required this.usuarioService,
+    required this.usuarioId});
   
-  final UnidadeService unidadeService;
+  final UsuarioService usuarioService;
+  final int usuarioId;
 
   @override
-  State<Profile> createState() => _ProfileState(perfil: );
+  State<Profile> createState() => _ProfileState();
 }
 
 class _ProfileState extends State<Profile> {
-  final ProfileData perfil;
+  _ProfileState();
 
-  _ProfileState({required this.perfil});
+  Usuario? usuario;
+
+  @override
+  void initState(){
+    super.initState();
+    carregarUsuario();
+  }
+
+  Future<void> carregarUsuario() async {
+    final dados = await widget.usuarioService.pegarDados(
+      widget.usuarioId,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      usuario = dados;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
+    if (usuario == null){
+      return const Scaffold(
+        body: Center(
+          child:CircularProgressIndicator(),
+        ),
+      );
+    }
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -105,12 +136,12 @@ class _ProfileState extends State<Profile> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                perfil.username,
+                                usuario!.nome,
                                 style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                               Text(
-                                '${perfil.estado} • ${perfil.cidade}',
+                                '${usuario!.estado} • ${usuario!.cidade}',
                                 style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(color: colors.onSurfaceVariant),
                               ),
@@ -140,28 +171,28 @@ class _ProfileState extends State<Profile> {
                         crossAxisSpacing: 10,
                         childAspectRatio: 2.8,
                         children: [
-                          _Stat('Nível', perfil.nivel.toString()),
-                          _Stat('XP', perfil.xp.toString()),
+                          _Stat('Nível', usuario!.level.toString()),
+                          _Stat('XP', usuario!.xp.toString()),
                           _Stat(
                             'Missões concluídas',
-                            perfil.missoesConcluidas.toString(),
+                            usuario!.missoesConcluidas.toString(),
                           ),
-                          _Stat('Recompensas', perfil.recompensas.toString()),
+                          _Stat('Recompensas', usuario!.moedas.toString()),
                           _Stat(
                             'Reports enviados',
-                            perfil.reportsEnviados.toString(),
+                            usuario!.reportsEnviados.toString(),
                           ),
                           _Stat(
                             'Reports resolvidos',
-                            perfil.reportsResolvidos.toString(),
+                            usuario!.reportsResolvidos.toString(),
                           ),
                           _Stat(
                             'Reports rejeitados',
-                            perfil.reportsRejeitados.toString(),
+                            usuario!.reportsRejeitados.toString(),
                           ),
                           _Stat(
                             'Reports pendentes',
-                            perfil.reportsPendentes.toString(),
+                            usuario!.reportsPendentes.toString(),
                           ),
                         ],
                       ),

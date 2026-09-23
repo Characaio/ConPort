@@ -87,6 +87,8 @@ public class CriadorDeValoresMock implements CommandLineRunner {
         usuario1.setEmail("gmail@WorldTradeCenter.com");
         usuario1.setSenha("Osama Bin Laden");
         usuario1.setConfiavel(true);
+        usuario1.setCidade("Santa Barbara D'oeste");
+        usuario1.setEstado("São paulo");
         usuario1.setXP(0);
         usuario1.setLevel(10);
         usuario1.setMoedas(69420);
@@ -98,6 +100,8 @@ public class CriadorDeValoresMock implements CommandLineRunner {
         usuario2.setEmail("JohnyStorms@gmail.com");
         usuario2.setSenha("QuartetoFantastico4444");
         usuario2.setConfiavel(false);
+        usuario2.setCidade("Santa Barbara D'oeste");
+        usuario2.setEstado("São paulo");
         usuario2.setXP(10);
         usuario2.setLevel(0);
         usuario2.setMoedas(5);
