@@ -1,53 +1,52 @@
-
 enum TipoDeUnidade {
-   PARQUE_NACIONAL,
-   RESERVA_BIOLOGICA,
-   MONUMENTO_NATURAL,
+  PARQUE_NACIONAL,
+  RESERVA_BIOLOGICA,
+  MONUMENTO_NATURAL,
 
-   FLONA,
-   RESERVA_EXTRATIVISTA,
-   RPPN,
+  FLONA,
+  RESERVA_EXTRATIVISTA,
+  RPPN,
 
-   DESCONHECIDO
+  DESCONHECIDO,
 }
 
-class Unidade{
-    final int id;
-    final String nome;
-    final String localizacao;
-    final String bioma;
-    final String telefone;
+class Unidade {
+  final int id;
+  final String nome;
+  final String localizacao;
+  final String bioma;
+  final String telefone;
 
-    final DateTime? horaDeAbertura;
-    final DateTime? horaDeFechamento;
+  final DateTime? horaDeAbertura;
+  final DateTime? horaDeFechamento;
 
-    final TipoDeUnidade tipoDaUnidade;
+  final TipoDeUnidade tipoDaUnidade;
 
-    final double areaTotal;
-    final double areaRegularizada;
-    final double areaPreservada;
-    final double areaMonitorada;
-    final double areaBasePorCorredor;
+  final double areaTotal;
+  final double areaRegularizada;
+  final double areaPreservada;
+  final double areaMonitorada;
+  final double areaBasePorCorredor;
 
-    final int pontosMonitorados;
-    final int pontosPrevistos;
-    final int quantidadeEspecies;
-    final int quantidadeEspeciesEsperadas;
+  final int pontosMonitorados;
+  final int pontosPrevistos;
+  final int quantidadeEspecies;
+  final int quantidadeEspeciesEsperadas;
 
-    final double qualidaAgua;
-    final double qualidadeSolo;
-    final double gestaoResiduos;
-    
-    final int? quantReports;
-    final double? integridadeTerritorial;
-    final int? corredoresNecessarios;
-    final double? conectividadeEcologica;
-    final double? qualidadeAmbiental;
-    final double? preservacaoLocal;
-    final double? fiscalizaocao;
-    final double? biodiversidade;
-    
-    const Unidade({
+  final double qualidaAgua;
+  final double qualidadeSolo;
+  final double gestaoResiduos;
+
+  final int? quantReports;
+  final double? integridadeTerritorial;
+  final int? corredoresNecessarios;
+  final double? conectividadeEcologica;
+  final double? qualidadeAmbiental;
+  final double? preservacaoLocal;
+  final double? fiscalizaocao;
+  final double? biodiversidade;
+
+  const Unidade({
     required this.id,
     required this.nome,
     required this.localizacao,
@@ -82,91 +81,203 @@ class Unidade{
     this.preservacaoLocal,
     this.fiscalizaocao,
     this.biodiversidade,
-        
-    });
+  });
 
-    factory Unidade.fromJson(Map<String,dynamic> json){
-        TipoDeUnidade parseTipo(String? value){
-            switch (value?.toUpperCase()){
-                case 'PARQUE NACIONAL':
-                    return TipoDeUnidade.PARQUE_NACIONAL;
-                case 'RESERVA BIOLOGICA':
-                    return TipoDeUnidade.RESERVA_BIOLOGICA;
-                case 'MONUMENTO NATURAL':
-                    return TipoDeUnidade.MONUMENTO_NATURAL;
-                case 'FLONA':
-                    return TipoDeUnidade.FLONA;
-                case 'RESERVA_EXTRATIVISTA':
-                    return TipoDeUnidade.RESERVA_EXTRATIVISTA;
-                case 'RPPN':
-                    return TipoDeUnidade.RPPN;
-                default:
-                    return TipoDeUnidade.DESCONHECIDO;
-            }
-        }
+  factory Unidade.fromJson(Map<String, dynamic> json) {
+    TipoDeUnidade parseTipo(String? value) {
+      switch (value?.toUpperCase()) {
+        case 'PARQUE NACIONAL':
+          return TipoDeUnidade.PARQUE_NACIONAL;
 
-        DateTime? parseDate(dynamic value) {
-            if (value == null) return null;
-            return DateTime.tryParse(value.toString());
-        }
+        case 'RESERVA BIOLOGICA':
+          return TipoDeUnidade.RESERVA_BIOLOGICA;
 
+        case 'MONUMENTO NATURAL':
+          return TipoDeUnidade.MONUMENTO_NATURAL;
 
-        return Unidade(
-            id:json ['Id'] ?? json ['id'] ?? 0,
+        case 'FLONA':
+          return TipoDeUnidade.FLONA;
 
-            nome: json['Nome'] ?? json['nome'] ?? 'Unidade',
+        case 'RESERVA_EXTRATIVISTA':
+        case 'RESERVA EXTRATIVISTA':
+          return TipoDeUnidade.RESERVA_EXTRATIVISTA;
 
-            localizacao: json['Localizacao'] ?? json['localizacao'] ?? 'NULL',
+        case 'RPPN':
+          return TipoDeUnidade.RPPN;
 
-            bioma: json['Bioma'] ?? json['bioma'] ?? 'Bioma',
-
-            telefone: json['Telefone'] ?? json['telefone'] ?? 'Telefone',
-
-            horaDeAbertura: parseDate(json['HoraDeAbertura'] ?? json['horaDeAbertura']),
-
-            tipoDaUnidade: parseTipo(json['TipoDaUnidade'] ?? json['tipoDaUnidade']),
-
-            horaDeFechamento: parseDate(json['HoraDeFechamento'] ?? json['horaDeFechamento']),
-
-            areaTotal: json['AreaTotal'] ?? json['areaTotal'] ?? 'Area Total',
-
-            areaRegularizada: json['AreaRegularizada'] ?? json['areaRegularizada'] ?? 'Area Regularizada',
-
-            areaPreservada: json['AreaPreservada'] ?? json['areaPreservada'] ?? 'Area preservada',
-
-            areaMonitorada: json['AreaMonitorada'] ?? json['areaMonitorada'] ?? 'Area Monitorada',
-
-            areaBasePorCorredor: json['AreaBasePorCorredor'] ?? json['areaBasePorCorredor'] ?? 'Area Base Por Corredor', 
-
-            pontosMonitorados: json['PontosMonitorados'] ?? json['pontosMonitorados'] ?? 'Pontos Monitorados',
-
-            pontosPrevistos: json['PontosPrevistos'] ?? json['pontosPrevistos'] ?? 'Pontos Previstos',
-
-            quantidadeEspecies: json['QuantidadeEspecies'] ?? json['quantidadeEspecies'] ?? 'Quantidade Especies',
-
-            quantidadeEspeciesEsperadas: json['QuantidadeEspeciesEsperadas'] ?? json['quantidadeEspeciesEsperadas'] ?? 'Quantidade Especies Esperadas',
-
-            qualidaAgua: json['QualidadeDaAgua'] ?? json['qualidadeDaAgua'] ?? 'Qualidade Da Agua',
-
-            qualidadeSolo: json['QualidadeSolo'] ?? json['qualidadeSolo'] ?? 'Qualidade Solo',
-
-            gestaoResiduos: json['GestaoResiduos'] ?? json['gestaoResiduos'] ?? 'Gestao Residuos',
-
-            quantReports: json["QuantReports"] ?? json["quantReports"] ?? 0,
-
-            integridadeTerritorial: json['IntegridadeTerritorial'] ?? json['integridadeTerritorial'] ?? 'Integridade Territorial',
-
-            corredoresNecessarios: json['CorredoresNecessarios'] ?? json['corredoresNecessarios'] ?? 'Corredores Necessarios',
-
-            conectividadeEcologica: json['ConectividadeEcologica'] ?? json['conectividadeEcologica'] ?? 'Conectividade Ecologica',
-
-            qualidadeAmbiental: json['QualidadeAmbiental'] ?? json['qualidadeAmbiental'] ?? 'Qualidade Ambiental',
-
-            preservacaoLocal: json['PreservacaoLocal'] ?? json['preservacaoLocal'] ?? 'Preservacao Local',
-
-            fiscalizaocao: json['Fiscalizacao'] ?? json['fiscalizacao'] ?? 'Fiscalizacao',
-
-            biodiversidade: json['Biodiversidade'] ?? json['biodiversidade'] ?? 'Biodiversidade'
-        );
+        default:
+          return TipoDeUnidade.DESCONHECIDO;
+      }
     }
+
+    DateTime? parseDate(dynamic value) {
+      if (value == null) return null;
+      return DateTime.tryParse(value.toString());
+    }
+
+    double parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+
+      if (value is num) {
+        return value.toDouble();
+      }
+
+      if (value is String) {
+        return double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
+      }
+
+      return 0.0;
+    }
+
+    int parseInt(dynamic value) {
+      if (value == null) return 0;
+
+      if (value is int) {
+        return value;
+      }
+
+      if (value is num) {
+        return value.toInt();
+      }
+
+      if (value is String) {
+        return int.tryParse(value) ?? 0;
+      }
+
+      return 0;
+    }
+
+    double? parseNullableDouble(dynamic value) {
+      if (value == null) return null;
+
+      if (value is num) {
+        return value.toDouble();
+      }
+
+      if (value is String) {
+        return double.tryParse(value.replaceAll(',', '.'));
+      }
+
+      return null;
+    }
+
+    int? parseNullableInt(dynamic value) {
+      if (value == null) return null;
+
+      if (value is int) {
+        return value;
+      }
+
+      if (value is num) {
+        return value.toInt();
+      }
+
+      if (value is String) {
+        return int.tryParse(value);
+      }
+
+      return null;
+    }
+
+    return Unidade(
+      id: parseInt(json['Id'] ?? json['id']),
+
+      nome: json['Nome'] ?? json['nome'] ?? 'Unidade',
+
+      localizacao: json['Localizacao'] ?? json['localizacao'] ?? 'NULL',
+
+      bioma: json['Bioma'] ?? json['bioma'] ?? 'Bioma',
+
+      telefone: json['Telefone'] ?? json['telefone'] ?? 'Telefone',
+
+      horaDeAbertura: parseDate(
+        json['HoraDeAbertura'] ?? json['horaDeAbertura'],
+      ),
+
+      horaDeFechamento: parseDate(
+        json['HoraDeFechamento'] ?? json['horaDeFechamento'],
+      ),
+
+      tipoDaUnidade: parseTipo(json['TipoDaUnidade'] ?? json['tipoDaUnidade']),
+
+      areaTotal: parseDouble(json['AreaTotal'] ?? json['areaTotal']),
+
+      areaRegularizada: parseDouble(
+        json['AreaRegularizada'] ?? json['areaRegularizada'],
+      ),
+
+      areaPreservada: parseDouble(
+        json['AreaPreservada'] ?? json['areaPreservada'],
+      ),
+
+      areaMonitorada: parseDouble(
+        json['AreaMonitorada'] ?? json['areaMonitorada'],
+      ),
+
+      areaBasePorCorredor: parseDouble(
+        json['AreaBasePorCorredor'] ?? json['areaBasePorCorredor'],
+      ),
+
+      pontosMonitorados: parseInt(
+        json['PontosMonitorados'] ?? json['pontosMonitorados'],
+      ),
+
+      pontosPrevistos: parseInt(
+        json['PontosPrevistos'] ?? json['pontosPrevistos'],
+      ),
+
+      quantidadeEspecies: parseInt(
+        json['QuantidadeEspecies'] ?? json['quantidadeEspecies'],
+      ),
+
+      quantidadeEspeciesEsperadas: parseInt(
+        json['QuantidadeEspeciesEsperadas'] ??
+            json['quantidadeEspeciesEsperadas'],
+      ),
+
+      qualidaAgua: parseDouble(
+        json['QualidadeDaAgua'] ?? json['qualidadeDaAgua'],
+      ),
+
+      qualidadeSolo: parseDouble(
+        json['QualidadeSolo'] ?? json['qualidadeSolo'],
+      ),
+
+      gestaoResiduos: parseDouble(
+        json['GestaoResiduos'] ?? json['gestaoResiduos'],
+      ),
+
+      quantReports: parseNullableInt(
+        json['QuantReports'] ?? json['quantReports'],
+      ),
+
+      integridadeTerritorial: parseNullableDouble(
+        json['IntegridadeTerritorial'] ?? json['integridadeTerritorial'],
+      ),
+
+      corredoresNecessarios: parseNullableInt(
+        json['CorredoresNecessarios'] ?? json['corredoresNecessarios'],
+      ),
+
+      conectividadeEcologica: parseNullableDouble(
+        json['ConectividadeEcologica'] ?? json['conectividadeEcologica'],
+      ),
+
+      qualidadeAmbiental: parseNullableDouble(
+        json['QualidadeAmbiental'] ?? json['qualidadeAmbiental'],
+      ),
+
+      preservacaoLocal: parseNullableDouble(
+        json['PreservacaoLocal'] ?? json['preservacaoLocal'],
+      ),
+
+      fiscalizaocao: parseNullableDouble(
+        json['Fiscalizacao'] ?? json['fiscalizacao'],
+      ),
+
+      biodiversidade: parseNullableDouble(
+        json['Biodiversidade'] ?? json['biodiversidade'],
+      ),
+    );
+  }
 }

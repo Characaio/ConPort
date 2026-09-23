@@ -9,13 +9,11 @@ import 'package:conport/widgets/weekly_missions.dart';
 import 'package:conport/models/unidade.dart';
 import 'package:conport/services/unidadeService.dart';
 
-
 class Home extends StatefulWidget {
   const Home({
     super.key,
     required this.unidadeService,
-    required this.unidadeId
-
+    required this.unidadeId,
   });
   final UnidadeService unidadeService;
   final int unidadeId;
@@ -24,12 +22,12 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
- _HomeState();
+  _HomeState();
 
   Unidade? unidade;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     carregarUnidade();
   }
@@ -52,12 +50,8 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    if (unidade == null){
-      return const Scaffold(
-        body:Center(
-          child: CircularProgressIndicator()
-          )
-        );
+    if (unidade == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -124,7 +118,10 @@ class _HomeState extends State<Home> {
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.schedule,
-                                      texto: unidade!.horaDeFechamento!.toIso8601String(),
+                                      texto:
+                                          unidade!.horaDeFechamento
+                                              ?.toIso8601String() ??
+                                          "Não informado",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.call,
@@ -161,7 +158,8 @@ class _HomeState extends State<Home> {
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.cloud_alert,
-                                      texto: "Poluição: ${unidade!.qualidadeAmbiental}",
+                                      texto:
+                                          "Poluição: ${unidade!.qualidadeAmbiental}",
                                     ),
                                     UnidadeIndicador(
                                       simbolo: Symbols.forest,
