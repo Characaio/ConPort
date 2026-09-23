@@ -5,14 +5,14 @@ import 'package:http/http.dart' as http;
 import '../models/mission.dart';
 import '../models/unidade.dart';
 
-class missaoService{
+class MissaoService{
 
     final String UrlBase = "http://localhost:8080";
 
     Future<Mission> buscarMissao(int missaoId) async{
 
         final url = Uri.parse(
-            '${UrlBase}/missoes/$missaoId'
+            '$UrlBase/missoes/$missaoId'
         );
 
         final response = await http.get(url);
@@ -24,15 +24,39 @@ class missaoService{
         }
 
         if (response.statusCode == 404){
-            throw Exception("Report não encontrada");
+            throw Exception("Missao não encontrada");
         }
-        throw Exception("Erro ao buscar Report: ${response.statusCode}");
+        throw Exception("Erro ao buscar Missao: ${response.statusCode}");
     }
 
-    Future<Mission> progredirMissao(int progresso) async{
+    Future<List<Mission>> buscarMissoesDeUsuario(List<int> idMissoes) async{
+        List<Mission> missoes = [];
 
+        for (final id in idMissoes) {
+            missoes.add(await buscarMissao(id));
+        }
+
+        return missoes;
     }
 
+    Future<Mission> progredirMissao(int missaoId,int progresso) async {
+        final url = Uri.parse(
+            '$UrlBase/missoes/$missaoId/progresso'
+        );
+
+        final response = await http.post(url, body: {
+            'progresso': progresso,
+        });
+
+        if (response.statusCode == 200) {
+            return Mission.fromJson(jsonDecode(response.body));
+        }
+
+        if (response.statusCode == 404) {
+            throw Exception('Missão não encontrada');
+        }
+        throw Exception('Erro ao progredir missão: ${response.statusCode}');
+    }
+}
     
    
-}
