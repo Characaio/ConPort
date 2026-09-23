@@ -3,8 +3,63 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:conport/widgets/topbar.dart';
 
-class Profile extends StatelessWidget {
+class ProfileData {
+  final String username;
+  final String estado;
+  final String cidade;
+
+  final int nivel;
+  final int xp;
+  final int missoesConcluidas;
+  final int recompensas;
+
+  final int reportsEnviados;
+  final int reportsResolvidos;
+  final int reportsRejeitados;
+  final int reportsPendentes;
+
+  ProfileData({
+    required this.username,
+    required this.estado,
+    required this.cidade,
+
+    required this.nivel,
+    required this.xp,
+    required this.missoesConcluidas,
+    required this.recompensas,
+
+    required this.reportsEnviados,
+    required this.reportsResolvidos,
+    required this.reportsRejeitados,
+    required this.reportsPendentes,
+  });
+}
+
+final ProfileData profileMock = ProfileData(
+  username: "Jorge",
+  estado: "Bahia",
+  cidade: "Xique-Xique",
+  nivel: 12,
+  xp: 670,
+  missoesConcluidas: 18,
+  recompensas: 1,
+  reportsEnviados: 5,
+  reportsResolvidos: 3,
+  reportsRejeitados: 1,
+  reportsPendentes: 1,
+);
+
+class Profile extends StatefulWidget {
   const Profile({super.key});
+
+  @override
+  State<Profile> createState() => _ProfileState(perfil: profileMock);
+}
+
+class _ProfileState extends State<Profile> {
+  final ProfileData perfil;
+
+  _ProfileState({required this.perfil});
 
   @override
   Widget build(BuildContext context) {
@@ -46,12 +101,12 @@ class Profile extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'username',
+                                perfil.username,
                                 style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                               Text(
-                                'São Paulo • Unidade de Conservação X',
+                                '${perfil.estado} • ${perfil.cidade}',
                                 style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(color: colors.onSurfaceVariant),
                               ),
@@ -80,15 +135,30 @@ class Profile extends StatelessWidget {
                         mainAxisSpacing: 10,
                         crossAxisSpacing: 10,
                         childAspectRatio: 2.8,
-                        children: const [
-                          _Stat('Nível', '12'),
-                          _Stat('XP', '890'),
-                          _Stat('Missões concluídas', '12'),
-                          _Stat('Recompensas', '1'),
-                          _Stat('Reports enviados', '5'),
-                          _Stat('Reports resolvidos', '3'),
-                          _Stat('Reports rejeitados', '2'),
-                          _Stat('Reports pendentes', '0'),
+                        children: [
+                          _Stat('Nível', perfil.nivel.toString()),
+                          _Stat('XP', perfil.xp.toString()),
+                          _Stat(
+                            'Missões concluídas',
+                            perfil.missoesConcluidas.toString(),
+                          ),
+                          _Stat('Recompensas', perfil.recompensas.toString()),
+                          _Stat(
+                            'Reports enviados',
+                            perfil.reportsEnviados.toString(),
+                          ),
+                          _Stat(
+                            'Reports resolvidos',
+                            perfil.reportsResolvidos.toString(),
+                          ),
+                          _Stat(
+                            'Reports rejeitados',
+                            perfil.reportsRejeitados.toString(),
+                          ),
+                          _Stat(
+                            'Reports pendentes',
+                            perfil.reportsPendentes.toString(),
+                          ),
                         ],
                       ),
 
