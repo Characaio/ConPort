@@ -289,4 +289,4 @@ Integrantes:
 - Caio: Backend e infraestrutura 
 
 ## Agradecimentos especiais
-- Victor: Ideia de missões e moedas
+- Victor: Ideia de missões, moedas e sequência
