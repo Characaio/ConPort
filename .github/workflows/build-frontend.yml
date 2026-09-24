@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - main
+
   workflow_dispatch:
 
 jobs:
+
+  # ============================================================
+  # ANDROID
+  # ============================================================
+
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
@@ -29,12 +35,21 @@ jobs:
         working-directory: FrontEnd
         run: flutter build apk --release
 
+      - name: Rename APK
+        run: |
+          cp FrontEnd/build/app/outputs/flutter-apk/app-release.apk \
+             ConPort.apk
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: conport-android
-          path: FrontEnd/build/app/outputs/flutter-apk/app-release.apk
+          path: ConPort.apk
 
+
+  # ============================================================
+  # WINDOWS DESKTOP
+  # ============================================================
 
   build-windows:
     name: Build Windows
@@ -62,8 +77,329 @@ jobs:
         working-directory: FrontEnd
         run: flutter build windows --release
 
-      - name: Upload Windows build
+      - name: Package Windows
+        shell: powershell
+        run: |
+          Compress-Archive `
+            -Path FrontEnd\build\windows\x64\runner\Release\* `
+            -DestinationPath ConPort-Windows.zip
+
+      - name: Upload Windows
         uses: actions/upload-artifact@v4
         with:
           name: conport-windows
-          path: FrontEnd/build/windows/x64/runner/Release/
+          path: ConPort-Windows.zip
+
+
+  # ============================================================
+  # LINUX DESKTOP
+  # ============================================================
+
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            liblzma-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Enable Linux
+        working-directory: FrontEnd
+        run: flutter config --enable-linux-desktop
+
+      - name: Install dependencies
+        working-directory: FrontEnd
+        run: flutter pub get
+
+      - name: Build Linux
+        working-directory: FrontEnd
+        run: flutter build linux --release
+
+      - name: Package Linux
+        run: |
+          tar -czf ConPort-Linux.tar.gz \
+            -C FrontEnd/build/linux/x64/release/bundle .
+
+      - name: Upload Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: conport-linux
+          path: ConPort-Linux.tar.gz
+
+
+  # ============================================================
+  # WEB - WINDOWS
+  # ============================================================
+
+  build-web-windows:
+    name: Build Web Server - Windows
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: FrontEnd
+        run: flutter pub get
+
+      - name: Build Web
+        working-directory: FrontEnd
+        run: flutter build web --release
+
+      # --------------------------------------------------------
+      # Instalar Go apenas no ambiente de CI
+      # --------------------------------------------------------
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      # --------------------------------------------------------
+      # Criar servidor
+      # --------------------------------------------------------
+
+      - name: Create HTTP server
+        run: |
+          mkdir -p server
+
+          cat > server/main.go << 'EOF'
+          package main
+
+          import (
+              "fmt"
+              "log"
+              "net/http"
+              "os"
+              "path/filepath"
+          )
+
+          func main() {
+              port := "8080"
+
+              if value := os.Getenv("PORT"); value != "" {
+                  port = value
+              }
+
+              webDir := "web"
+              fs := http.FileServer(http.Dir(webDir))
+
+              http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+                  path := filepath.Join(webDir, filepath.Clean(r.URL.Path))
+
+                  if info, err := os.Stat(path); err == nil && !info.IsDir() {
+                      fs.ServeHTTP(w, r)
+                      return
+                  }
+
+                  http.ServeFile(w, r, filepath.Join(webDir, "index.html"))
+              })
+
+              fmt.Println("========================================")
+              fmt.Println("             ConPort Web")
+              fmt.Println("========================================")
+              fmt.Println()
+              fmt.Printf("Servidor: http://localhost:%s\n", port)
+              fmt.Println("Pressione CTRL+C para parar.")
+              fmt.Println()
+
+              log.Fatal(http.ListenAndServe(":"+port, nil))
+          }
+          EOF
+
+      - name: Build Windows server
+        working-directory: server
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: go build -ldflags="-s -w" -o ../conport-server.exe main.go
+
+      # --------------------------------------------------------
+      # Montar pacote
+      # --------------------------------------------------------
+
+      - name: Prepare package
+        run: |
+          mkdir -p ConPort-Web-Windows/web
+
+          cp -r FrontEnd/build/web/* ConPort-Web-Windows/web/
+          cp conport-server.exe ConPort-Web-Windows/
+
+          cat > ConPort-Web-Windows/run-server.bat << 'EOF'
+          @echo off
+          title ConPort Web Server
+
+          echo ========================================
+          echo             ConPort Web
+          echo ========================================
+          echo.
+          echo Servidor:
+          echo http://localhost:8080
+          echo.
+          echo Feche esta janela ou pressione CTRL+C
+          echo para encerrar o servidor.
+          echo.
+
+          conport-server.exe
+
+          pause
+          EOF
+
+      - name: Package Web Windows
+        run: |
+          cd ConPort-Web-Windows
+          zip -r ../ConPort-Web-Windows.zip .
+
+      - name: Upload Web Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: conport-web-windows
+          path: ConPort-Web-Windows.zip
+
+
+  # ============================================================
+  # WEB - LINUX
+  # ============================================================
+
+  build-web-linux:
+    name: Build Web Server - Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: FrontEnd
+        run: flutter pub get
+
+      - name: Build Web
+        working-directory: FrontEnd
+        run: flutter build web --release
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Create HTTP server
+        run: |
+          mkdir -p server
+
+          cat > server/main.go << 'EOF'
+          package main
+
+          import (
+              "fmt"
+              "log"
+              "net/http"
+              "os"
+              "path/filepath"
+          )
+
+          func main() {
+              port := "8080"
+
+              if value := os.Getenv("PORT"); value != "" {
+                  port = value
+              }
+
+              webDir := "web"
+              fs := http.FileServer(http.Dir(webDir))
+
+              http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+                  path := filepath.Join(webDir, filepath.Clean(r.URL.Path))
+
+                  if info, err := os.Stat(path); err == nil && !info.IsDir() {
+                      fs.ServeHTTP(w, r)
+                      return
+                  }
+
+                  http.ServeFile(w, r, filepath.Join(webDir, "index.html"))
+              })
+
+              fmt.Println("========================================")
+              fmt.Println("             ConPort Web")
+              fmt.Println("========================================")
+              fmt.Println()
+              fmt.Printf("Servidor: http://localhost:%s\n", port)
+              fmt.Println("Pressione CTRL+C para parar.")
+              fmt.Println()
+
+              log.Fatal(http.ListenAndServe(":"+port, nil))
+          }
+          EOF
+
+      - name: Build Linux server
+        working-directory: server
+        env:
+          GOOS: linux
+          GOARCH: amd64
+        run: go build -ldflags="-s -w" -o ../conport-server main.go
+
+      - name: Prepare package
+        run: |
+          mkdir -p ConPort-Web-Linux/web
+
+          cp -r FrontEnd/build/web/* ConPort-Web-Linux/web/
+          cp conport-server ConPort-Web-Linux/
+
+          cat > ConPort-Web-Linux/run-server.sh << 'EOF'
+          #!/bin/sh
+
+          echo "========================================"
+          echo "             ConPort Web"
+          echo "========================================"
+          echo
+          echo "Servidor:"
+          echo "http://localhost:8080"
+          echo
+          echo "Pressione CTRL+C para encerrar."
+          echo
+
+          ./conport-server
+          EOF
+
+          chmod +x ConPort-Web-Linux/run-server.sh
+          chmod +x ConPort-Web-Linux/conport-server
+
+      - name: Package Web Linux
+        run: |
+          tar -czf ConPort-Web-Linux.tar.gz \
+            -C ConPort-Web-Linux .
+
+      - name: Upload Web Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: conport-web-linux
+          path: ConPort-Web-Linux.tar.gz
