@@ -287,3 +287,6 @@ Integrantes:
 - Flávio: Frontend
 - Keirrisson: Integração e pesquisa
 - Caio: Backend e infraestrutura 
+
+## Agradecimentos especiais
+- Victor: Ideia de missões e moedas
