@@ -43,6 +43,8 @@ public class Usuario {
     @Column(name = "Moedas", nullable = false)
     private int Moedas;
 
+    @Column(name = "Confiabilidade")
+
 
     public Long getId() { return Id; }
     public void setId(Long id) { Id = id; }

@@ -52,4 +52,8 @@ public class UsuarioService {
                 reportsRejeitados,reportsPendentes, missoesConcluidas);
 
     }
+
+    public void CalcularReputação(){
+
+    }
 }

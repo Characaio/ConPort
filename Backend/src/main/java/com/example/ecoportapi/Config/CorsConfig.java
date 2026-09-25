@@ -1,4 +1,4 @@
-package com.example.ecoportapi;
+package com.example.ecoportapi.Config;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;

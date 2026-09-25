@@ -1,5 +1,6 @@
 package com.example.ecoportapi.DTOs.Response;
 
+import com.example.ecoportapi.Models.Enums.ReportPrioridade;
 import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Models.Enums.TipoDeIncidente;
 import com.example.ecoportapi.Models.Report;
@@ -13,6 +14,7 @@ public record ReportExpandidoDTO(
         StatusReport Status,
         LocalDateTime DataDoOcorrido,
         String Descricao,
+        ReportPrioridade Prioridade,
         List<String> ImagensAnexadas,
         String UsuarioNome,
         String UnidadeNome,
@@ -26,6 +28,7 @@ public record ReportExpandidoDTO(
                 report.getStatus(),
                 report.getDataDoOcorrido(),
                 report.getDescricao(),
+                report.getPrioridade(),
                 report.getImagensAnexadas(),
                 report.getUsuario().getNome(),
                 report.getUnidade().getNome(),

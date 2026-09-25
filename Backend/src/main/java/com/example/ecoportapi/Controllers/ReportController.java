@@ -23,17 +23,20 @@ public class ReportController {
     }
 
     @GetMapping("/{id}/completo")
-    public ReportExpandidoDTO PegarReportCompleto(@PathVariable Long id){
-        return reportService.PegarReportCompleto(id);
+    public ResponseEntity<?> PegarReportCompleto(@PathVariable Long id){
+        return ResponseEntity.ok(reportService.PegarReportCompleto(id));
     }
     @GetMapping("/{id}/resumido")
-    public ReportResumidoDTO PegarReportResumido(@PathVariable Long id){
-        return reportService.PegarReportResumido(id);
+    public ResponseEntity<?> PegarReportResumido(@PathVariable Long id){
+        return ResponseEntity.ok(reportService.PegarReportResumido(id));
     }
 
     @PostMapping("/{id}/analise")
-    public ResponseEntity<?> PostarAnalise(@PathVariable Long id, @RequestBody ReportStatusAnalise reportStatusAnalise){
-        return reportService.PostarAnalise(id, reportStatusAnalise);
+    public ResponseEntity<?> PostarAnalise(
+            @PathVariable Long id,
+            @RequestBody ReportStatusAnalise reportStatusAnalise
+    ){
+        return ResponseEntity.ok(reportService.PostarAnalise(id, reportStatusAnalise));
     }
 
 

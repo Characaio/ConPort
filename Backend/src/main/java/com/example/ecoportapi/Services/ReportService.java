@@ -73,7 +73,7 @@ public class ReportService {
         return ResponseEntity.status(HttpStatus.CREATED).body(reportRepository.save(report));
     }
 
-    public ResponseEntity<?> PostarAnalise(Long id, ReportStatusAnalise reportStatusAnalise){
+    public ReportExpandidoDTO PostarAnalise(Long id, ReportStatusAnalise reportStatusAnalise){
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new ReportNaoEncontrado("Report Não Encontrado"));
         SupervisorDeUnidade supervisor = supervisorRepository.findById(reportStatusAnalise.SupervisorId())
@@ -83,7 +83,7 @@ public class ReportService {
         report.setSupervisor(supervisor);
         reportRepository.save(report);
 
-        return ResponseEntity.ok().build();
+        return new ReportExpandidoDTO(report);
     }
     private Report CriarReport(ReportCreateDTO reportDTO,Long unidadeId){
         Report report = new Report();
@@ -98,6 +98,7 @@ public class ReportService {
         report.setDescricao(reportDTO.Descricao());
         report.setTipo(TipoDeIncidente.StringParaTipo(reportDTO.Tipo()));
         report.setDataDoOcorrido(LocalDateTime.parse(reportDTO.DataDoOcorrido()));
+        report.setPrioridade(reportDTO.Prioridade());
         report.setStatus(StatusReport.PENDENTE);
 
         return report;

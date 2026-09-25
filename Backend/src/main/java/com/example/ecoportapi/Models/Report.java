@@ -1,5 +1,6 @@
 package com.example.ecoportapi.Models;
 
+import com.example.ecoportapi.Models.Enums.ReportPrioridade;
 import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Models.Enums.TipoDeIncidente;
 import jakarta.persistence.*;
@@ -51,6 +52,10 @@ public class Report {
     private List<String> ImagensAnexadas = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "Prioridade", nullable = false)
+    private ReportPrioridade Prioridade;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false)
     private StatusReport Status;
 
@@ -88,4 +93,7 @@ public class Report {
 
     public StatusReport getStatus() { return Status; }
     public void setStatus(StatusReport status) { Status = status; }
+
+    public ReportPrioridade getPrioridade() { return Prioridade; }
+    public void setPrioridade(ReportPrioridade prioridade) { Prioridade = prioridade; }
 }

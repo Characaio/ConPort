@@ -1,7 +1,6 @@
-package com.example.ecoportapi;
+package com.example.ecoportapi.Config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.server.servlet.context.ServletComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;

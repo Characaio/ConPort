@@ -32,18 +32,18 @@ public class UnidadeController {
     }
 
     @GetMapping("/{id}/statusPrincipal")
-    public UnidadeStatusPrincipalDTO PegarStatus(@PathVariable Long id){
-        return unidadeService.PegarStatusPrincipal(id);
+    public ResponseEntity<?> PegarStatus(@PathVariable Long id){
+        return ResponseEntity.ok(unidadeService.PegarStatusPrincipal(id));
     }
 
     @GetMapping("/{id}/statusGeral")
-    public UnidadeStatusGeralDTO PegarStatusGeral(@PathVariable Long id){
-        return unidadeService.PegarStatusGeral(id);
+    public ResponseEntity<?> PegarStatusGeral(@PathVariable Long id){
+        return ResponseEntity.ok(unidadeService.PegarStatusGeral(id));
     }
 
     @GetMapping("/{id}/reports")
-    public List<ReportResumidoDTO> PegarReportsDaUnidade(@PathVariable Long id){
-        return unidadeService.PegarReportsDaUnidade(id);
+    public ResponseEntity<?> PegarReportsDaUnidade(@PathVariable Long id){
+        return ResponseEntity.ok(unidadeService.PegarReportsDaUnidade(id));
     }
     @PostMapping(
             value = "/{id}/criarReport",
