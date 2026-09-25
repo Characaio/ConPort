@@ -2,6 +2,7 @@ package com.example.ecoportapi.Controllers;
 
 //Começar o trabalho
 
+import com.example.ecoportapi.DTOs.Request.AvisoCreateDTO;
 import com.example.ecoportapi.DTOs.Request.ReportCreateDTO;
 import com.example.ecoportapi.DTOs.Response.ReportResumidoDTO;
 import com.example.ecoportapi.DTOs.Response.UnidadeStatusGeralDTO;
@@ -46,7 +47,7 @@ public class UnidadeController {
         return ResponseEntity.ok(unidadeService.PegarReportsDaUnidade(id));
     }
     @PostMapping(
-            value = "/{id}/criarReport",
+            value = "/{id}/report",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<?> PostarReport(
@@ -56,6 +57,8 @@ public class UnidadeController {
     ) throws IOException {
         return reportService.PostarReport(reportDTO,imagens,id);
     }
+
+
 
 
 

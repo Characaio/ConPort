@@ -22,57 +22,12 @@ public class UnidadeService {
         this.indicadoresService = indicadoresService;
     }
 
-    private UnidadeIndicadoresDerivadosDTO CalcularIndicadores(UnidadeDadosGeraisDTO StatusGeralBaseDTO){
-        Integer CorredoresNecessarios = indicadoresService.CalcularCorredoresNecessarios(
-                StatusGeralBaseDTO.AreaTotal(),StatusGeralBaseDTO.AreaBasePorCorredor()
-        );
-        UnidadeIndicadoresDerivadosDTO indicadoresDerivadosDTO = new UnidadeIndicadoresDerivadosDTO(
-                indicadoresService.CalcularIntegridadeTerritorial(
-                        StatusGeralBaseDTO.AreaRegularizada(),StatusGeralBaseDTO.AreaTotal()
-                ),
-                CorredoresNecessarios,
-                indicadoresService.CalcularConectividadeEcologica(
-                        StatusGeralBaseDTO.QuantCorredores(),CorredoresNecessarios
-                ),
-                indicadoresService.CalcularQualidadeAmbiental(
-                        StatusGeralBaseDTO.QualidadeAgua(),
-                        StatusGeralBaseDTO.QualidadeSolo(),
-                        StatusGeralBaseDTO.GestaoResiduos()
-                ),
-                indicadoresService.CalcularPreservacaoLocal(
-                        StatusGeralBaseDTO.AreaPreservada(),StatusGeralBaseDTO.AreaTotal()
-                ),
-                indicadoresService.CalcularFiscalizacao(
-                        indicadoresService.CalcularCobertura(
-                                StatusGeralBaseDTO.AreaMonitorada(),StatusGeralBaseDTO.AreaTotal()
-                        ),
-                        indicadoresService.CalcularMonitoramento(
-                                StatusGeralBaseDTO.PontosMonitorados(),StatusGeralBaseDTO.PontosPrevistos()
-                        ),
-                        indicadoresService.CalcularResposta(
-                                reportRepository.PegarReportsConfirmados(
-                                        StatusGeralBaseDTO.Id(),
-                                        List.of(
-                                                StatusReport.ACEITO,
-                                                StatusReport.EM_TRATAMENTO,
-                                                StatusReport.TRATADO
-                                        )
-                                ), reportRepository.PegarReportsTratados(
-                                        StatusGeralBaseDTO.Id(),
-                                        StatusReport.TRATADO)
-                        )
-                ),
-                indicadoresService.CalcularBiodiversidade(
-                        StatusGeralBaseDTO.QuantEspecies(),StatusGeralBaseDTO.QuantEspeciesEsperadas()
-                )
-        );
-        return indicadoresDerivadosDTO;
-    }
 
     public UnidadeStatusPrincipalDTO PegarStatusPrincipal(Long id){
         UnidadeDadosGeraisDTO StatusGeralBaseDTO = unidadeRepository.PegarStatusGeral(id);
         Integer QuantDeReports = unidadeRepository.PegarQuantDeReports(id);
-        UnidadeIndicadoresDerivadosDTO indicadoresDerivadosDTO = CalcularIndicadores(StatusGeralBaseDTO);
+        UnidadeIndicadoresDerivadosDTO indicadoresDerivadosDTO =
+                indicadoresService.CalcularIndicadores(StatusGeralBaseDTO);
 
         return new UnidadeStatusPrincipalDTO(
                 unidadeRepository.PegarStatusPrincipal(id),
@@ -83,7 +38,8 @@ public class UnidadeService {
     public UnidadeStatusGeralDTO PegarStatusGeral(Long id){
         UnidadeDadosGeraisDTO StatusGeralBaseDTO = unidadeRepository.PegarStatusGeral(id);
         Integer QuantDeReports = unidadeRepository.PegarQuantDeReports(id);
-        UnidadeIndicadoresDerivadosDTO indicadoresDerivadosDTO = CalcularIndicadores(StatusGeralBaseDTO);
+        UnidadeIndicadoresDerivadosDTO indicadoresDerivadosDTO =
+                indicadoresService.CalcularIndicadores(StatusGeralBaseDTO);
 
         return new UnidadeStatusGeralDTO(
                 StatusGeralBaseDTO,
@@ -94,5 +50,7 @@ public class UnidadeService {
     public List<ReportResumidoDTO> PegarReportsDaUnidade(Long id){
         return unidadeRepository.PegarReportsDaUnidade(id);
     }
+
+
 
 }
