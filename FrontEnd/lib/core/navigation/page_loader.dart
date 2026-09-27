@@ -1,16 +1,20 @@
-import 'package:conport/services/usuarioService.dart';
-import 'package:conport/services/unidadeService.dart';
+import 'package:conport/pages/map.dart';
+import 'package:conport/pages/revamphome.dart';
 import 'package:flutter/material.dart';
 
 import 'package:conport/pages/home.dart';
-import 'package:conport/pages/dtrepo.dart';
-import 'package:conport/pages/myrepo.dart';
-import 'package:conport/pages/reports.dart';
-import 'package:conport/pages/dtunit.dart';
 import 'package:conport/pages/profile.dart';
+import 'package:conport/pages/reports.dart';
+import 'package:conport/pages/myrepo.dart';
+import 'package:conport/pages/dtrepo.dart';
+import 'package:conport/pages/dtunit.dart';
+
+import 'package:conport/services/unidadeService.dart';
+import 'package:conport/services/usuarioService.dart';
 
 class PageLoader {
   static const String home = '/';
+  static const String map = '/map';
   static const String reports = '/reports';
   static const String myreports = '/myreports';
   static const String report = '/report';
@@ -20,7 +24,14 @@ class PageLoader {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case home:
-        return MaterialPageRoute(builder: (_) => const Home(unidadeId: 1, unidadeService: UnidadeService()));
+        return MaterialPageRoute(
+          builder: (_) =>
+              // Home(unidadeId: 1, unidadeService: const UnidadeService()),
+              HomeRevamp(),
+        );
+
+      case map:
+        return MaterialPageRoute(builder: (_) => const Map());
 
       case reports:
         return MaterialPageRoute(builder: (_) => const Reports());
@@ -33,26 +44,36 @@ class PageLoader {
 
       case unit:
         return MaterialPageRoute(
-          builder: (_) => UnidadeDetalhes(unidadeId:1, unidadeService: UnidadeService()),
+          builder: (_) => UnidadeDetalhes(
+            unidadeId: 1,
+            unidadeService: const UnidadeService(),
+          ),
         );
 
       case profile:
-        return MaterialPageRoute(builder: (_) => const Profile(usuarioId: 2, usuarioService: UsuarioService()));
+        return MaterialPageRoute(
+          builder: (_) =>
+              Profile(usuarioId: 2, usuarioService: const UsuarioService()),
+        );
 
       default:
-        return MaterialPageRoute(builder: (_) => const Home(unidadeId: 1, unidadeService: UnidadeService()));
+        return MaterialPageRoute(
+          builder: (_) =>
+              // Home(unidadeId: 1, unidadeService: const UnidadeService()),
+              HomeRevamp(),
+        );
     }
   }
 
-  static void go(BuildContext context, String page) {
-    Navigator.of(context).pushNamed(page);
+  static void go(BuildContext context, String route) {
+    Navigator.pushNamed(context, route);
   }
 
-  static void replace(BuildContext context, String page) {
-    Navigator.of(context).pushReplacementNamed(page);
+  static void replace(BuildContext context, String route) {
+    Navigator.pushReplacementNamed(context, route);
   }
 
   static void back(BuildContext context) {
-    Navigator.of(context).pop();
+    Navigator.pop(context);
   }
 }

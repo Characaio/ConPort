@@ -1,0 +1,63 @@
+import 'package:flutter/material.dart';
+
+class HomeCard extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+  final String pagina;
+
+  HomeCard({
+    required this.icon,
+    required this.text,
+    required this.color,
+    required this.pagina,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {},
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                spreadRadius: 1,
+                blurRadius: 10,
+                offset: Offset(0, 5),
+                color: colors.onSurface,
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: EdgeInsetsGeometry.all(8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(96),
+                    color: colors.surface,
+                  ),
+                  child: Icon(icon, color: colors.onSurface),
+                ),
+                Text(
+                  text,
+                  style: TextStyle(color: colors.surface, fontSize: 20),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
