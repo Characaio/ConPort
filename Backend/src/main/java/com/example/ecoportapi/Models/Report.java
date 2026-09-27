@@ -1,5 +1,6 @@
 package com.example.ecoportapi.Models;
 
+import com.example.ecoportapi.Models.Enums.ImagemOrigem;
 import com.example.ecoportapi.Models.Enums.ReportPrioridade;
 import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Models.Enums.TipoDeIncidente;
@@ -59,13 +60,21 @@ public class Report {
     @Column(name = "Status", nullable = false)
     private StatusReport Status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ImagemOrigem",nullable = false)
+    private ImagemOrigem ImagemOrigem;
+
+    @Column(name = "Longitude",nullable = false)
+    private Double Longitude;
+
+    @Column(name = "Latitude",nullable = false)
+    private Double Latitude;
 
     public Long getId() { return Id; }
     public void setId(Long id) { Id = id; }
 
     public UnidadeDeConservacao getUnidade() { return Unidade; }
     public void setUnidade(UnidadeDeConservacao unidade) { this.Unidade = unidade; }
-
 
     public Usuario getUsuario() { return Usuario; }
     public void setUsuario(Usuario usuario) { this.Usuario = usuario; }
@@ -96,4 +105,13 @@ public class Report {
 
     public ReportPrioridade getPrioridade() { return Prioridade; }
     public void setPrioridade(ReportPrioridade prioridade) { Prioridade = prioridade; }
+
+    public ImagemOrigem getImagemOrigem(){ return ImagemOrigem; }
+    public void setImagemOrigem(ImagemOrigem imagemOrigem) {ImagemOrigem = imagemOrigem; }
+
+    public Double getLongitude(){ return Longitude; }
+    public void setLongitude(Double longitude) {Longitude = longitude; }
+
+    public Double getLatitude(){ return Latitude; }
+    public void setLatitude(Double latitude) {Latitude = latitude; }
 }

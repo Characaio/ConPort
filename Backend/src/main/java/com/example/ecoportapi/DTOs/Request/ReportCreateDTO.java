@@ -8,7 +8,6 @@ public record ReportCreateDTO(
     String Tipo,
     String Descricao,
     ReportPrioridade Prioridade,
-    List<String> ImagensAnexadas,
     String DataDoOcorrido,
     Long UsuarioId
 ) {}

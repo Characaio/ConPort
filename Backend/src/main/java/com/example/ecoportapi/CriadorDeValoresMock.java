@@ -177,6 +177,9 @@ public class CriadorDeValoresMock implements CommandLineRunner {
 
             report2.setStatus(StatusReport.TRATADO);
 
+            report1.setPrioridade(ReportPrioridade.ALARMANTE);
+            report2.setPrioridade(ReportPrioridade.MEDIA);
+
             reportRepository.saveAll(List.of(report1,report2));
     }
 

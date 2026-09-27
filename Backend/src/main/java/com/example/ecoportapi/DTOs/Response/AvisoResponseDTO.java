@@ -15,7 +15,7 @@ public record AvisoResponseDTO(
         this(
                 aviso.getId(),
                 aviso.getTitulo(),
-                aviso.getDescricao(),
+                aviso.getConteudo(),
                 aviso.getHorarioDoAviso()
         );
     }
