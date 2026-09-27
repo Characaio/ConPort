@@ -68,12 +68,14 @@ public class ReportService {
             List<String> imagensCaminho = new ArrayList<>();
             Map<Integer,Map<ImagemDadosParametros,List<Object>>> ImagemInfo = imagemService.salvarImagens(imagens);
             for (Map<ImagemDadosParametros,List<Object>> imgInfo : ImagemInfo.values()){
-                if (imgInfo.containsKey(ImagemDadosParametros.METADADOS) && localizacaoDTO == null){
+                if (imgInfo.containsKey(ImagemDadosParametros.METADADOS) &&
+                        !report.getImagemOrigem().equals(ImagemOrigem.GPS_CELULAR)){
                     List<Object> localização = List.copyOf(imgInfo.values());
                     double longitude = (double) localização.get(0);
                     double latitude = (double) localização.get(1);
                     report.setLongitude(longitude);
                     report.setLatitude(latitude);
+                    report.setImagemOrigem(ImagemOrigem.IMAGEM_EXIF);
                 } else if (imgInfo.containsKey(ImagemDadosParametros.IMAGEMNOME)){
                     List<Object> caminhos = Collections.singletonList(imgInfo.values());
                     for (Object imagem: caminhos){
