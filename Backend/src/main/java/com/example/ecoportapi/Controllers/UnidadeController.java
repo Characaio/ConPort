@@ -3,6 +3,7 @@ package com.example.ecoportapi.Controllers;
 //Começar o trabalho
 
 import com.example.ecoportapi.DTOs.Request.AvisoCreateDTO;
+import com.example.ecoportapi.DTOs.Request.LocalizacaoDTO;
 import com.example.ecoportapi.DTOs.Request.ReportCreateDTO;
 import com.example.ecoportapi.DTOs.Response.ReportResumidoDTO;
 import com.example.ecoportapi.DTOs.Response.UnidadeStatusGeralDTO;
@@ -52,10 +53,11 @@ public class UnidadeController {
     )
     public ResponseEntity<?> PostarReport(
             @RequestPart("reportDTO") ReportCreateDTO reportDTO,
+            @RequestPart(value="localizacao",required = false) LocalizacaoDTO localizacaoDTO,
             @RequestPart(value = "imagens",required = false) List<MultipartFile> imagens,
             @PathVariable Long id
     ) throws IOException {
-        return reportService.PostarReport(reportDTO,imagens,id);
+        return reportService.PostarReport(reportDTO,localizacaoDTO,imagens,id);
     }
 
 

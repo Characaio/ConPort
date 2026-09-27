@@ -1,6 +1,7 @@
 package com.example.ecoportapi.Services;
 
 
+import com.example.ecoportapi.DTOs.Request.LocalizacaoDTO;
 import com.example.ecoportapi.DTOs.Request.ReportCreateDTO;
 import com.example.ecoportapi.DTOs.Request.ReportStatusAnalise;
 import com.example.ecoportapi.DTOs.Response.ReportExpandidoDTO;
@@ -9,6 +10,8 @@ import com.example.ecoportapi.Exceptions.ReportNaoEncontrado;
 import com.example.ecoportapi.Exceptions.SupervisorNaoEncontrado;
 import com.example.ecoportapi.Exceptions.UnidadeNaoEncontrada;
 import com.example.ecoportapi.Exceptions.UsuarioNaoEncontrado;
+import com.example.ecoportapi.Models.Enums.ImagemDadosParametros;
+import com.example.ecoportapi.Models.Enums.ImagemOrigem;
 import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Models.Enums.TipoDeIncidente;
 import com.example.ecoportapi.Models.Report;
@@ -25,10 +28,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class ReportService {
@@ -37,14 +38,14 @@ public class ReportService {
     private final UnidadeRepository unidadeRepository;
     private final UsuarioRepository usuarioRepository;
     private final SupervisorRepository supervisorRepository;
-    private final ImagensService imagensService;
+    private final ImagemService imagemService;
 
-    public ReportService(ReportRepository reportRepository, UnidadeRepository unidadeRepository, UsuarioRepository usuarioRepository, SupervisorRepository supervisorRepository, ImagensService imagensService) {
+    public ReportService(ReportRepository reportRepository, UnidadeRepository unidadeRepository, UsuarioRepository usuarioRepository, SupervisorRepository supervisorRepository, ImagemService imagemService) {
         this.reportRepository = reportRepository;
         this.unidadeRepository = unidadeRepository;
         this.usuarioRepository = usuarioRepository;
         this.supervisorRepository = supervisorRepository;
-        this.imagensService = imagensService;
+        this.imagemService = imagemService;
     }
 
     public ReportExpandidoDTO PegarReportCompleto(Long id){
@@ -59,16 +60,32 @@ public class ReportService {
 
     public ResponseEntity<?> PostarReport(
             ReportCreateDTO reportDTO,
+            LocalizacaoDTO localizacaoDTO,
             List<MultipartFile> imagens,
             Long unidadeId) throws IOException {
-        Report report = CriarReport(reportDTO,unidadeId);
+        Report report = CriarReport(reportDTO,localizacaoDTO,unidadeId);
         if (imagens != null){
             List<String> imagensCaminho = new ArrayList<>();
-            for (MultipartFile imagem : imagens){
-                String caminho = imagensService.salvarImagem(imagem);
-                imagensCaminho.add(caminho);
+            Map<Integer,Map<ImagemDadosParametros,List<Object>>> ImagemInfo = imagemService.salvarImagens(imagens);
+            for (Map<ImagemDadosParametros,List<Object>> imgInfo : ImagemInfo.values()){
+                if (imgInfo.containsKey(ImagemDadosParametros.METADADOS) &&
+                        !report.getImagemOrigem().equals(ImagemOrigem.GPS_CELULAR)){
+                    List<Object> localização = List.copyOf(imgInfo.values());
+                    double longitude = (double) localização.get(0);
+                    double latitude = (double) localização.get(1);
+                    report.setLongitude(longitude);
+                    report.setLatitude(latitude);
+                    report.setImagemOrigem(ImagemOrigem.IMAGEM_EXIF);
+                } else if (imgInfo.containsKey(ImagemDadosParametros.IMAGEMNOME)){
+                    List<Object> caminhos = Collections.singletonList(imgInfo.values());
+                    for (Object imagem: caminhos){
+                        String caminho = imagem.toString();
+                        imagensCaminho.add(caminho);
+                    }
+                    report.setImagensAnexadas(imagensCaminho);
+                }
             }
-            report.setImagensAnexadas(imagensCaminho);
+
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(reportRepository.save(report));
     }
@@ -85,7 +102,7 @@ public class ReportService {
 
         return new ReportExpandidoDTO(report);
     }
-    private Report CriarReport(ReportCreateDTO reportDTO,Long unidadeId){
+    private Report CriarReport(ReportCreateDTO reportDTO,LocalizacaoDTO localizaoDTO, Long unidadeId){
         Report report = new Report();
         UnidadeDeConservacao unidade = unidadeRepository.findById(unidadeId)
                 .orElseThrow(() -> new UnidadeNaoEncontrada("Unidade não encontrada"));
@@ -100,6 +117,12 @@ public class ReportService {
         report.setDataDoOcorrido(LocalDateTime.parse(reportDTO.DataDoOcorrido()));
         report.setPrioridade(reportDTO.Prioridade());
         report.setStatus(StatusReport.PENDENTE);
+
+        if (localizaoDTO != null){
+            report.setLongitude(localizaoDTO.Longitude());
+            report.setLatitude(localizaoDTO.Latitude());
+            report.setImagemOrigem(ImagemOrigem.GPS_CELULAR);
+        }
 
         return report;
     }
