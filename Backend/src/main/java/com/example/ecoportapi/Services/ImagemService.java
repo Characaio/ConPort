@@ -2,6 +2,7 @@ package com.example.ecoportapi.Services;
 
 import com.drew.lang.GeoLocation;
 import com.drew.metadata.exif.GpsDirectory;
+import com.example.ecoportapi.DTOs.Request.ImagemProcessada;
 import com.example.ecoportapi.Models.Enums.ImagemDadosParametros;
 import org.springframework.core.io.Resource;
 import jakarta.transaction.Transactional;
@@ -60,21 +61,17 @@ public class ImagemService {
     }
 
     @Transactional
-    public Map<Integer,Map<ImagemDadosParametros,List<Object>>> salvarImagens(List<MultipartFile> imagens) throws IOException{
-        Map<Integer,Map<ImagemDadosParametros,List<Object>>> imagensInfo = new HashMap<>();
+    public List<ImagemProcessada> SalvarImagens(List<MultipartFile> imagens) throws IOException{
+        List<ImagemProcessada> imagensInfo = new ArrayList<>();
 
-        for (int i=0; i<imagens.size();i++){
-            Map<ImagemDadosParametros,List<Object>> info = salvarImagem(imagens.get(i));
-            imagensInfo.put(
-                    i,
-                    info
-            );
+        for (MultipartFile imagem : imagens){
+            imagensInfo.add(SalvarImagem(imagem));
         }
         return imagensInfo;
     }
 
     @Transactional
-    public Map<ImagemDadosParametros,List<Object>> salvarImagem(MultipartFile imagem) throws IOException {
+    public ImagemProcessada SalvarImagem(MultipartFile imagem) throws IOException {
         if (imagem.isEmpty()) {
             throw new IllegalArgumentException("A imagem está vazia.");
         }
@@ -93,8 +90,8 @@ public class ImagemService {
 
         Path destino = diretorio.resolve(nomeArquivo);
 
-        double Latitude = 0D;
-        double Longitude = 0D;
+        Double latitude = null;
+        Double longitude = null;
 
         Files.copy(
                 imagem.getInputStream(),
@@ -110,8 +107,8 @@ public class ImagemService {
             if (gpsDirectory != null && gpsDirectory.getGeoLocation() != null){
                 GeoLocation location = gpsDirectory.getGeoLocation();
 
-                Latitude = location.getLatitude();
-                Longitude = location.getLongitude();
+                latitude = location.getLatitude();
+                longitude = location.getLongitude();
             }
         } catch (Exception e) {
             System.err.println("Failed to read metadata: " + e.getMessage());
@@ -119,10 +116,7 @@ public class ImagemService {
         }
 
 
-        return Map.of(
-                ImagemDadosParametros.METADADOS,List.of(nomeArquivo),
-                ImagemDadosParametros.IMAGEMNOME, List.of(Longitude,Latitude)
-        );
+        return new ImagemProcessada(nomeArquivo,latitude,longitude);
     }
 
     private String obterExtensao(String nomeArquivo) {

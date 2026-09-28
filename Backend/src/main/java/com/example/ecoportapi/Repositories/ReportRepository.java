@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface ReportRepository extends JpaRepository<Report,Long> {
 
-
+    List<Report> findByUnidadeIdAndUsuarioId(Long UnidadeId,Long UsuarioId);
 
     @Query("""
     SELECT new com.example.ecoportapi.DTOs.Response.ReportResumidoDTO(

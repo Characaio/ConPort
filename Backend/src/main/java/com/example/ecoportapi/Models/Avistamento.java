@@ -2,6 +2,9 @@ package com.example.ecoportapi.Models;
 
 import com.example.ecoportapi.Models.Enums.AvistamentoCerteza;
 import jakarta.persistence.*;
+
+import java.lang.classfile.constantpool.DoubleEntry;
+import java.security.PublicKey;
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,12 +18,14 @@ public class Avistamento {
     @Column(name = "HoraDoAvistamento", nullable = false)
     private LocalDateTime HoraDoAvistamento;
 
-    @Column(name = "Local",nullable = false)
-    private String Local;
+    @Column(name = "Longitude", nullable = true)
+    private Double Longitude;
 
-    @Enumerated(EnumType.STRING)
+    @Column(name = "Latitude", nullable = true)
+    private Double Latitude;
+
     @Column(name = "Certeza", nullable = false)
-    private AvistamentoCerteza Certeza;
+    private Double Certeza;
 
     @Column(name = "EspecieAvistada", nullable = false)
     private String EspecieAvistada;
@@ -36,11 +41,14 @@ public class Avistamento {
     public LocalDateTime getHoraDoAvistamento() { return HoraDoAvistamento; }
     public void setHoraDoAvistamento(LocalDateTime horaDoAvistamento) { HoraDoAvistamento = horaDoAvistamento; }
 
-    public String getLocal() { return Local; }
-    public void setLocal(String local) { Local = local; }
+    public Double setLongitude(){ return Longitude; }
+    public void setLongitude(Double longitude) {Longitude = longitude; }
 
-    public AvistamentoCerteza getCerteza() { return Certeza; }
-    public void setCerteza(AvistamentoCerteza certeza) { Certeza = certeza; }
+    public Double setLatitude(){ return Latitude; }
+    public void setLatitude(Double latitude) {Latitude = latitude; }
+
+    public Double getCerteza() { return Certeza; }
+    public void setCerteza(Double certeza) { Certeza = certeza; }
 
     public String getEspecieAvistada() { return EspecieAvistada; }
     public void setEspecieAvistada(String especieAvistada) { EspecieAvistada = especieAvistada; }

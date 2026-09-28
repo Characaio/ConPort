@@ -1,7 +1,8 @@
 package com.example.ecoportapi.Models.Enums;
 
-public enum ImagemOrigem {
+public enum LocalizacaoOrigem {
     IMAGEM_EXIF,
     GPS_CELULAR,
-    MAPA_MANUAL
+    MAPA_MANUAL,
+    NAO_INFORMADA
 }

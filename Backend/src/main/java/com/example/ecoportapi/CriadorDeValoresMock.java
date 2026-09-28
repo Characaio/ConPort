@@ -180,6 +180,15 @@ public class CriadorDeValoresMock implements CommandLineRunner {
             report1.setPrioridade(ReportPrioridade.ALARMANTE);
             report2.setPrioridade(ReportPrioridade.MEDIA);
 
+            report1.setLongitude(0D);
+            report2.setLongitude(0D);
+
+            report1.setLatitude(0D);
+            report2.setLatitude(0D);
+
+            report1.setLocalizacaoOrigem(LocalizacaoOrigem.MAPA_MANUAL);
+            report2.setLocalizacaoOrigem(LocalizacaoOrigem.MAPA_MANUAL);
+
             reportRepository.saveAll(List.of(report1,report2));
     }
 
