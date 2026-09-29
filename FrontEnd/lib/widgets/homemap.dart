@@ -1,20 +1,108 @@
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
 class HomeMap extends StatefulWidget {
   const HomeMap({super.key});
 
   @override
-  State<HomeMap> createState() => _HomeMapState();
+  State<HomeMap> createState() => HomeMapState();
 }
 
-class _HomeMapState extends State<HomeMap> {
+class HomeMapState extends State<HomeMap> {
   final MapController _mapController = MapController();
+  Future<void> centralizarLocalizacao() async{
+    await _determinePosition();
 
+    if (_currentPosition != null && mounted){
+      _mapController.move(
+        _currentPosition!,
+        15,
+      );
+    }
+  }
+Future<void> pesquisarLocal(String consulta) async {
+  final texto = consulta.trim();
+
+  if (texto.isEmpty) {
+    return;
+  }
+
+  try {
+    final uri = Uri.https(
+      'nominatim.openstreetmap.org',
+      '/search',
+      {
+        'q': texto,
+        'format': 'jsonv2',
+        'limit': '1',
+        'countrycodes': 'br',
+      },
+    );
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'User-Agent': 'ConPort/1.0',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Erro na pesquisa');
+    }
+
+    final List<dynamic> resultados =
+        jsonDecode(response.body);
+
+    if (resultados.isEmpty) {
+      throw Exception('Local não encontrado');
+    }
+
+    final resultado = resultados.first;
+
+    final latitude = double.parse(
+      resultado['lat'].toString(),
+    );
+
+    final longitude = double.parse(
+      resultado['lon'].toString(),
+    );
+
+    final local = LatLng(
+      latitude,
+      longitude,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    _mapController.move(
+      local,
+      16,
+    );
+  } catch (e) {
+    debugPrint('SEARCH ERROR: $e');
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Local não encontrado.',
+        ),
+      ),
+    );
+  }
+}
   LatLng? _currentPosition;
 
   bool _isLoadingLocation = false;
@@ -276,28 +364,7 @@ class _HomeMapState extends State<HomeMap> {
                     ),
                   ),
               ],
-            ),
-
-            // Botão de localização.
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: FloatingActionButton(
-                onPressed: _determinePosition,
-                child: _isLoadingLocation
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : Icon(
-                        Icons.my_location,
-                        color: colors.primary,
-                      ),
-              ),
-            ),        
+            ),       
           ],
         );
       },
