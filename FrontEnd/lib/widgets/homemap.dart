@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
@@ -17,103 +16,18 @@ class HomeMap extends StatefulWidget {
 
 class HomeMapState extends State<HomeMap> {
   final MapController _mapController = MapController();
-  Future<void> centralizarLocalizacao() async{
-    await _determinePosition();
 
-    if (_currentPosition != null && mounted){
-      _mapController.move(
-        _currentPosition!,
-        15,
-      );
-    }
-  }
-Future<void> pesquisarLocal(String consulta) async {
-  final texto = consulta.trim();
-
-  if (texto.isEmpty) {
-    return;
-  }
-
-  try {
-    final uri = Uri.https(
-      'nominatim.openstreetmap.org',
-      '/search',
-      {
-        'q': texto,
-        'format': 'jsonv2',
-        'limit': '1',
-        'countrycodes': 'br',
-      },
-    );
-
-    final response = await http.get(
-      uri,
-      headers: {
-        'User-Agent': 'ConPort/1.0',
-      },
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Erro na pesquisa');
-    }
-
-    final List<dynamic> resultados =
-        jsonDecode(response.body);
-
-    if (resultados.isEmpty) {
-      throw Exception('Local não encontrado');
-    }
-
-    final resultado = resultados.first;
-
-    final latitude = double.parse(
-      resultado['lat'].toString(),
-    );
-
-    final longitude = double.parse(
-      resultado['lon'].toString(),
-    );
-
-    final local = LatLng(
-      latitude,
-      longitude,
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    _mapController.move(
-      local,
-      16,
-    );
-  } catch (e) {
-    debugPrint('SEARCH ERROR: $e');
-
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Local não encontrado.',
-        ),
-      ),
-    );
-  }
-}
   LatLng? _currentPosition;
 
   bool _isLoadingLocation = false;
-
   String? _locationError;
 
-  Future<vt.Style>? _styleFuture;
+  Future<void>? _locationRequest;
 
+  Future<vt.Style>? _styleFuture;
   vt.Style? _style;
 
-  // Posição usada caso não seja possível pegar a localização.
+  // Posição usada quando ainda não foi possível obter a localização.
   // Santa Bárbara d'Oeste - SP
   static const LatLng _fallbackLocation =
       LatLng(-22.7542, -47.4147);
@@ -128,12 +42,36 @@ Future<void> pesquisarLocal(String consulta) async {
       const Duration(seconds: 15),
     );
 
-    // A localização NÃO bloqueia mais o carregamento do mapa.
+    // Tenta obter a localização sem impedir o mapa de carregar.
     _determinePosition();
   }
 
-  Future<void> _determinePosition() async {
-    if (_isLoadingLocation) {
+  // ============================================================
+  // LOCALIZAÇÃO
+  // ============================================================
+
+  Future<void> _determinePosition() {
+    // Se já existe uma requisição acontecendo,
+    // retorna a mesma Future em vez de iniciar outra.
+    if (_locationRequest != null) {
+      return _locationRequest!;
+    }
+
+    final request = _fetchLocation();
+
+    _locationRequest = request;
+
+    request.whenComplete(() {
+      if (identical(_locationRequest, request)) {
+        _locationRequest = null;
+      }
+    });
+
+    return request;
+  }
+
+  Future<void> _fetchLocation() async {
+    if (!mounted) {
       return;
     }
 
@@ -150,9 +88,16 @@ Future<void> pesquisarLocal(String consulta) async {
         permission = await Geolocator.requestPermission();
       }
 
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        throw Exception('Permissão de localização negada');
+      if (permission == LocationPermission.denied) {
+        throw Exception(
+          'Permissão de localização negada.',
+        );
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception(
+          'Permissão de localização negada permanentemente.',
+        );
       }
 
       final position = await Geolocator.getCurrentPosition(
@@ -184,19 +129,6 @@ Future<void> pesquisarLocal(String consulta) async {
         _isLoadingLocation = false;
         _locationError = null;
       });
-
-      // Só move o mapa depois que ele estiver montado.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
-        }
-
-        try {
-          _mapController.move(location, 15);
-        } catch (e) {
-          debugPrint('MAP MOVE ERROR: $e');
-        }
-      });
     } catch (e, stack) {
       debugPrint('LOCATION ERROR: $e');
       debugPrintStack(stackTrace: stack);
@@ -205,8 +137,6 @@ Future<void> pesquisarLocal(String consulta) async {
         return;
       }
 
-      // IMPORTANTE:
-      // Falha na localização NÃO impede o mapa de aparecer.
       setState(() {
         _isLoadingLocation = false;
         _locationError =
@@ -215,11 +145,209 @@ Future<void> pesquisarLocal(String consulta) async {
     }
   }
 
+  // ============================================================
+  // BOTÃO DE CENTRALIZAR LOCALIZAÇÃO
+  // ============================================================
+
+  Future<void> centralizarLocalizacao() async {
+    try {
+      // Se já temos a localização, centraliza imediatamente.
+      if (_currentPosition != null) {
+        if (!mounted) {
+          return;
+        }
+
+        _moverMapaParaLocalizacao();
+        return;
+      }
+
+      // Caso ainda não tenhamos localização,
+      // espera a requisição atual terminar.
+      await _determinePosition();
+
+      if (!mounted) {
+        return;
+      }
+
+      if (_currentPosition == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _locationError ??
+                  'Não foi possível obter sua localização.',
+            ),
+          ),
+        );
+
+        return;
+      }
+
+      _moverMapaParaLocalizacao();
+    } catch (e, stack) {
+      debugPrint(
+        'CENTRALIZAR LOCALIZAÇÃO ERROR: $e',
+      );
+
+      debugPrintStack(
+        stackTrace: stack,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível acessar sua localização.',
+          ),
+        ),
+      );
+    }
+  }
+
+  void _moverMapaParaLocalizacao() {
+    if (!mounted || _currentPosition == null) {
+      return;
+    }
+
+    final location = _currentPosition!;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      try {
+        _mapController.move(
+          location,
+          15,
+        );
+      } catch (e) {
+        debugPrint(
+          'MAP MOVE ERROR: $e',
+        );
+      }
+    });
+  }
+
+  // ============================================================
+  // PESQUISA DE LOCAL
+  // ============================================================
+
+  Future<void> pesquisarLocal(String consulta) async {
+    final texto = consulta.trim();
+
+    if (texto.isEmpty) {
+      return;
+    }
+
+    try {
+      final uri = Uri.https(
+        'nominatim.openstreetmap.org',
+        '/search',
+        {
+          'q': texto,
+          'format': 'jsonv2',
+          'limit': '1',
+          'countrycodes': 'br',
+        },
+      );
+
+      final response = await http.get(
+        uri,
+        headers: const {
+          'User-Agent': 'ConPort/1.0',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Erro na pesquisa: ${response.statusCode}',
+        );
+      }
+
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is! List) {
+        throw Exception(
+          'Resposta inválida da pesquisa.',
+        );
+      }
+
+      final List<dynamic> resultados = decoded;
+
+      if (resultados.isEmpty) {
+        throw Exception(
+          'Local não encontrado.',
+        );
+      }
+
+      final resultado = resultados.first;
+
+      final latitude = double.tryParse(
+        resultado['lat'].toString(),
+      );
+
+      final longitude = double.tryParse(
+        resultado['lon'].toString(),
+      );
+
+      if (latitude == null || longitude == null) {
+        throw Exception(
+          'Coordenadas inválidas.',
+        );
+      }
+
+      final local = LatLng(
+        latitude,
+        longitude,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _mapController.move(
+        local,
+        16,
+      );
+    } catch (e, stack) {
+      debugPrint(
+        'SEARCH ERROR: $e',
+      );
+
+      debugPrintStack(
+        stackTrace: stack,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Local não encontrado.',
+          ),
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // DESCARTAR
+  // ============================================================
+
   @override
   void dispose() {
     _style?.dispose();
     super.dispose();
   }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -227,16 +355,21 @@ Future<void> pesquisarLocal(String consulta) async {
 
     return FutureBuilder<vt.Style>(
       future: _styleFuture,
-
       builder: (context, snapshot) {
-        // Ainda carregando o estilo do mapa.
+        // --------------------------------------------------------
+        // CARREGANDO MAPA
+        // --------------------------------------------------------
+
         if (snapshot.connectionState != ConnectionState.done) {
           return const Center(
             child: CircularProgressIndicator(),
           );
         }
 
-        // Não conseguiu baixar o estilo.
+        // --------------------------------------------------------
+        // ERRO AO CARREGAR MAPA
+        // --------------------------------------------------------
+
         if (snapshot.hasError || !snapshot.hasData) {
           return Center(
             child: Padding(
@@ -248,9 +381,7 @@ Future<void> pesquisarLocal(String consulta) async {
                     Icons.map_outlined,
                     size: 48,
                   ),
-
                   const SizedBox(height: 12),
-
                   const Text(
                     'Não foi possível carregar o mapa.',
                     textAlign: TextAlign.center,
@@ -259,20 +390,17 @@ Future<void> pesquisarLocal(String consulta) async {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
                   const Text(
                     'Verifique sua conexão com a internet.',
                     textAlign: TextAlign.center,
                   ),
-
                   const SizedBox(height: 16),
-
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
-                        _styleFuture = const vt.StyleReader(
+                        _styleFuture =
+                            const vt.StyleReader(
                           uri:
                               'https://tiles.openfreemap.org/styles/liberty',
                         ).read().timeout(
@@ -280,7 +408,9 @@ Future<void> pesquisarLocal(String consulta) async {
                         );
                       });
                     },
-                    child: const Text('Tentar novamente'),
+                    child: const Text(
+                      'Tentar novamente',
+                    ),
                   ),
                 ],
               ),
@@ -288,30 +418,40 @@ Future<void> pesquisarLocal(String consulta) async {
           );
         }
 
+        // --------------------------------------------------------
+        // ESTILO DO MAPA
+        // --------------------------------------------------------
+
         final style = snapshot.data!;
 
         _style ??= style;
 
-        // Se ainda não conseguiu localização,
-        // usa a posição padrão.
+        // Se a localização ainda não chegou,
+        // utiliza Santa Bárbara d'Oeste como posição inicial.
         final center =
             _currentPosition ??
             style.center ??
             _fallbackLocation;
 
+        // --------------------------------------------------------
+        // MAPA
+        // --------------------------------------------------------
+
         return Stack(
           children: [
             FlutterMap(
               mapController: _mapController,
-
               options: MapOptions(
                 initialCenter: center,
                 initialZoom: 15,
                 minZoom: 2,
                 maxZoom: 21,
               ),
-
               children: [
+                // ------------------------------------------------
+                // CAMADA DO MAPA
+                // ------------------------------------------------
+
                 vt.VectorTileLayer(
                   theme: style.theme,
                   tileProviders: style.providers,
@@ -319,7 +459,10 @@ Future<void> pesquisarLocal(String consulta) async {
                   sprites: style.sprites,
                 ),
 
-                // Marcador da localização real.
+                // ------------------------------------------------
+                // MARCADOR DA LOCALIZAÇÃO
+                // ------------------------------------------------
+
                 if (_currentPosition != null)
                   MarkerLayer(
                     markers: [
@@ -335,6 +478,10 @@ Future<void> pesquisarLocal(String consulta) async {
                       ),
                     ],
                   ),
+
+                // ------------------------------------------------
+                // ATRIBUIÇÃO
+                // ------------------------------------------------
 
                 if (style.attributions.isNotEmpty)
                   Positioned(
@@ -364,11 +511,32 @@ Future<void> pesquisarLocal(String consulta) async {
                     ),
                   ),
               ],
-            ),       
+            ),
+
+            // ----------------------------------------------------
+            // INDICADOR DE LOCALIZAÇÃO
+            // ----------------------------------------------------
+
+            if (_isLoadingLocation)
+              const Positioned(
+                top: 16,
+                right: 16,
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(10),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         );
       },
     );
   }
 }
-
