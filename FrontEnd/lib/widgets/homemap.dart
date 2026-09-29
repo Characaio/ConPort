@@ -17,13 +17,18 @@ class _HomeMapState extends State<HomeMap> {
 
   LatLng? _currentPosition;
 
-  bool _isLoading = true;
-  String? _errorMessage;
+  bool _isLoadingLocation = false;
+
+  String? _locationError;
 
   Future<vt.Style>? _styleFuture;
+
   vt.Style? _style;
 
-  static const LatLng _fallbackLocation = LatLng(40.7128, -74.0060);
+  // Posição usada caso não seja possível pegar a localização.
+  // Santa Bárbara d'Oeste - SP
+  static const LatLng _fallbackLocation =
+      LatLng(-22.7542, -47.4147);
 
   @override
   void initState() {
@@ -31,66 +36,94 @@ class _HomeMapState extends State<HomeMap> {
 
     _styleFuture = const vt.StyleReader(
       uri: 'https://tiles.openfreemap.org/styles/liberty',
-    ).read();
+    ).read().timeout(
+      const Duration(seconds: 15),
+    );
 
+    // A localização NÃO bloqueia mais o carregamento do mapa.
     _determinePosition();
   }
 
   Future<void> _determinePosition() async {
-    if (kIsWeb) {
-      try {
-        LocationPermission permission = await Geolocator.checkPermission();
+    if (_isLoadingLocation) {
+      return;
+    }
 
-        if (permission == LocationPermission.denied) {
-          permission = await Geolocator.requestPermission();
-        }
+    setState(() {
+      _isLoadingLocation = true;
+      _locationError = null;
+    });
 
-        if (permission == LocationPermission.denied ||
-            permission == LocationPermission.deniedForever) {
-          throw Exception('Permissão de localização negada: $permission');
-        }
+    try {
+      LocationPermission permission =
+          await Geolocator.checkPermission();
 
-        final position = await Geolocator.getCurrentPosition(
-          locationSettings: WebSettings(
-            accuracy: LocationAccuracy.high,
-            maximumAge: Duration(minutes: 5),
-            timeLimit: Duration(seconds: 45),
-          ),
-        );
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
 
-        final location = LatLng(position.latitude, position.longitude);
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw Exception('Permissão de localização negada');
+      }
 
-        debugPrint('LOCATION: ${position.latitude}, ${position.longitude}');
-        debugPrint('ACCURACY: ${position.accuracy}m');
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
 
-        if (!mounted) return;
+      final location = LatLng(
+        position.latitude,
+        position.longitude,
+      );
 
-        setState(() {
-          _currentPosition = location;
-          _isLoading = false;
-          _errorMessage = null;
-        });
+      debugPrint(
+        'LOCATION: ${position.latitude}, ${position.longitude}',
+      );
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _mapController.move(location, 15);
-          }
-        });
+      debugPrint(
+        'ACCURACY: ${position.accuracy}m',
+      );
 
-        return;
-      } catch (e, stack) {
-        debugPrint('LOCATION ERROR: $e');
-        debugPrintStack(stackTrace: stack);
-
-        if (!mounted) return;
-
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Não foi possível obter sua localização:\n$e';
-        });
-
+      if (!mounted) {
         return;
       }
+
+      setState(() {
+        _currentPosition = location;
+        _isLoadingLocation = false;
+        _locationError = null;
+      });
+
+      // Só move o mapa depois que ele estiver montado.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+
+        try {
+          _mapController.move(location, 15);
+        } catch (e) {
+          debugPrint('MAP MOVE ERROR: $e');
+        }
+      });
+    } catch (e, stack) {
+      debugPrint('LOCATION ERROR: $e');
+      debugPrintStack(stackTrace: stack);
+
+      if (!mounted) {
+        return;
+      }
+
+      // IMPORTANTE:
+      // Falha na localização NÃO impede o mapa de aparecer.
+      setState(() {
+        _isLoadingLocation = false;
+        _locationError =
+            'Não foi possível obter sua localização.';
+      });
     }
   }
 
@@ -103,18 +136,66 @@ class _HomeMapState extends State<HomeMap> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+
     return FutureBuilder<vt.Style>(
       future: _styleFuture,
+
       builder: (context, snapshot) {
+        // Ainda carregando o estilo do mapa.
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
         }
 
-        if (snapshot.hasError) {
+        // Não conseguiu baixar o estilo.
+        if (snapshot.hasError || !snapshot.hasData) {
           return Center(
-            child: Text(
-              'Erro ao carregar o mapa:\n${snapshot.error}',
-              textAlign: TextAlign.center,
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.map_outlined,
+                    size: 48,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  const Text(
+                    'Não foi possível carregar o mapa.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  const Text(
+                    'Verifique sua conexão com a internet.',
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _styleFuture = const vt.StyleReader(
+                          uri:
+                              'https://tiles.openfreemap.org/styles/liberty',
+                        ).read().timeout(
+                          const Duration(seconds: 15),
+                        );
+                      });
+                    },
+                    child: const Text('Tentar novamente'),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -123,26 +204,25 @@ class _HomeMapState extends State<HomeMap> {
 
         _style ??= style;
 
-        if (_isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (_errorMessage != null) {
-          return Center(child: Text(_errorMessage!));
-        }
-
-        final center = _currentPosition ?? style.center ?? _fallbackLocation;
+        // Se ainda não conseguiu localização,
+        // usa a posição padrão.
+        final center =
+            _currentPosition ??
+            style.center ??
+            _fallbackLocation;
 
         return Stack(
           children: [
             FlutterMap(
               mapController: _mapController,
+
               options: MapOptions(
                 initialCenter: center,
                 initialZoom: 15,
                 minZoom: 2,
                 maxZoom: 21,
               ),
+
               children: [
                 vt.VectorTileLayer(
                   theme: style.theme,
@@ -151,6 +231,7 @@ class _HomeMapState extends State<HomeMap> {
                   sprites: style.sprites,
                 ),
 
+                // Marcador da localização real.
                 if (_currentPosition != null)
                   MarkerLayer(
                     markers: [
@@ -178,8 +259,11 @@ class _HomeMapState extends State<HomeMap> {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: colors.surface.withValues(alpha: 0.75),
-                          borderRadius: BorderRadius.circular(4),
+                          color: colors.surface.withValues(
+                            alpha: 0.75,
+                          ),
+                          borderRadius:
+                              BorderRadius.circular(4),
                         ),
                         child: Text(
                           '© OpenFreeMap · OpenStreetMap',
@@ -194,19 +278,30 @@ class _HomeMapState extends State<HomeMap> {
               ],
             ),
 
+            // Botão de localização.
             Positioned(
               right: 16,
               bottom: 16,
               child: FloatingActionButton(
-                onPressed: () {
-                  _determinePosition();
-                },
-                child: Icon(Icons.my_location, color: colors.primary),
+                onPressed: _determinePosition,
+                child: _isLoadingLocation
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Icon(
+                        Icons.my_location,
+                        color: colors.primary,
+                      ),
               ),
-            ),
+            ),        
           ],
         );
       },
     );
   }
 }
+
