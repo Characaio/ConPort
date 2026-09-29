@@ -14,6 +14,18 @@ class HomeMap extends StatefulWidget {
   State<HomeMap> createState() => HomeMapState();
 }
 
+class LocalSugestao {
+  final String nome;
+  final double latitude;
+  final double longitude;
+
+  const LocalSugestao({
+    required this.nome,
+    required this.latitude,
+    required this.longitude,
+  });
+}
+
 class HomeMapState extends State<HomeMap> {
   final MapController _mapController = MapController();
 
@@ -29,8 +41,7 @@ class HomeMapState extends State<HomeMap> {
 
   // Posição usada quando ainda não foi possível obter a localização.
   // Santa Bárbara d'Oeste - SP
-  static const LatLng _fallbackLocation =
-      LatLng(-22.7542, -47.4147);
+  static const LatLng _fallbackLocation = LatLng(-22.7542, -47.4147);
 
   @override
   void initState() {
@@ -38,9 +49,7 @@ class HomeMapState extends State<HomeMap> {
 
     _styleFuture = const vt.StyleReader(
       uri: 'https://tiles.openfreemap.org/styles/liberty',
-    ).read().timeout(
-      const Duration(seconds: 15),
-    );
+    ).read().timeout(const Duration(seconds: 15));
 
     // Tenta obter a localização sem impedir o mapa de carregar.
     _determinePosition();
@@ -81,23 +90,18 @@ class HomeMapState extends State<HomeMap> {
     });
 
     try {
-      LocationPermission permission =
-          await Geolocator.checkPermission();
+      LocationPermission permission = await Geolocator.checkPermission();
 
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
 
       if (permission == LocationPermission.denied) {
-        throw Exception(
-          'Permissão de localização negada.',
-        );
+        throw Exception('Permissão de localização negada.');
       }
 
       if (permission == LocationPermission.deniedForever) {
-        throw Exception(
-          'Permissão de localização negada permanentemente.',
-        );
+        throw Exception('Permissão de localização negada permanentemente.');
       }
 
       final position = await Geolocator.getCurrentPosition(
@@ -107,18 +111,11 @@ class HomeMapState extends State<HomeMap> {
         ),
       );
 
-      final location = LatLng(
-        position.latitude,
-        position.longitude,
-      );
+      final location = LatLng(position.latitude, position.longitude);
 
-      debugPrint(
-        'LOCATION: ${position.latitude}, ${position.longitude}',
-      );
+      debugPrint('LOCATION: ${position.latitude}, ${position.longitude}');
 
-      debugPrint(
-        'ACCURACY: ${position.accuracy}m',
-      );
+      debugPrint('ACCURACY: ${position.accuracy}m');
 
       if (!mounted) {
         return;
@@ -139,8 +136,7 @@ class HomeMapState extends State<HomeMap> {
 
       setState(() {
         _isLoadingLocation = false;
-        _locationError =
-            'Não foi possível obter sua localização.';
+        _locationError = 'Não foi possível obter sua localização.';
       });
     }
   }
@@ -173,8 +169,7 @@ class HomeMapState extends State<HomeMap> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              _locationError ??
-                  'Não foi possível obter sua localização.',
+              _locationError ?? 'Não foi possível obter sua localização.',
             ),
           ),
         );
@@ -184,13 +179,9 @@ class HomeMapState extends State<HomeMap> {
 
       _moverMapaParaLocalizacao();
     } catch (e, stack) {
-      debugPrint(
-        'CENTRALIZAR LOCALIZAÇÃO ERROR: $e',
-      );
+      debugPrint('CENTRALIZAR LOCALIZAÇÃO ERROR: $e');
 
-      debugPrintStack(
-        stackTrace: stack,
-      );
+      debugPrintStack(stackTrace: stack);
 
       if (!mounted) {
         return;
@@ -198,9 +189,7 @@ class HomeMapState extends State<HomeMap> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Não foi possível acessar sua localização.',
-          ),
+          content: Text('Não foi possível acessar sua localização.'),
         ),
       );
     }
@@ -219,14 +208,9 @@ class HomeMapState extends State<HomeMap> {
       }
 
       try {
-        _mapController.move(
-          location,
-          15,
-        );
+        _mapController.move(location, 15);
       } catch (e) {
-        debugPrint(
-          'MAP MOVE ERROR: $e',
-        );
+        debugPrint('MAP MOVE ERROR: $e');
       }
     });
   }
@@ -234,105 +218,98 @@ class HomeMapState extends State<HomeMap> {
   // ============================================================
   // PESQUISA DE LOCAL
   // ============================================================
-
-  Future<void> pesquisarLocal(String consulta) async {
+  Future<List<LocalSugestao>> buscarSugestoes(String consulta) async {
     final texto = consulta.trim();
 
     if (texto.isEmpty) {
-      return;
+      return [];
     }
 
     try {
-      final uri = Uri.https(
-        'nominatim.openstreetmap.org',
-        '/search',
-        {
-          'q': texto,
-          'format': 'jsonv2',
-          'limit': '1',
-          'countrycodes': 'br',
-        },
-      );
+      final uri = Uri.https('nominatim.openstreetmap.org', '/search', {
+        'q': texto,
+        'format': 'jsonv2',
+        'limit': '5',
+        'addressdetails': '1',
+      });
 
       final response = await http.get(
         uri,
-        headers: const {
-          'User-Agent': 'ConPort/1.0',
-        },
+        headers: const {'User-Agent': 'ConPort/1.0'},
       );
 
       if (response.statusCode != 200) {
-        throw Exception(
-          'Erro na pesquisa: ${response.statusCode}',
-        );
+        throw Exception('Erro na pesquisa: ${response.statusCode}');
       }
 
       final decoded = jsonDecode(response.body);
 
       if (decoded is! List) {
-        throw Exception(
-          'Resposta inválida da pesquisa.',
-        );
+        return [];
       }
 
-      final List<dynamic> resultados = decoded;
+      return decoded
+          .map<LocalSugestao?>((resultado) {
+            final latitude = double.tryParse(
+              resultado['lat']?.toString() ?? '',
+            );
 
-      if (resultados.isEmpty) {
-        throw Exception(
-          'Local não encontrado.',
-        );
-      }
+            final longitude = double.tryParse(
+              resultado['lon']?.toString() ?? '',
+            );
 
-      final resultado = resultados.first;
+            if (latitude == null || longitude == null) {
+              return null;
+            }
 
-      final latitude = double.tryParse(
-        resultado['lat'].toString(),
-      );
+            final nome = resultado['display_name']?.toString();
 
-      final longitude = double.tryParse(
-        resultado['lon'].toString(),
-      );
+            if (nome == null || nome.isEmpty) {
+              return null;
+            }
 
-      if (latitude == null || longitude == null) {
-        throw Exception(
-          'Coordenadas inválidas.',
-        );
-      }
-
-      final local = LatLng(
-        latitude,
-        longitude,
-      );
-
-      if (!mounted) {
-        return;
-      }
-
-      _mapController.move(
-        local,
-        16,
-      );
+            return LocalSugestao(
+              nome: nome,
+              latitude: latitude,
+              longitude: longitude,
+            );
+          })
+          .whereType<LocalSugestao>()
+          .toList();
     } catch (e, stack) {
-      debugPrint(
-        'SEARCH ERROR: $e',
-      );
+      debugPrint('SUGGESTIONS ERROR: $e');
+      debugPrintStack(stackTrace: stack);
 
-      debugPrintStack(
-        stackTrace: stack,
-      );
+      return [];
+    }
+  }
 
+  Future<void> pesquisarLocal(String consulta) async {
+    final sugestoes = await buscarSugestoes(consulta);
+
+    if (sugestoes.isEmpty) {
       if (!mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Local não encontrado.',
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Local não encontrado.')));
+
+      return;
     }
+
+    final local = sugestoes.first;
+
+    if (!mounted) {
+      return;
+    }
+
+    _mapController.move(LatLng(local.latitude, local.longitude), 16);
+  }
+
+  void irParaLocal(LocalSugestao sugestao) {
+    _mapController.move(LatLng(sugestao.latitude, sugestao.longitude), 16);
   }
 
   // ============================================================
@@ -361,9 +338,7 @@ class HomeMapState extends State<HomeMap> {
         // --------------------------------------------------------
 
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         // --------------------------------------------------------
@@ -377,18 +352,12 @@ class HomeMapState extends State<HomeMap> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.map_outlined,
-                    size: 48,
-                  ),
+                  const Icon(Icons.map_outlined, size: 48),
                   const SizedBox(height: 12),
                   const Text(
                     'Não foi possível carregar o mapa.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -399,18 +368,12 @@ class HomeMapState extends State<HomeMap> {
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
-                        _styleFuture =
-                            const vt.StyleReader(
-                          uri:
-                              'https://tiles.openfreemap.org/styles/liberty',
-                        ).read().timeout(
-                          const Duration(seconds: 15),
-                        );
+                        _styleFuture = const vt.StyleReader(
+                          uri: 'https://tiles.openfreemap.org/styles/liberty',
+                        ).read().timeout(const Duration(seconds: 15));
                       });
                     },
-                    child: const Text(
-                      'Tentar novamente',
-                    ),
+                    child: const Text('Tentar novamente'),
                   ),
                 ],
               ),
@@ -428,10 +391,7 @@ class HomeMapState extends State<HomeMap> {
 
         // Se a localização ainda não chegou,
         // utiliza Santa Bárbara d'Oeste como posição inicial.
-        final center =
-            _currentPosition ??
-            style.center ??
-            _fallbackLocation;
+        final center = _currentPosition ?? style.center ?? _fallbackLocation;
 
         // --------------------------------------------------------
         // MAPA
@@ -451,7 +411,6 @@ class HomeMapState extends State<HomeMap> {
                 // ------------------------------------------------
                 // CAMADA DO MAPA
                 // ------------------------------------------------
-
                 vt.VectorTileLayer(
                   theme: style.theme,
                   tileProviders: style.providers,
@@ -462,7 +421,6 @@ class HomeMapState extends State<HomeMap> {
                 // ------------------------------------------------
                 // MARCADOR DA LOCALIZAÇÃO
                 // ------------------------------------------------
-
                 if (_currentPosition != null)
                   MarkerLayer(
                     markers: [
@@ -482,7 +440,6 @@ class HomeMapState extends State<HomeMap> {
                 // ------------------------------------------------
                 // ATRIBUIÇÃO
                 // ------------------------------------------------
-
                 if (style.attributions.isNotEmpty)
                   Positioned(
                     left: 8,
@@ -494,11 +451,8 @@ class HomeMapState extends State<HomeMap> {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: colors.surface.withValues(
-                            alpha: 0.75,
-                          ),
-                          borderRadius:
-                              BorderRadius.circular(4),
+                          color: colors.surface.withValues(alpha: 0.75),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           '© OpenFreeMap · OpenStreetMap',
@@ -516,7 +470,6 @@ class HomeMapState extends State<HomeMap> {
             // ----------------------------------------------------
             // INDICADOR DE LOCALIZAÇÃO
             // ----------------------------------------------------
-
             if (_isLoadingLocation)
               const Positioned(
                 top: 16,
@@ -527,9 +480,7 @@ class HomeMapState extends State<HomeMap> {
                     child: SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   ),
                 ),
@@ -540,3 +491,4 @@ class HomeMapState extends State<HomeMap> {
     );
   }
 }
+

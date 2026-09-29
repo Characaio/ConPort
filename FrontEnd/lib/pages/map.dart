@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'dart:async';
 import 'package:conport/widgets/homemap.dart';
 
 class Map extends StatefulWidget {
@@ -11,8 +13,13 @@ class Map extends StatefulWidget {
 class _MapState extends State<Map> {
   final GlobalKey<HomeMapState> _mapKey = GlobalKey<HomeMapState>();
 
-  final TextEditingController _searchController =
-      TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+
+  Timer? _searchDebounce;
+
+  List<LocalSugestao> _sugestoes = [];
+
+  bool _pesquisando = false;
 
   // Controla a posição da gaveta.
   // 0.12 = fechada
@@ -21,8 +28,49 @@ class _MapState extends State<Map> {
 
   double _dragStartSize = 0.12;
 
+  void _buscarSugestoes(String texto) {
+    _searchDebounce?.cancel();
+
+    if (texto.trim().isEmpty) {
+      setState(() {
+        _sugestoes = [];
+        _pesquisando = false;
+      });
+
+      return;
+    }
+
+    setState(() {
+      _pesquisando = true;
+    });
+
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () async {
+      final resultados = await _mapKey.currentState?.buscarSugestoes(texto);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _sugestoes = resultados ?? [];
+        _pesquisando = false;
+      });
+    });
+  }
+
+  void _selecionarSugestao(LocalSugestao sugestao) {
+    _searchController.text = sugestao.nome;
+
+    setState(() {
+      _sugestoes = [];
+    });
+
+    _mapKey.currentState?.irParaLocal(sugestao);
+  }
+
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -57,11 +105,7 @@ class _MapState extends State<Map> {
             // ============================================================
             // MAPA
             // ============================================================
-            Positioned.fill(
-              child: HomeMap(
-                key: _mapKey,
-              ),
-            ),
+            Positioned.fill(child: HomeMap(key: _mapKey)),
 
             // ============================================================
             // BOTÃO VOLTAR
@@ -100,7 +144,7 @@ class _MapState extends State<Map> {
             // BARRA DE PESQUISA
             // ============================================================
             Positioned(
-              top: 20,
+              top: 12,
               left: 62,
               right: 12,
               child: Container(
@@ -119,29 +163,94 @@ class _MapState extends State<Map> {
                 child: TextField(
                   controller: _searchController,
                   textInputAction: TextInputAction.search,
+                  onChanged: _buscarSugestoes,
                   onSubmitted: (value) {
+                    _searchDebounce?.cancel();
+
+                    setState(() {
+                      _sugestoes = [];
+                    });
+
                     _mapKey.currentState?.pesquisarLocal(value);
                   },
                   decoration: const InputDecoration(
-                    hintText: 'pesquisar...',
-                    hintStyle: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black54,
-                    ),
+                    hintText: 'Pesquisar...',
+                    hintStyle: TextStyle(fontSize: 12, color: Colors.black54),
                     prefixIcon: Icon(
                       Icons.search,
                       size: 18,
                       color: Colors.black54,
                     ),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 12,
-                    ),
+                    contentPadding: EdgeInsets.symmetric(vertical: 8),
                   ),
                 ),
               ),
             ),
+            if (_sugestoes.isNotEmpty)
+              Positioned(
+                top: 66,
+                left: 62,
+                right: 12,
+                child: Material(
+                  elevation: 8,
+                  borderRadius: BorderRadius.circular(16),
+                  color: const Color(0xFFE8E0D8),
+                  clipBehavior: Clip.antiAlias,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 280),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      itemCount: _sugestoes.length,
+                      separatorBuilder: (_, __) => Divider(
+                        height: 1,
+                        color: Colors.black.withValues(alpha: 0.08),
+                      ),
+                      itemBuilder: (context, index) {
+                        final sugestao = _sugestoes[index];
 
+                        return InkWell(
+                          onTap: () {
+                            _selecionarSugestao(sugestao);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 2),
+                                  child: Icon(
+                                    Icons.location_on_outlined,
+                                    size: 19,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    sugestao.nome,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
             // ============================================================
             // BOTÃO CENTRALIZAR LOCALIZAÇÃO
             // ============================================================
@@ -150,9 +259,7 @@ class _MapState extends State<Map> {
             //
             Positioned(
               right: 16,
-              bottom: MediaQuery.of(context).size.height *
-                  _drawerSize +
-                  16,
+              bottom: MediaQuery.of(context).size.height * _drawerSize + 16,
               child: Container(
                 width: 44,
                 height: 44,
@@ -169,8 +276,7 @@ class _MapState extends State<Map> {
                 ),
                 child: IconButton(
                   onPressed: () async {
-                    await _mapKey.currentState
-                        ?.centralizarLocalizacao();
+                    await _mapKey.currentState?.centralizarLocalizacao();
                   },
                   icon: const Icon(
                     Icons.my_location,
@@ -190,8 +296,7 @@ class _MapState extends State<Map> {
               left: 0,
               right: 0,
               bottom: 0,
-              height: MediaQuery.of(context).size.height *
-                  _drawerSize,
+              height: MediaQuery.of(context).size.height * _drawerSize,
               child: Material(
                 elevation: 12,
                 color: Colors.transparent,
@@ -214,15 +319,17 @@ class _MapState extends State<Map> {
                           _dragStartSize = _drawerSize;
                         },
                         onVerticalDragUpdate: (details) {
-                          final screenHeight =
-                              MediaQuery.of(context).size.height;
+                          final screenHeight = MediaQuery.of(
+                            context,
+                          ).size.height;
 
-                          final delta =
-                              -details.delta.dy / screenHeight;
+                          final delta = -details.delta.dy / screenHeight;
 
                           setState(() {
-                            _drawerSize = (_dragStartSize + delta)
-                                .clamp(0.12, 0.75);
+                            _drawerSize = (_dragStartSize + delta).clamp(
+                              0.12,
+                              0.75,
+                            );
                           });
                         },
                         onVerticalDragEnd: (details) {
@@ -257,8 +364,7 @@ class _MapState extends State<Map> {
                               height: 5,
                               decoration: BoxDecoration(
                                 color: Colors.black26,
-                                borderRadius:
-                                    BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                           ),
@@ -270,14 +376,8 @@ class _MapState extends State<Map> {
                       // ==================================================
                       Expanded(
                         child: ListView(
-                          physics:
-                              const ClampingScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(
-                            20,
-                            0,
-                            20,
-                            20,
-                          ),
+                          physics: const ClampingScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                           children: [
                             // TÍTULO
                             const Text(
@@ -368,8 +468,7 @@ class _MapState extends State<Map> {
                             Container(
                               width: double.infinity,
                               height: 1,
-                              color: Colors.black
-                                  .withValues(alpha: 0.10),
+                              color: Colors.black.withValues(alpha: 0.10),
                             ),
 
                             const SizedBox(height: 12),
@@ -396,12 +495,10 @@ class _MapState extends State<Map> {
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF0E4D5),
-                                borderRadius:
-                                    BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: const [
                                   Icon(
                                     Icons.info_outline,
@@ -428,106 +525,95 @@ class _MapState extends State<Map> {
                             const SizedBox(height: 12),
 
                             // =================================================
-                            // TAGS
-                            // =================================================
-                            Row(
-                              children: [
-                                Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        const Color(0xFFC7D8C0),
-                                    borderRadius:
-                                        BorderRadius.circular(20),
-                                  ),
-                                  child: const Text(
-                                    'Ecossistema',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color:
-                                          Color(0xFF40533A),
-                                      fontWeight:
-                                          FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(width: 8),
-
-                                Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        const Color(0xFFD8C7B8),
-                                    borderRadius:
-                                        BorderRadius.circular(20),
-                                  ),
-                                  child: const Text(
-                                    'Preservação',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.black54,
-                                      fontWeight:
-                                          FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 14),
-
-                            // =================================================
-                            // SAIBA MAIS
+                            // BOTOES
                             // =================================================
                             SizedBox(
                               width: double.infinity,
-                              height: 45,
-                              child: ElevatedButton(
-                                onPressed: () {},
-                                style:
-                                    ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      const Color(0xFF5E7654),
-                                  foregroundColor:
-                                      Colors.white,
-                                  elevation: 0,
-                                  shape:
-                                      RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(12),
+                              height: 54,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {},
+                                      icon: const Icon(
+                                        Symbols.emoji_nature,
+                                        size: 20,
+                                        weight: 12,
+                                      ),
+                                      label: const Text(
+                                        'Ecossistema',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF5E7654,
+                                        ),
+                                        foregroundColor: const Color(
+                                          0xFFE8E4DC,
+                                        ),
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            30,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                child: const Text(
-                                  'Saiba mais',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight:
-                                        FontWeight.w600,
+
+                                  const SizedBox(width: 12),
+
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {},
+                                      icon: const Icon(
+                                        Symbols.globe_2_question,
+                                        size: 20,
+                                        weight: 12,
+                                      ),
+                                      label: const Text(
+                                        'Saiba mais...',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF5E7654,
+                                        ),
+                                        foregroundColor: const Color(
+                                          0xFFE8E4DC,
+                                        ),
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            30,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
-
-                            const SizedBox(height: 14),
-
                             // =================================================
                             // IMAGEM
                             // =================================================
                             ClipRRect(
-                              borderRadius:
-                                  BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(14),
                               child: SizedBox(
                                 width: double.infinity,
-                                height: 90,
+                                height: 250,
                                 child: Image.asset(
                                   'assets/images/araraias.jpg',
                                   fit: BoxFit.cover,
@@ -558,9 +644,7 @@ class _MapState extends State<Map> {
                 bottom: 0,
                 child: GestureDetector(
                   onTap: _alternarGaveta,
-                  child: const SizedBox(
-                    height: 55,
-                  ),
+                  child: const SizedBox(height: 55),
                 ),
               ),
           ],
