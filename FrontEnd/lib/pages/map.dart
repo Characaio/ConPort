@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'dart:async';
 import 'package:conport/widgets/mapembed.dart';
+import 'package:conport/models/unidade_mapa.dart';
+import 'package:conport/services/map_service.dart';
 
 class Map extends StatefulWidget {
   const Map({super.key});
@@ -26,6 +28,30 @@ class _MapState extends State<Map> {
 
   double _dragStartSize = 0.12;
 
+  final MapService _mapService = const MapService();
+
+  UnidadeMapa? _unidade;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarUnidade();
+  }
+
+  Future<void> _carregarUnidade() async {
+    try {
+      final unidade = await _mapService.buscarUnidade(1);
+
+      if (!mounted) return;
+
+      setState(() {
+        _unidade = unidade;
+      });
+    } catch (e) {
+      debugPrint('Erro ao carregar unidade: $e');
+    }
+  }
+
   void _buscarSugestoes(String texto) {
     _searchDebounce?.cancel();
 
@@ -36,7 +62,6 @@ class _MapState extends State<Map> {
 
       return;
     }
-
 
     _searchDebounce = Timer(const Duration(milliseconds: 400), () async {
       final resultados = await _mapKey.currentState?.buscarSugestoes(texto);
@@ -373,8 +398,8 @@ class _MapState extends State<Map> {
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                           children: [
                             // TÍTULO
-                            const Text(
-                              'Unidade de Conservação',
+                            Text(
+                              _unidade?.nome ?? '',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -384,8 +409,8 @@ class _MapState extends State<Map> {
 
                             const SizedBox(height: 4),
 
-                            const Text(
-                              'Parque Estadual',
+                            Text(
+                              _unidade?.tipo ?? '',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.black54,
@@ -394,7 +419,7 @@ class _MapState extends State<Map> {
 
                             // LOCALIZAÇÃO
                             Row(
-                              children: const [
+                              children: [
                                 Icon(
                                   Icons.location_on_outlined,
                                   size: 17,
@@ -403,7 +428,7 @@ class _MapState extends State<Map> {
                                 SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    'Localização da unidade',
+                                    _unidade?.local ?? '',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.black87,
@@ -417,7 +442,7 @@ class _MapState extends State<Map> {
 
                             // TELEFONE
                             Row(
-                              children: const [
+                              children: [
                                 Icon(
                                   Icons.phone,
                                   size: 17,
@@ -425,7 +450,7 @@ class _MapState extends State<Map> {
                                 ),
                                 SizedBox(width: 6),
                                 Text(
-                                  'Telefone: (19) 3456-7890',
+                                  'Telefone: ${_unidade?.telefone ?? ''}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.black87,
@@ -438,7 +463,7 @@ class _MapState extends State<Map> {
 
                             // HORÁRIO
                             Row(
-                              children: const [
+                              children: [
                                 Icon(
                                   Icons.access_time,
                                   size: 17,
@@ -446,7 +471,7 @@ class _MapState extends State<Map> {
                                 ),
                                 SizedBox(width: 6),
                                 Text(
-                                  'Aberto hoje',
+                                  _unidade?.horario ?? '',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.black87,
@@ -467,10 +492,8 @@ class _MapState extends State<Map> {
                             const SizedBox(height: 12),
 
                             // DESCRIÇÃO
-                            const Text(
-                              'Área destinada à preservação da fauna e flora, '
-                              'com grande importância para a conservação '
-                              'do ecossistema.',
+                            Text(
+                              _unidade?.descricao ?? '',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.black54,
@@ -483,41 +506,39 @@ class _MapState extends State<Map> {
                             // =================================================
                             // AVISO
                             // =================================================
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF0E4D5),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  Icon(
-                                    Icons.info_outline,
-                                    size: 18,
-                                    color: Colors.black54,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'Atenção: respeite as regras '
-                                      'de preservação e evite deixar '
-                                      'resíduos no local.',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.black54,
-                                        height: 1.3,
+                            if (_unidade?.aviso != null) ...[
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF0E4D5),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(
+                                      Icons.info_outline,
+                                      size: 18,
+                                      color: Colors.black54,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _unidade!.aviso!,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.black54,
+                                          height: 1.3,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
 
-                            const SizedBox(height: 12),
-
-                            // =================================================
+                              const SizedBox(height: 12),
+                            ], // =================================================
                             // BOTOES
                             // =================================================
                             SizedBox(
@@ -607,8 +628,8 @@ class _MapState extends State<Map> {
                               child: SizedBox(
                                 width: double.infinity,
                                 height: 250,
-                                child: Image.asset(
-                                  'assets/images/araraias.jpg',
+                                child: Image.network(
+                                  _unidade?.imagens.first ?? '',
                                   fit: BoxFit.cover,
                                 ),
                               ),

@@ -24,39 +24,51 @@ class PageLoader {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case home:
-        return MaterialPageRoute(builder: (_) => Home());
+        return MaterialPageRoute(builder: (_) => SafeArea(child: Home()));
 
       case map:
-        return MaterialPageRoute(builder: (_) => const Map());
+        return MaterialPageRoute(builder: (_) => const SafeArea(child: Map()));
 
       case criarreport:
-        return MaterialPageRoute(builder: (_) => const Report());
+        return MaterialPageRoute(
+          builder: (_) => const SafeArea(child: Report()),
+        );
 
       case myreports:
-        return MaterialPageRoute(builder: (_) => const SeusReports());
+        return MaterialPageRoute(
+          builder: (_) => const SafeArea(child: SeusReports()),
+        );
 
       case report:
-        return MaterialPageRoute(builder: (_) => const ReportDetails());
+        return MaterialPageRoute(
+          builder: (_) => const SafeArea(child: ReportDetails()),
+        );
 
       case unit:
         return MaterialPageRoute(
-          builder: (_) => UnidadeDetalhes(
-            unidadeId: 1,
-            unidadeService: const UnidadeService(),
+          builder: (_) => SafeArea(
+            child: UnidadeDetalhes(
+              unidadeId: 1,
+              unidadeService: const UnidadeService(),
+            ),
           ),
         );
 
       case profile:
         return MaterialPageRoute(
-          builder: (_) =>
-              Profile(usuarioId: 2, usuarioService: const UsuarioService()),
+          builder: (_) => SafeArea(
+            child: Profile(
+              usuarioId: 2,
+              usuarioService: const UsuarioService(),
+            ),
+          ),
         );
 
       default:
         return MaterialPageRoute(
           builder: (_) =>
               // Home(unidadeId: 1, unidadeService: const UnidadeService()),
-              Home(),
+              SafeArea(child: Home()),
         );
     }
   }
