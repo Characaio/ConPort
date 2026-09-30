@@ -2,6 +2,8 @@ package com.example.ecoportapi.Controllers;
 
 //TRABALHAR DE MANEIRA SERIA NESSA CONTROLLER APÓS A QUARTA-FEIRA
 
+import com.example.ecoportapi.DTOs.Request.LoginDTO;
+import com.example.ecoportapi.DTOs.Request.SignupDTO;
 import com.example.ecoportapi.Services.MissaoService;
 import com.example.ecoportapi.Services.UsuarioService;
 import org.apache.catalina.connector.Response;
@@ -28,8 +30,20 @@ public class UsuarioController {
 
     @PostMapping("/{id}/missoes/gerar")
     public ResponseEntity<?> GerarMissoes(@PathVariable Long id){
-        missaoService.GerarMissoes(id);
-        return ResponseEntity.ok("oq caralhas é pra ter aqui seu fdp");
+        return ResponseEntity.ok(missaoService.GerarMissoes(id));
+    }
+
+    @PostMapping
+    public ResponseEntity<?> Signup(
+            @RequestBody SignupDTO signupDTO
+            ){
+        return usuarioService.Signup(signupDTO);
+    }
+    @PostMapping
+    public ResponseEntity<?> Login(
+            @RequestBody LoginDTO loginDTO
+    ){
+        return usuarioService.Login(loginDTO);
     }
 
 }

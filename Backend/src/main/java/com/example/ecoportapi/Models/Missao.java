@@ -4,7 +4,6 @@ import com.example.ecoportapi.Models.Enums.StatusMissao;
 import com.example.ecoportapi.Models.Enums.TipoMissao;
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -80,10 +79,10 @@ public class Missao {
     public LocalDateTime getTempoFechamento() { return TempoFechamento; }
     public void setTempoFechamento(LocalDateTime tempoLimite) { TempoFechamento = tempoLimite; }
 
-    public int getMoedaRecompensa() { return MoedaRecompensa; }
-    public void setMoedaRecompensa(int moedaRecompensa) { MoedaRecompensa = moedaRecompensa; }
+    public Integer getMoedaRecompensa() { return MoedaRecompensa; }
+    public void setMoedaRecompensa(Integer moedaRecompensa) { MoedaRecompensa = moedaRecompensa; }
 
-    public int getXpRecompensa() { return XpRecompensa; }
-    public void setXpRecompensa(int xpRecompensa) { XpRecompensa = xpRecompensa; }
+    public Integer getXpRecompensa() { return XpRecompensa; }
+    public void setXpRecompensa(Integer xpRecompensa) { XpRecompensa = xpRecompensa; }
 
 }

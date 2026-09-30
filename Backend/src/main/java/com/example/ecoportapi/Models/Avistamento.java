@@ -1,10 +1,6 @@
 package com.example.ecoportapi.Models;
 
-import com.example.ecoportapi.Models.Enums.AvistamentoCerteza;
 import jakarta.persistence.*;
-
-import java.lang.classfile.constantpool.DoubleEntry;
-import java.security.PublicKey;
 import java.time.LocalDateTime;
 
 @Entity
@@ -33,7 +29,13 @@ public class Avistamento {
     @Column(name = "ImagenAnexada", nullable = false)
     private String ImagemAnexada;
 
+    @ManyToOne
+    @JoinColumn(name = "Usuario", nullable = false)
+    private Usuario Usuario;
 
+    @ManyToOne
+    @JoinColumn(name = "Unidade", nullable = false)
+    private UnidadeDeConservacao Unidade;
 
     public Long getId() { return Id; }
     public void setId(Long id) { Id = id; }
@@ -41,10 +43,10 @@ public class Avistamento {
     public LocalDateTime getHoraDoAvistamento() { return HoraDoAvistamento; }
     public void setHoraDoAvistamento(LocalDateTime horaDoAvistamento) { HoraDoAvistamento = horaDoAvistamento; }
 
-    public Double setLongitude(){ return Longitude; }
+    public Double getLongitude(){ return Longitude; }
     public void setLongitude(Double longitude) {Longitude = longitude; }
 
-    public Double setLatitude(){ return Latitude; }
+    public Double getLatitude(){ return Latitude; }
     public void setLatitude(Double latitude) {Latitude = latitude; }
 
     public Double getCerteza() { return Certeza; }
@@ -55,6 +57,12 @@ public class Avistamento {
 
     public String getImagemAnexada() { return ImagemAnexada; }
     public void setImagemAnexada(String imagemAnexada) { ImagemAnexada = imagemAnexada; }
+
+    public UnidadeDeConservacao getUnidade() { return Unidade; }
+    public void setUnidade(UnidadeDeConservacao unidade) { this.Unidade = unidade; }
+
+    public Usuario getUsuario() { return Usuario; }
+    public void setUsuario(Usuario usuario) { this.Usuario = usuario; }
 
 
 

@@ -1,8 +1,6 @@
 package com.example.ecoportapi.Services;
 
-import com.example.ecoportapi.DTOs.Response.ReportResumidoDTO;
-import com.example.ecoportapi.DTOs.Response.UnidadeDadosGeraisDTO;
-import com.example.ecoportapi.DTOs.Response.UnidadeIndicadoresDerivadosDTO;
+import com.example.ecoportapi.DTOs.Response.*;
 import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Repositories.ReportRepository;
 import org.springframework.stereotype.Service;
@@ -18,51 +16,53 @@ public class IndicadoresService {
         this.reportRepository = reportRepository;
     }
 
-    public UnidadeIndicadoresDerivadosDTO CalcularIndicadores(UnidadeDadosGeraisDTO StatusGeralBaseDTO) {
+    public UnidadeIndicadoresDTO CalcularIndicadores(
+            UnidadeDadosAmbientaisDTO unidadeDadosAmbientais,
+            Long unidadeId
+    ){
         Integer CorredoresNecessarios = CalcularCorredoresNecessarios(
-                StatusGeralBaseDTO.AreaTotal(), StatusGeralBaseDTO.AreaBasePorCorredor()
+                unidadeDadosAmbientais.areaTotal(), unidadeDadosAmbientais.areaBasePorCorredor()
         );
-        UnidadeIndicadoresDerivadosDTO indicadoresDerivadosDTO = new UnidadeIndicadoresDerivadosDTO(
+        return new UnidadeIndicadoresDTO(
                 CalcularIntegridadeTerritorial(
-                        StatusGeralBaseDTO.AreaRegularizada(), StatusGeralBaseDTO.AreaTotal()
+                        unidadeDadosAmbientais.areaRegularizada(), unidadeDadosAmbientais.areaTotal()
                 ),
                 CorredoresNecessarios,
                 CalcularConectividadeEcologica(
-                        StatusGeralBaseDTO.QuantCorredores(), CorredoresNecessarios
+                        unidadeDadosAmbientais.quantCorredores(), CorredoresNecessarios
                 ),
                 CalcularQualidadeAmbiental(
-                        StatusGeralBaseDTO.QualidadeAgua(),
-                        StatusGeralBaseDTO.QualidadeSolo(),
-                        StatusGeralBaseDTO.GestaoResiduos()
+                        unidadeDadosAmbientais.qualidadeAgua(),
+                        unidadeDadosAmbientais.qualidadeSolo(),
+                        unidadeDadosAmbientais.gestaoResiduos()
                 ),
                 CalcularPreservacaoLocal(
-                        StatusGeralBaseDTO.AreaPreservada(), StatusGeralBaseDTO.AreaTotal()
+                        unidadeDadosAmbientais.areaPreservada(), unidadeDadosAmbientais.areaTotal()
                 ),
                 CalcularFiscalizacao(
                         CalcularCobertura(
-                                StatusGeralBaseDTO.AreaMonitorada(), StatusGeralBaseDTO.AreaTotal()
+                                unidadeDadosAmbientais.areaMonitorada(), unidadeDadosAmbientais.areaTotal()
                         ),
                         CalcularMonitoramento(
-                                StatusGeralBaseDTO.PontosMonitorados(), StatusGeralBaseDTO.PontosPrevistos()
+                                unidadeDadosAmbientais.pontosMonitorados(), unidadeDadosAmbientais.pontosPrevistos()
                         ),
                         CalcularResposta(
                                 reportRepository.PegarReportsConfirmados(
-                                        StatusGeralBaseDTO.Id(),
+                                        unidadeId,
                                         List.of(
                                                 StatusReport.ACEITO,
                                                 StatusReport.EM_TRATAMENTO,
                                                 StatusReport.TRATADO
                                         )
                                 ), reportRepository.PegarReportsTratados(
-                                        StatusGeralBaseDTO.Id(),
+                                        unidadeId,
                                         StatusReport.TRATADO)
                         )
                 ),
                 CalcularBiodiversidade(
-                        StatusGeralBaseDTO.QuantEspecies(), StatusGeralBaseDTO.QuantEspeciesEsperadas()
+                        unidadeDadosAmbientais.quantEspecies(), unidadeDadosAmbientais.quantEspeciesEsperadas()
                 )
         );
-        return indicadoresDerivadosDTO;
     }
     private Double CalcularIntegridadeTerritorial(Double AreaRegularizada,Double AreaTotal){
         return (AreaRegularizada / AreaTotal) * 100;

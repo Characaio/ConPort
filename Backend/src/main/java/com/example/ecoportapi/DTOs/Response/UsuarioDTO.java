@@ -15,19 +15,9 @@ public record UsuarioDTO(
     boolean Confiavel,
     Integer XP,
     Integer Level,
-    Integer Moedas,
-    Integer ReportsEnviados,
-    Integer ReportsResolvidos,
-    Integer ReportsRejeitados,
-    Integer ReportsPendentes,
-    Integer MissoesConcluidas
+    Integer Moedas
 ) {
-    public UsuarioDTO(Usuario usuario,
-    Integer reportsEnviados,
-    Integer reportsResolvidos,
-    Integer reportsRejeitados,
-    Integer reportsPendentes,
-    Integer missoesConcluidas
+    public UsuarioDTO(Usuario usuario
     ){
         this(
                 usuario.getId(),
@@ -40,12 +30,7 @@ public record UsuarioDTO(
                 usuario.isConfiavel(),
                 usuario.getXP(),
                 usuario.getLevel(),
-                usuario.getMoedas(),
-                reportsEnviados,
-                reportsResolvidos,
-                reportsRejeitados,
-                reportsPendentes,
-                missoesConcluidas
+                usuario.getMoedas()
         );
     }
 }

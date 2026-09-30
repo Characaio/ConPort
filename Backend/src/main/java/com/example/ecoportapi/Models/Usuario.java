@@ -32,18 +32,19 @@ public class Usuario {
     private String Cidade;
 
     @Column(name = "Confiavel", nullable = false)
-    private boolean Confiavel;
+    private Boolean Confiavel;
 
     @Column(name = "XP", nullable = false)
-    private int XP;
+    private Integer XP;
 
     @Column(name = "Level", nullable = false)
-    private int Level;
+    private Integer Level;
 
     @Column(name = "Moedas", nullable = false)
-    private int Moedas;
+    private Integer Moedas;
 
-    @Column(name = "Confiabilidade")
+    @Column(name = "Reputacao",nullable = false)
+    private Double Reputacao;
 
 
     public Long getId() { return Id; }
@@ -67,15 +68,18 @@ public class Usuario {
     public String getCidade() { return Cidade; }
     public void setCidade(String cidade) { Cidade = cidade; }
 
-    public boolean isConfiavel() { return Confiavel; }
-    public void setConfiavel(boolean confiavel) { Confiavel = confiavel; }
+    public Boolean isConfiavel() { return Confiavel; }
+    public void setConfiavel(Boolean confiavel) { Confiavel = confiavel; }
 
-    public int getXP() { return XP; }
-    public void setXP(int XP) { this.XP = XP; }
+    public Integer getXP() { return XP; }
+    public void setXP(Integer XP) { this.XP = XP; }
 
-    public int getLevel() { return Level; }
-    public void setLevel(int level) { Level = level; }
+    public Integer getLevel() { return Level; }
+    public void setLevel(Integer level) { Level = level; }
 
-    public int getMoedas() { return Moedas; }
-    public void setMoedas(int moedas) { Moedas = moedas; }
+    public Integer getMoedas() { return Moedas; }
+    public void setMoedas(Integer moedas) { Moedas = moedas; }
+
+    public Double getReputacao() { return Reputacao; }
+    public void setReputacao(Double reputacao) { Reputacao = reputacao; }
 }

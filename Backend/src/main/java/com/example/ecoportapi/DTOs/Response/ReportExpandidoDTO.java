@@ -19,7 +19,9 @@ public record ReportExpandidoDTO(
         String UsuarioNome,
         String UnidadeNome,
         String SupervisorNome,
-        LocalDateTime DataDaAnalise
+        LocalDateTime DataDaAnalise,
+        Double Longitude,
+        Double Latitude
 ) {
     public ReportExpandidoDTO(Report report) {
         this(
@@ -35,7 +37,9 @@ public record ReportExpandidoDTO(
                 report.getSupervisor() != null
                         ? report.getSupervisor().getUsuario().getNome()
                         : null,
-                report.getDataDaAnalisa()
+                report.getDataDaAnalisa(),
+                report.getLongitude(),
+                report.getLatitude()
         );
 
 

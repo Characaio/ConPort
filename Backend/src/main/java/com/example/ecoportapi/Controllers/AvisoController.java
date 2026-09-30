@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/avisos")
+@RequestMapping("/unidade/{unidadeId}/aviso")
 public class AvisoController {
 
     private final AvisoService avisoService;
@@ -16,22 +16,35 @@ public class AvisoController {
         this.avisoService = avisoService;
     }
 
-    @GetMapping("/{unidadeId}/Aviso")
+    @GetMapping("")
     public ResponseEntity<?> BuscarAvisos(
             @RequestParam(defaultValue = "1") Integer limite,
             @PathVariable Long unidadeId
     ){
         /*
-        Essa função usa um sistema de pageabl
+        Essa função usa um sistema de pageable
         Para pegar o aviso mais recente, coloque o limit como 1
         Para pegar uma lista de avisos coloque um limite alto
-        */
-
         //MAIS TARDE MUDAR ESSA LOGICA PARA PAGEABLE
+        */
         return ResponseEntity.ok(avisoService.BuscarAvisos(unidadeId,limite));
     }
 
-    @PostMapping("/{unidadeId}/Aviso")
+    @GetMapping("{avisoId}")
+    public ResponseEntity<?> BuscarAviso(
+            @PathVariable Long avisoId,
+            @PathVariable Long unidadeId
+    ){
+        /*
+        Essa função usa um sistema de pageable
+        Para pegar o aviso mais recente, coloque o limit como 1
+        Para pegar uma lista de avisos coloque um limite alto
+        //MAIS TARDE MUDAR ESSA LOGICA PARA PAGEABLE
+        */
+        return ResponseEntity.ok(avisoService.BuscarAviso(avisoId));
+    }
+
+    @PostMapping()
     public ResponseEntity<?> PostarAviso(
             @RequestBody AvisoCreateDTO avisoDTO,
             @PathVariable Long unidadeId

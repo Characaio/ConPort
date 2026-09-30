@@ -2,12 +2,11 @@ package com.example.ecoportapi.Services;
 
 
 import com.example.ecoportapi.DTOs.Response.*;
-import com.example.ecoportapi.Models.Enums.StatusReport;
+import com.example.ecoportapi.Exceptions.InformacoesNaoEncontrada;
+import com.example.ecoportapi.Models.UnidadeDeConservacao;
 import com.example.ecoportapi.Repositories.ReportRepository;
 import com.example.ecoportapi.Repositories.UnidadeRepository;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class UnidadeService {
@@ -23,33 +22,36 @@ public class UnidadeService {
     }
 
 
-    public UnidadeStatusPrincipalDTO PegarStatusPrincipal(Long id){
-        UnidadeDadosGeraisDTO StatusGeralBaseDTO = unidadeRepository.PegarStatusGeral(id);
-        Integer QuantDeReports = unidadeRepository.PegarQuantDeReports(id);
-        UnidadeIndicadoresDerivadosDTO indicadoresDerivadosDTO =
-                indicadoresService.CalcularIndicadores(StatusGeralBaseDTO);
-
-        return new UnidadeStatusPrincipalDTO(
-                unidadeRepository.PegarStatusPrincipal(id),
-                QuantDeReports,
-                indicadoresDerivadosDTO);
+    public UnidadeInformacoesDTO PegarInformacoes(Long unidadeId){
+        return new UnidadeInformacoesDTO(
+                unidadeRepository.findById(unidadeId).orElseThrow(
+                        () -> new InformacoesNaoEncontrada("Informações da unidade não encontrada")
+                )
+        );
     }
 
-    public UnidadeStatusGeralDTO PegarStatusGeral(Long id){
-        UnidadeDadosGeraisDTO StatusGeralBaseDTO = unidadeRepository.PegarStatusGeral(id);
-        Integer QuantDeReports = unidadeRepository.PegarQuantDeReports(id);
-        UnidadeIndicadoresDerivadosDTO indicadoresDerivadosDTO =
-                indicadoresService.CalcularIndicadores(StatusGeralBaseDTO);
+    public UnidadeStatusDTO PegarStatus(Long unidadeId){
+        UnidadeDeConservacao unidade = unidadeRepository.findById(unidadeId)
+                .orElseThrow(
+                        () -> new InformacoesNaoEncontrada("Informações da unidade não encontrada")
+                );
 
-        return new UnidadeStatusGeralDTO(
-                StatusGeralBaseDTO,
-                QuantDeReports,
-                indicadoresDerivadosDTO);
+        UnidadeInformacoesDTO unidadeInformacoesDTO = new UnidadeInformacoesDTO(unidade);
+
+        UnidadeDadosAmbientaisDTO unidadeDadosAmbientaisDTO = new UnidadeDadosAmbientaisDTO(unidade);
+
+        UnidadeIndicadoresDTO unidadeIndicadoresDTO = indicadoresService
+                .CalcularIndicadores(unidadeDadosAmbientaisDTO,unidadeId);
+
+        return new UnidadeStatusDTO(
+                unidadeInformacoesDTO,
+                unidadeIndicadoresDTO,
+                unidadeDadosAmbientaisDTO,
+                reportRepository.PegarQuantDeReports(unidadeId)
+        );
     }
 
-    public List<ReportResumidoDTO> PegarReportsDaUnidade(Long id){
-        return unidadeRepository.PegarReportsDaUnidade(id);
-    }
+
 
 
 

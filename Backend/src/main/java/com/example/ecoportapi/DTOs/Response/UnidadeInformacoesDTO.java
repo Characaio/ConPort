@@ -1,19 +1,34 @@
 package com.example.ecoportapi.DTOs.Response;
 
-
 import com.example.ecoportapi.Models.Enums.TipoDeUnidade;
+import com.example.ecoportapi.Models.Report;
+import com.example.ecoportapi.Models.UnidadeDeConservacao;
 
 import java.time.LocalTime;
 
+/**
+ * Representa toda informação não ambiental da unidade de conservação
+ */
 public record UnidadeInformacoesDTO(
-        Long Id,
-        String Nome,
-        String Telefone,
-        TipoDeUnidade TipoDeUnidade,
-        //Essas informações devem ser formatadas como:
-        //XX:XX até YY:YY
-        //Com X sendo o horario de abertura e Y sendo o horario de fechamento
-        //Ambos seguem a formatação e HORA:MINUTO
-        LocalTime HoraDeAbertura,
-        LocalTime HoraDeFechamento
-) {}
+        Long id,
+        String nome,
+        String telefone,
+        TipoDeUnidade tipoDeUnidade,
+        LocalTime horaDeAbertura,
+        LocalTime horaDeFechamento,
+        Double Latitude,
+        Double Longitude
+) {
+    public UnidadeInformacoesDTO (UnidadeDeConservacao unidade){
+        this(
+                unidade.getId(),
+                unidade.getNome(),
+                unidade.getTelefone(),
+                unidade.getTipoDeUnidade(),
+                unidade.getHoraAbertura(),
+                unidade.getHoraFechamento(),
+                unidade.getLatitude(),
+                unidade.getLongitude()
+        );
+    }
+}

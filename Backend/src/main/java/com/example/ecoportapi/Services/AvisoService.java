@@ -3,6 +3,7 @@ package com.example.ecoportapi.Services;
 import com.example.ecoportapi.DTOs.Request.AvisoCreateDTO;
 import com.example.ecoportapi.DTOs.Response.AvisoResponseDTO;
 import com.example.ecoportapi.DTOs.Response.MissaoDTO;
+import com.example.ecoportapi.Exceptions.AvisoNaoEncontrado;
 import com.example.ecoportapi.Exceptions.UnidadeNaoEncontrada;
 import com.example.ecoportapi.Models.Aviso;
 import com.example.ecoportapi.Models.UnidadeDeConservacao;
@@ -30,7 +31,6 @@ public class AvisoService {
     }
 
     public List<AvisoResponseDTO> BuscarAvisos(Long unidadeId, Integer limite){
-
         Pageable pageable = PageRequest.of(
                 0,
                 limite,
@@ -42,6 +42,13 @@ public class AvisoService {
                 .toList();
     }
 
+    public AvisoResponseDTO BuscarAviso(Long avisoId){
+        return new AvisoResponseDTO(
+                avisoRepository.findById(avisoId).orElseThrow(
+                        () -> new AvisoNaoEncontrado("Aviso não encontrado")
+                )
+        );
+    }
 
     public AvisoResponseDTO PostarAviso(AvisoCreateDTO avisoDTO, Long unidadeId){
         Aviso aviso = new Aviso();
