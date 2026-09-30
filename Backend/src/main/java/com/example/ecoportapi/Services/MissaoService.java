@@ -11,7 +11,6 @@ import com.example.ecoportapi.Models.Usuario;
 import com.example.ecoportapi.Repositories.MissaoRepository;
 import com.example.ecoportapi.Repositories.UsuarioRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,17 +20,18 @@ public class MissaoService {
 
     private final MissaoRepository missaoRepository;
     private final UsuarioRepository usuarioRepository;
-    private final ErroLoggerService erroLoggerService;
 
-    public MissaoService(MissaoRepository missaoRepository, UsuarioRepository usuarioRepository, ErroLoggerService erroLoggerService) {
+    public MissaoService(MissaoRepository missaoRepository, UsuarioRepository usuarioRepository) {
         this.missaoRepository = missaoRepository;
         this.usuarioRepository = usuarioRepository;
-        this.erroLoggerService = erroLoggerService;
     }
 
-    public List<MissaoDTO> GerarMissoes(Long usuarioId){
-        erroLoggerService.registrarErro(new RuntimeException("Essa logica ainda não foi implementada"));
-        throw new RuntimeException("Essa logica ainda não foi implementada");
+    public List<MissaoDTO> GerarMissoes(Long ignoredUsuarioId){
+        return List.of(
+                new MissaoDTO(missaoRepository.findById(1L).orElseThrow(
+                        () -> new MissaoNaoEncontrada("Missão não encontrada")
+                ))
+        );
     }
 
     public MissaoDTO PegarMissao(Long id){

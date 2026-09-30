@@ -3,28 +3,29 @@ package com.example.ecoportapi.DTOs.Response;
 import com.example.ecoportapi.Models.Enums.StatusMissao;
 import com.example.ecoportapi.Models.Enums.TipoMissao;
 import com.example.ecoportapi.Models.Missao;
-import com.example.ecoportapi.Models.Usuario;
 
 import java.time.LocalDateTime;
 
 public record MissaoDTO(
-        Long Id,
-        Usuario Usuario,
-        String Nome,
-        TipoMissao TipoDeMissao,
-        StatusMissao StatusDeMissao,
-        LocalDateTime TempoDeInicio,
-        LocalDateTime TempoFechamento,
-        Integer MoedaRecompensa,
-        Integer XpRecompensa,
-        Integer Meta,
-        Integer Progresso
+        Long id,
+        String usuarioNome,
+        String titulo,
+        String descricao,
+        TipoMissao ttipoDeMissao,
+        StatusMissao statusDeMissao,
+        LocalDateTime tempoDeInicio,
+        LocalDateTime tempoFechamento,
+        Integer moedaRecompensa,
+        Integer xpRecompensa,
+        Integer meta,
+        Integer progresso
 ) {
     public MissaoDTO(Missao missao){
         this(
                 missao.getId(),
-                missao.getUsuario(),
+                missao.getUsuario().getNome(),
                 missao.getTitulo(),
+                missao.getDescricao(),
                 missao.getTipoDeMissao(),
                 missao.getStatusMissao(),
                 missao.getTempoDeInicio(),

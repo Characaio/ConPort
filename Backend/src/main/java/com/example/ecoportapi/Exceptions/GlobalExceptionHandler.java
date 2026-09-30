@@ -22,6 +22,30 @@ public class GlobalExceptionHandler {
         this.erroLoggerService = erroLoggerService;
     }
 
+    @ExceptionHandler(AvisoNaoEncontrado.class)
+    public ResponseEntity<String> AvisoNaoEncontrado(AvisoNaoEncontrado exception){
+        erroLoggerService.registrarErro(exception);
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+    }
+
+    @ExceptionHandler(AvistamentoNaoEncontrado.class)
+    public ResponseEntity<String> AvistamentoNaoEncontrado(AvistamentoNaoEncontrado exception){
+        erroLoggerService.registrarErro(exception);
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+    }
+
+    @ExceptionHandler(InformacoesNaoEncontrada.class)
+    public ResponseEntity<String> InformacoesNaoEncontrada(InformacoesNaoEncontrada exception){
+        erroLoggerService.registrarErro(exception);
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+    }
+
     @ExceptionHandler(MissaoJaConcluida.class)
     public ResponseEntity<String> MissaoJaConcluida(MissaoJaConcluida exception){
         erroLoggerService.registrarErro(exception);
@@ -54,14 +78,13 @@ public class GlobalExceptionHandler {
                 .body("Eu tenho q trabalhar melhor nisso aqui, ta merda gamer" + exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
-    @ExceptionHandler(UsuarioNaoEncontrado.class)
-    public ResponseEntity<String> UsuarioNaoEncontrado(UsuarioNaoEncontrado exception){
+    @ExceptionHandler(SupervisorNaoEncontrado.class)
+    public ResponseEntity<String> SupervisorNaoEncontrado(SupervisorNaoEncontrado exception){
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
-
 
     @ExceptionHandler(UnidadeNaoEncontrada.class)
     public ResponseEntity<String> UnidadeNaoEncontrada(UnidadeNaoEncontrada exception){
@@ -71,8 +94,8 @@ public class GlobalExceptionHandler {
                 .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
-    @ExceptionHandler(SupervisorNaoEncontrado.class)
-    public ResponseEntity<String> SupervisorNaoEncontrado(SupervisorNaoEncontrado exception){
+    @ExceptionHandler(UsuarioNaoEncontrado.class)
+    public ResponseEntity<String> UsuarioNaoEncontrado(UsuarioNaoEncontrado exception){
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
@@ -86,16 +109,6 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
-
-    /*
-    @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity<String> NullPointerException(NullPointerException exception){
-        erroLoggerService.registrarErro(exception);
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
-    }
-    */
 
     @ExceptionHandler(IOException.class)
     public ResponseEntity<String> IOException(IOException exception){

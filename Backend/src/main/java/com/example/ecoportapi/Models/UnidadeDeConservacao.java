@@ -19,8 +19,11 @@ public class UnidadeDeConservacao {
     @Column(name = "Nome", nullable = false)
     private String Nome;
 
-    @Column(name = "Localizacao", nullable = false)
-    private String Localizacao;
+    @Column(name = "Longitude", nullable = false)
+    private Double Longitude;
+
+    @Column(name = "Latitude", nullable = false)
+    private Double Latitude;
 
     @Column(name = "Bioma", nullable = false)
     private String Bioma;
@@ -93,8 +96,11 @@ public class UnidadeDeConservacao {
     public String getNome() { return Nome; }
     public void setNome(String nome) { Nome = nome; }
 
-    public String getLocalizacao() { return Localizacao; }
-    public void setLocalizacao(String localizacao) { Localizacao = localizacao; }
+    public Double getLongitude(){ return Longitude; }
+    public void setLongitude(Double longitude) {Longitude = longitude; }
+
+    public Double getLatitude(){ return Latitude; }
+    public void setLatitude(Double latitude) {Latitude = latitude; }
 
     public String getBioma() { return Bioma; }
     public void setBioma(String bioma) { Bioma = bioma; }

@@ -5,5 +5,6 @@ import com.example.ecoportapi.Models.Enums.LocalizacaoOrigem;
 public record AvistamentoCreateDTO(
     Double Longitude,
     Double Latitude,
-    LocalizacaoOrigem Origem
+    LocalizacaoOrigem Origem,
+    Long UnidadeId
 ) {}

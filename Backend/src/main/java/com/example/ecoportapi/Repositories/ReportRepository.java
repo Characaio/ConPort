@@ -15,7 +15,16 @@ import java.util.Optional;
 @Repository
 public interface ReportRepository extends JpaRepository<Report,Long> {
 
-    List<Report> findByUnidadeIdAndUsuarioId(Long UnidadeId,Long UsuarioId);
+    @Query("""
+        SELECT r
+        FROM Report r
+        WHERE r.Unidade.Id = :unidadeId
+          AND r.Usuario.Id = :usuarioId
+    """)
+    List<Report> BuscarReportsDoUsuarioNaUnidade(
+            @Param("unidadeId") Long unidadeId,
+            @Param("usuarioId") Long usuarioId
+    );
 
     @Query("""
     SELECT new com.example.ecoportapi.DTOs.Response.ReportResumidoDTO(
@@ -51,4 +60,24 @@ public interface ReportRepository extends JpaRepository<Report,Long> {
             @Param("unidadeId") Long unidadeId,
             @Param("status") StatusReport status
     );
+
+    //No futuro, mudar o status para ser um parametro, isso permite uma analise mais detalhada
+    @Query("""
+        SELECT COUNT(r)
+        FROM Report r
+        WHERE r.Unidade.Id = :unidadeId
+    """)
+    public Integer PegarQuantDeReports(@Param("unidadeId") Long unidadeId);
+
+    @Query("""
+        SELECT new com.example.ecoportapi.DTOs.Response.ReportResumidoDTO(
+            r.Id,
+            r.Tipo,
+            r.DataDoOcorrido,
+            r.Prioridade,
+            r.Status
+            ) FROM Report r
+            WHERE r.Unidade.Id = :unidadeId
+    """)
+    public List<ReportResumidoDTO> PegarReportsDaUnidade(@Param("unidadeId") Long unidadeId);
 }

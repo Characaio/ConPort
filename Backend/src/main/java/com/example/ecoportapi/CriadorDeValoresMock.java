@@ -45,8 +45,10 @@ public class CriadorDeValoresMock implements CommandLineRunner {
         UnidadeDeConservacao unidade = new UnidadeDeConservacao();
 
         unidade.setNome("Parque Estadual da Serra Verde");
-        unidade.setLocalizacao("Santa Bárbara d'Oeste - SP");
-        //unidade.setLocalizacao("Rua Lisboa Filho, 765, Jardim Charles Manoel, Santa Barbara D'oeste, Brasil");
+
+        unidade.setLatitude(10D);
+        unidade.setLongitude(8D);
+
         unidade.setTipoDeUnidade(TipoDeUnidade.PARQUE_NACIONAL);
         unidade.setBioma("Mata Atlântica");
 
