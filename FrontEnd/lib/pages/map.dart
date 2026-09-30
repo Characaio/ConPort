@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'dart:async';
-import 'package:conport/widgets/homemap.dart';
+import 'package:conport/widgets/mapembed.dart';
 
 class Map extends StatefulWidget {
   const Map({super.key});
@@ -11,15 +11,13 @@ class Map extends StatefulWidget {
 }
 
 class _MapState extends State<Map> {
-  final GlobalKey<HomeMapState> _mapKey = GlobalKey<HomeMapState>();
+  final GlobalKey<MapEmbedState> _mapKey = GlobalKey<MapEmbedState>();
 
   final TextEditingController _searchController = TextEditingController();
 
   Timer? _searchDebounce;
 
   List<LocalSugestao> _sugestoes = [];
-
-  bool _pesquisando = false;
 
   // Controla a posição da gaveta.
   // 0.12 = fechada
@@ -34,15 +32,11 @@ class _MapState extends State<Map> {
     if (texto.trim().isEmpty) {
       setState(() {
         _sugestoes = [];
-        _pesquisando = false;
       });
 
       return;
     }
 
-    setState(() {
-      _pesquisando = true;
-    });
 
     _searchDebounce = Timer(const Duration(milliseconds: 400), () async {
       final resultados = await _mapKey.currentState?.buscarSugestoes(texto);
@@ -53,7 +47,6 @@ class _MapState extends State<Map> {
 
       setState(() {
         _sugestoes = resultados ?? [];
-        _pesquisando = false;
       });
     });
   }
@@ -105,7 +98,7 @@ class _MapState extends State<Map> {
             // ============================================================
             // MAPA
             // ============================================================
-            Positioned.fill(child: HomeMap(key: _mapKey)),
+            Positioned.fill(child: MapEmbed(key: _mapKey)),
 
             // ============================================================
             // BOTÃO VOLTAR

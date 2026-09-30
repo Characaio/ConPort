@@ -7,11 +7,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
-class HomeMap extends StatefulWidget {
-  const HomeMap({super.key});
+class MapEmbed extends StatefulWidget {
+  const MapEmbed({super.key});
 
   @override
-  State<HomeMap> createState() => HomeMapState();
+  State<MapEmbed> createState() => MapEmbedState();
 }
 
 class LocalSugestao {
@@ -26,7 +26,7 @@ class LocalSugestao {
   });
 }
 
-class HomeMapState extends State<HomeMap> {
+class MapEmbedState extends State<MapEmbed> {
   final MapController _mapController = MapController();
 
   LatLng? _currentPosition;
@@ -491,4 +491,3 @@ class HomeMapState extends State<HomeMap> {
     );
   }
 }
-

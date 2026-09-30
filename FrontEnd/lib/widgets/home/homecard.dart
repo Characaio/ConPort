@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:conport/core/navigation/page_loader.dart';
 
 class HomeCard extends StatelessWidget {
   final IconData icon;
@@ -20,7 +21,9 @@ class HomeCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {},
+        onTap: () {
+          PageLoader.go(context, pagina);
+        },
         child: Container(
           width: double.infinity,
           height: double.infinity,
@@ -43,11 +46,18 @@ class HomeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(96),
                     color: colors.surface,
                   ),
-                  child: Icon(icon, color: colors.onSurface),
+                  child: Icon(
+                    icon,
+                    color: colors.onSurface,
+                    size: 20,
+                    weight: 700,
+                  ),
                 ),
                 Text(
                   text,
