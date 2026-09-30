@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:conport/core/navigation/page_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -20,11 +21,9 @@ class _ReportState extends State<Report> {
   // CAMPOS
   // ==========================================
 
-  final TextEditingController _descricaoController =
-      TextEditingController();
+  final TextEditingController _descricaoController = TextEditingController();
 
-  final TextEditingController _localController =
-      TextEditingController();
+  final TextEditingController _localController = TextEditingController();
 
   // ==========================================
   // PESQUISA DE LOCAL
@@ -61,53 +60,40 @@ class _ReportState extends State<Report> {
       _localSelecionado = null;
     });
 
-    _localSearchDebounce = Timer(
-      const Duration(milliseconds: 400),
-      () async {
-        final resultados = await _pesquisarLocal(texto);
+    _localSearchDebounce = Timer(const Duration(milliseconds: 400), () async {
+      final resultados = await _pesquisarLocal(texto);
 
-        if (!mounted) {
-          return;
-        }
+      if (!mounted) {
+        return;
+      }
 
-        setState(() {
-          _localSugestoes = resultados;
-          _pesquisandoLocal = false;
-        });
-      },
-    );
+      setState(() {
+        _localSugestoes = resultados;
+        _pesquisandoLocal = false;
+      });
+    });
   }
 
   // ==========================================
   // CONSULTA NOMINATIM
   // ==========================================
 
-  Future<List<LocalSugestao>> _pesquisarLocal(
-    String consulta,
-  ) async {
+  Future<List<LocalSugestao>> _pesquisarLocal(String consulta) async {
     try {
-      final uri = Uri.https(
-        'nominatim.openstreetmap.org',
-        '/search',
-        {
-          'q': consulta.trim(),
-          'format': 'jsonv2',
-          'limit': '5',
-          'addressdetails': '1',
-        },
-      );
+      final uri = Uri.https('nominatim.openstreetmap.org', '/search', {
+        'q': consulta.trim(),
+        'format': 'jsonv2',
+        'limit': '5',
+        'addressdetails': '1',
+      });
 
       final response = await http.get(
         uri,
-        headers: const {
-          'User-Agent': 'ConPort/1.0',
-        },
+        headers: const {'User-Agent': 'ConPort/1.0'},
       );
 
       if (response.statusCode != 200) {
-        debugPrint(
-          'Erro Nominatim: ${response.statusCode}',
-        );
+        debugPrint('Erro Nominatim: ${response.statusCode}');
 
         return [];
       }
@@ -128,8 +114,7 @@ class _ReportState extends State<Report> {
               resultado['lon']?.toString() ?? '',
             );
 
-            final nome =
-                resultado['display_name']?.toString();
+            final nome = resultado['display_name']?.toString();
 
             if (latitude == null ||
                 longitude == null ||
@@ -164,26 +149,18 @@ class _ReportState extends State<Report> {
       _localSugestoes = [];
     });
 
-    debugPrint(
-      'Local selecionado: ${sugestao.nome}',
-    );
+    debugPrint('Local selecionado: ${sugestao.nome}');
 
-    debugPrint(
-      'Latitude: ${sugestao.latitude}',
-    );
+    debugPrint('Latitude: ${sugestao.latitude}');
 
-    debugPrint(
-      'Longitude: ${sugestao.longitude}',
-    );
+    debugPrint('Longitude: ${sugestao.longitude}');
   }
 
   // ==========================================
   // ENVIAR PESQUISA PELO TECLADO
   // ==========================================
 
-  Future<void> _pesquisarLocalAoEnviar(
-    String texto,
-  ) async {
+  Future<void> _pesquisarLocalAoEnviar(String texto) async {
     _localSearchDebounce?.cancel();
 
     if (texto.trim().isEmpty) {
@@ -233,25 +210,17 @@ class _ReportState extends State<Report> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Topbar(
-                  hasLogo: false,
-                  hasReturn: true,
-                  text: 'Criar Report',
-                ),
+                Topbar(hasLogo: false, hasReturn: true, text: 'Criar Report'),
 
                 const SizedBox(height: 20),
 
                 // ==========================================
                 // O QUE ACONTECEU?
                 // ==========================================
-
                 const Text('O que aconteceu?'),
 
                 const SizedBox(height: 6),
@@ -260,10 +229,7 @@ class _ReportState extends State<Report> {
                   width: double.infinity,
                   initialSelection: 'queimada',
                   dropdownMenuEntries: const [
-                    DropdownMenuEntry(
-                      value: 'queimada',
-                      label: 'Queimada',
-                    ),
+                    DropdownMenuEntry(value: 'queimada', label: 'Queimada'),
                     DropdownMenuEntry(
                       value: 'animal_ferido',
                       label: 'Animal Ferido',
@@ -272,10 +238,7 @@ class _ReportState extends State<Report> {
                       value: 'animal_exotico',
                       label: 'Animal Exótico',
                     ),
-                    DropdownMenuEntry(
-                      value: 'poluicao',
-                      label: 'Poluição',
-                    ),
+                    DropdownMenuEntry(value: 'poluicao', label: 'Poluição'),
                     DropdownMenuEntry(
                       value: 'desmatamento',
                       label: 'Desmatamento',
@@ -289,40 +252,29 @@ class _ReportState extends State<Report> {
                 // ==========================================
                 // DESCRIÇÃO
                 // ==========================================
-
                 const Text('Descrição'),
 
                 const SizedBox(height: 6),
 
                 Container(
                   width: double.infinity,
-                  constraints: const BoxConstraints(
-                    minHeight: 170,
-                  ),
+                  constraints: const BoxConstraints(minHeight: 170),
                   decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.grey,
-                    ),
-                    borderRadius:
-                        BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   padding: const EdgeInsets.all(12),
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TextField(
-                        controller:
-                            _descricaoController,
+                        controller: _descricaoController,
                         maxLines: 5,
                         minLines: 3,
-                        decoration:
-                            const InputDecoration(
-                          hintText:
-                              'Descreva o que aconteceu...',
+                        decoration: const InputDecoration(
+                          hintText: 'Descreva o que aconteceu...',
                           border: InputBorder.none,
-                          contentPadding:
-                              EdgeInsets.zero,
+                          contentPadding: EdgeInsets.zero,
                         ),
                       ),
 
@@ -333,14 +285,9 @@ class _ReportState extends State<Report> {
                           Container(
                             width: 72,
                             height: 72,
-                            decoration:
-                                BoxDecoration(
-                              color:
-                                  Colors.grey.shade400,
-                              borderRadius:
-                                  BorderRadius.circular(
-                                8,
-                              ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade400,
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
 
@@ -349,23 +296,15 @@ class _ReportState extends State<Report> {
                           Container(
                             width: 72,
                             height: 72,
-                            decoration:
-                                BoxDecoration(
-                              color:
-                                  Colors.grey.shade400,
-                              borderRadius:
-                                  BorderRadius.circular(
-                                8,
-                              ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade400,
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
 
                           const Spacer(),
 
-                          const Icon(
-                            Icons.attach_file,
-                            size: 18,
-                          ),
+                          const Icon(Icons.attach_file, size: 18),
                         ],
                       ),
                     ],
@@ -377,61 +316,39 @@ class _ReportState extends State<Report> {
                 // ==========================================
                 // LOCAL
                 // ==========================================
-
                 const Text('Local'),
 
                 const SizedBox(height: 6),
 
                 TextField(
                   controller: _localController,
-                  textInputAction:
-                      TextInputAction.search,
+                  textInputAction: TextInputAction.search,
                   onChanged: _buscarSugestoesLocal,
-                  onSubmitted:
-                      _pesquisarLocalAoEnviar,
+                  onSubmitted: _pesquisarLocalAoEnviar,
                   decoration: InputDecoration(
                     hintText: 'Pesquisar local...',
-                    prefixIcon: const Icon(
-                      Icons.location_on_outlined,
-                    ),
-                    suffixIcon:
-                        _pesquisandoLocal
-                            ? const Padding(
-                                padding:
-                                    EdgeInsets.all(12),
-                                child:
-                                    SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child:
-                                      CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              )
-                            : null,
+                    prefixIcon: const Icon(Icons.location_on_outlined),
+                    suffixIcon: _pesquisandoLocal
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : null,
                     border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(16),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
-                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Colors.grey),
                     ),
-                    enabledBorder:
-                        OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(16),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
-                      ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Colors.grey),
                     ),
-                    focusedBorder:
-                        OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(16),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
-                      ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Colors.grey),
                     ),
                   ),
                 ),
@@ -439,103 +356,61 @@ class _ReportState extends State<Report> {
                 // ==========================================
                 // SUGESTÕES
                 // ==========================================
-
                 if (_localSugestoes.isNotEmpty)
                   Container(
-                    margin:
-                        const EdgeInsets.only(
-                      top: 6,
-                    ),
+                    margin: const EdgeInsets.only(top: 6),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius:
-                          BorderRadius.circular(14),
-                      border: Border.all(
-                        color: Colors.grey.shade300,
-                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.grey.shade300),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black
-                              .withValues(
-                            alpha: 0.12,
-                          ),
+                          color: Colors.black.withValues(alpha: 0.12),
                           blurRadius: 8,
-                          offset:
-                              const Offset(0, 3),
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
                     child: ListView.separated(
                       shrinkWrap: true,
-                      physics:
-                          const NeverScrollableScrollPhysics(),
-                      padding:
-                          EdgeInsets.zero,
-                      itemCount:
-                          _localSugestoes.length,
-                      separatorBuilder:
-                          (context, index) {
-                        return Divider(
-                          height: 1,
-                          color:
-                              Colors.grey.shade300,
-                        );
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: EdgeInsets.zero,
+                      itemCount: _localSugestoes.length,
+                      separatorBuilder: (context, index) {
+                        return Divider(height: 1, color: Colors.grey.shade300);
                       },
-                      itemBuilder:
-                          (context, index) {
-                        final sugestao =
-                            _localSugestoes[
-                                index];
+                      itemBuilder: (context, index) {
+                        final sugestao = _localSugestoes[index];
 
                         return InkWell(
                           onTap: () {
-                            _selecionarLocal(
-                              sugestao,
-                            );
+                            _selecionarLocal(sugestao);
                           },
-                          borderRadius:
-                              BorderRadius.circular(
-                            14,
-                          ),
+                          borderRadius: BorderRadius.circular(14),
                           child: Padding(
-                            padding:
-                                const EdgeInsets
-                                    .symmetric(
+                            padding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 12,
                             ),
                             child: Row(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment
-                                      .start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Padding(
-                                  padding:
-                                      EdgeInsets.only(
-                                    top: 2,
-                                  ),
+                                  padding: EdgeInsets.only(top: 2),
                                   child: Icon(
-                                    Icons
-                                        .location_on_outlined,
+                                    Icons.location_on_outlined,
                                     size: 20,
                                   ),
                                 ),
 
-                                const SizedBox(
-                                  width: 10,
-                                ),
+                                const SizedBox(width: 10),
 
                                 Expanded(
                                   child: Text(
                                     sugestao.nome,
                                     maxLines: 3,
-                                    overflow:
-                                        TextOverflow
-                                            .ellipsis,
-                                    style:
-                                        const TextStyle(
-                                      fontSize: 13,
-                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 13),
                                   ),
                                 ),
                               ],
@@ -551,10 +426,7 @@ class _ReportState extends State<Report> {
                 // ==========================================
                 // URGÊNCIA
                 // ==========================================
-
-                const Text(
-                  'O quão urgente é o ocorrido',
-                ),
+                const Text('O quão urgente é o ocorrido'),
 
                 const SizedBox(height: 4),
 
@@ -570,19 +442,10 @@ class _ReportState extends State<Report> {
                 ),
 
                 Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: const [
-                    Text(
-                      'Pouco',
-                      style:
-                          TextStyle(fontSize: 15),
-                    ),
-                    Text(
-                      'Muito',
-                      style:
-                          TextStyle(fontSize: 15),
-                    ),
+                    Text('Pouco', style: TextStyle(fontSize: 15)),
+                    Text('Muito', style: TextStyle(fontSize: 15)),
                   ],
                 ),
 
@@ -591,10 +454,7 @@ class _ReportState extends State<Report> {
                 // ==========================================
                 // INFORMAÇÕES
                 // ==========================================
-
-                const Text(
-                  'Veja o que se fazer referente a queimadas:',
-                ),
+                const Text('Veja o que se fazer referente a queimadas:'),
 
                 const SizedBox(height: 2),
 
@@ -604,9 +464,7 @@ class _ReportState extends State<Report> {
                   'ut fringilla lorem posuere a. Mauris ut '
                   'tellus in justo venenatis tristique '
                   'efficitur sit amet metus.',
-                  style: TextStyle(
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(fontSize: 14),
                 ),
 
                 const SizedBox(height: 8),
@@ -616,8 +474,7 @@ class _ReportState extends State<Report> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade700,
-                    borderRadius:
-                        BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Center(
                     child: Icon(
@@ -633,33 +490,22 @@ class _ReportState extends State<Report> {
                 // ==========================================
                 // BOTÕES
                 // ==========================================
-
                 Row(
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {},
-                        style:
-                            ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Colors.green.shade400,
-                          foregroundColor:
-                              Colors.white,
-                          shape:
-                              RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(
-                              20,
-                            ),
+                        onPressed: () {
+                          PageLoader.go(context, PageLoader.myreports);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade400,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          padding:
-                              const EdgeInsets
-                                  .symmetric(
-                            vertical: 12,
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        child:
-                            const Text('Enviar'),
+                        child: const Text('Enviar'),
                       ),
                     ),
 
@@ -667,28 +513,18 @@ class _ReportState extends State<Report> {
 
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {},
-                        style:
-                            ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Colors.brown.shade400,
-                          foregroundColor:
-                              Colors.white,
-                          shape:
-                              RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(
-                              20,
-                            ),
+                        onPressed: () {
+                          PageLoader.go(context, PageLoader.home);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.brown.shade400,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          padding:
-                              const EdgeInsets
-                                  .symmetric(
-                            vertical: 12,
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        child:
-                            const Text('Cancelar'),
+                        child: const Text('Cancelar'),
                       ),
                     ),
                   ],
@@ -719,3 +555,4 @@ class LocalSugestao {
     required this.longitude,
   });
 }
+
