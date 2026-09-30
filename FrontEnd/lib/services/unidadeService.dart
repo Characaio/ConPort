@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
 import '../models/unidade.dart';
-import '../mocks/unidadeMock.dart';
+import '../mocks/unidade_mock.dart';
 
 class UnidadeService {
   const UnidadeService();
@@ -76,4 +76,3 @@ class UnidadeService {
     throw Exception('Erro ao buscar reports: ${response.statusCode}');
   }
 }
-

@@ -4,7 +4,7 @@ import 'package:conport/models/usuario.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
-import '../mocks/usuarioMock.dart';
+import '../mocks/usuario_mock.dart';
 
 class UsuarioService {
   const UsuarioService();
