@@ -8,6 +8,7 @@ import 'package:conport/pages/home.dart';
 import 'package:conport/pages/report.dart';
 import 'package:conport/pages/listrepo.dart';
 import 'package:conport/pages/reportinfo.dart';
+import 'package:conport/pages/ecossistema.dart';
 
 import 'package:conport/services/unidadeService.dart';
 import 'package:conport/services/usuarioService.dart';
@@ -15,10 +16,11 @@ import 'package:conport/services/usuarioService.dart';
 class PageLoader {
   static const String home = '/';
   static const String map = '/map';
+  static const String unit = '/unit';
+  static const String ecossistema = '/ecossistema';
   static const String criarreport = '/criar-report';
   static const String myreports = '/meus-reports';
   static const String report = '/report';
-  static const String unit = '/unit';
   static const String profile = '/profile';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -28,6 +30,9 @@ class PageLoader {
 
       case map:
         return MaterialPageRoute(builder: (_) => const SafeArea(child: Map()));
+
+      case ecossistema:
+        return MaterialPageRoute(builder: (_) => SafeArea(child: EcossistemaPage()));
 
       case criarreport:
         return MaterialPageRoute(

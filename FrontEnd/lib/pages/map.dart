@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:conport/widgets/mapembed.dart';
 import 'package:conport/models/unidade_mapa.dart';
 import 'package:conport/services/map_service.dart';
+import 'package:conport/core/navigation/page_loader.dart';
 
 class Map extends StatefulWidget {
   const Map({super.key});
@@ -548,7 +549,9 @@ class _MapState extends State<Map> {
                                 children: [
                                   Expanded(
                                     child: ElevatedButton.icon(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        PageLoader.go(context, PageLoader.ecossistema);
+                                      },
                                       icon: const Icon(
                                         Symbols.emoji_nature,
                                         size: 20,
