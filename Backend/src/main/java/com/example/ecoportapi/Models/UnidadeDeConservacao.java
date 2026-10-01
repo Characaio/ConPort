@@ -42,6 +42,9 @@ public class UnidadeDeConservacao {
     @Column(name = "TipoDeUnidade", nullable = false)
     private TipoDeUnidade TipoDeUnidade;
 
+    @Column(name = "Descricao",nullable = false)
+    private String Descricao;
+
 
     //Dados internos da unidade
     //Informações base para derivar novos indicadores de status
@@ -116,6 +119,9 @@ public class UnidadeDeConservacao {
 
     public TipoDeUnidade getTipoDeUnidade() { return TipoDeUnidade; }
     public void setTipoDeUnidade(TipoDeUnidade tipoDeUnidade) { TipoDeUnidade = tipoDeUnidade; }
+
+    public String getDescricao(){ return Descricao; }
+    public void setDescricao(String descricao){ Descricao = descricao; }
 
     public Double getAreaTotal() { return AreaTotal; }
     public void setAreaTotal(Double areaTotal) { AreaTotal = areaTotal; }

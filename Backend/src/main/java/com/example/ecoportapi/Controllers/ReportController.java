@@ -32,8 +32,8 @@ public class ReportController {
     }
 
     @GetMapping("/{reportId}")
-    public ResponseEntity<?> PegarReportCompleto(@PathVariable Long id){
-        return ResponseEntity.ok(reportService.PegarReportCompleto(id));
+    public ResponseEntity<?> PegarReportCompleto(@PathVariable Long reportId){
+        return ResponseEntity.ok(reportService.PegarReportCompleto(reportId));
     }
 
     @PostMapping("/{reportId}/analise")

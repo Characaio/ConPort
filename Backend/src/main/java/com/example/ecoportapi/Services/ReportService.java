@@ -49,12 +49,18 @@ public class ReportService {
 
     public ReportExpandidoDTO PegarReportCompleto(Long id){
         Report report = reportRepository.findById(id)
-                .orElseThrow(() -> new ReportNaoEncontrado("Report Nao Encontrado"));
+                .orElseThrow(
+                        () -> new ReportNaoEncontrado("Report Nao Encontrado")
+                );
 
         return new ReportExpandidoDTO(report);
     }
     public ReportResumidoDTO PegarReportResumido(Long id){
-        return reportRepository.PegarReportResumido(id);
+        return new ReportResumidoDTO(reportRepository.findById(id)
+                .orElseThrow(
+                        () -> new ReportNaoEncontrado("Report Nao Encontrado")
+                )
+        );
     }
 
     private int CalcularConfianca(Report novoReport, Report reportExistente){
@@ -76,8 +82,9 @@ public class ReportService {
         return confianca;
     }
 
-    public List<ReportResumidoDTO> PegarReportsDaUnidade(Long id){
-        return reportRepository.PegarReportsDaUnidade(id);
+    public List<ReportResumidoDTO> PegarReportsDaUnidade(Long unidadeId){
+        return reportRepository.findAllByUnidade_Id(unidadeId)
+                .stream().map(ReportResumidoDTO::new).toList();
     }
 
     public ResponseEntity<?> PostarReport(
@@ -98,10 +105,15 @@ public class ReportService {
 
     public ReportExpandidoDTO PostarAnalise(Long id, ReportStatusAnalise reportStatusAnalise){
         Report report = reportRepository.findById(id)
-                .orElseThrow(() -> new ReportNaoEncontrado("Report Não Encontrado"));
+                .orElseThrow(
+                        () -> new ReportNaoEncontrado("Report Não Encontrado")
+                );
         SupervisorDeUnidade supervisor = supervisorRepository.findById(reportStatusAnalise.SupervisorId())
-                        .orElseThrow(() -> new SupervisorNaoEncontrado("Supervisor Não Encontrado"));
-        report.setStatus(StatusReport.StringParaTipo(reportStatusAnalise.Status()));
+                        .orElseThrow(
+                                () -> new SupervisorNaoEncontrado("Supervisor Não Encontrado"));
+        report.setStatus(
+                StatusReport.StringParaTipo(reportStatusAnalise.Status())
+        );
         report.setDataDaAnalisa(LocalDateTime.now());
         report.setSupervisor(supervisor);
         reportRepository.save(report);

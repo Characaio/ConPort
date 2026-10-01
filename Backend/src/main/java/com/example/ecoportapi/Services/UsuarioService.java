@@ -58,13 +58,12 @@ public class UsuarioService {
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
     public ResponseEntity<?> Login(LoginDTO loginDTO){
         Usuario usuario = usuarioRepository
                 .findByEmailAndSenha(loginDTO.email(), loginDTO.senha()).orElseThrow(
                         () -> new UsuarioNaoEncontrado("Usuario não encontrado")
                 );
-
         return ResponseEntity.ok(new UsuarioDTO(usuario));
-
     }
 }

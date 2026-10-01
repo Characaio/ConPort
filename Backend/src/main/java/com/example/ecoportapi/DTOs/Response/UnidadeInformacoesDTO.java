@@ -13,10 +13,11 @@ public record UnidadeInformacoesDTO(
         Long id,
         String nome,
         String telefone,
+        String descricao,
         TipoDeUnidade tipoDeUnidade,
         LocalTime horaDeAbertura,
         LocalTime horaDeFechamento,
-        Double Latitude,
+        Double latitude,
         Double Longitude
 ) {
     public UnidadeInformacoesDTO (UnidadeDeConservacao unidade){
@@ -24,6 +25,7 @@ public record UnidadeInformacoesDTO(
                 unidade.getId(),
                 unidade.getNome(),
                 unidade.getTelefone(),
+                unidade.getDescricao(),
                 unidade.getTipoDeUnidade(),
                 unidade.getHoraAbertura(),
                 unidade.getHoraFechamento(),

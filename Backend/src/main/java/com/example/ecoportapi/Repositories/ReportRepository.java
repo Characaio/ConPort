@@ -1,7 +1,5 @@
 package com.example.ecoportapi.Repositories;
 
-import com.example.ecoportapi.DTOs.Response.ReportExpandidoDTO;
-import com.example.ecoportapi.DTOs.Response.ReportResumidoDTO;
 import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Models.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +8,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ReportRepository extends JpaRepository<Report,Long> {
@@ -26,18 +23,7 @@ public interface ReportRepository extends JpaRepository<Report,Long> {
             @Param("usuarioId") Long usuarioId
     );
 
-    @Query("""
-    SELECT new com.example.ecoportapi.DTOs.Response.ReportResumidoDTO(
-        r.Id,
-        r.Tipo,
-        r.DataDoOcorrido,
-        r.Prioridade,
-        r.Status
-        ) FROM Report r
-        WHERE r.Id = :reportId
-    """)
-    public ReportResumidoDTO PegarReportResumido(@Param("reportId") Long reportId);
-
+    List<Report> findAllByUnidade_Id(Long unidadeId);
 
     @Query("""
         SELECT COUNT(r)
@@ -69,15 +55,4 @@ public interface ReportRepository extends JpaRepository<Report,Long> {
     """)
     public Integer PegarQuantDeReports(@Param("unidadeId") Long unidadeId);
 
-    @Query("""
-        SELECT new com.example.ecoportapi.DTOs.Response.ReportResumidoDTO(
-            r.Id,
-            r.Tipo,
-            r.DataDoOcorrido,
-            r.Prioridade,
-            r.Status
-            ) FROM Report r
-            WHERE r.Unidade.Id = :unidadeId
-    """)
-    public List<ReportResumidoDTO> PegarReportsDaUnidade(@Param("unidadeId") Long unidadeId);
 }
