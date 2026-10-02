@@ -508,36 +508,42 @@ class _MapState extends State<Map> {
                             // AVISO
                             // =================================================
                             if (_unidade?.aviso != null) ...[
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF0E4D5),
+                              Material(
+                                color: const Color(0xFFF0E4D5),
+                                borderRadius: BorderRadius.circular(12),
+                                child: InkWell(
                                   borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Icon(
-                                      Icons.info_outline,
-                                      size: 18,
-                                      color: Colors.black54,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        _unidade!.aviso!,
-                                        style: const TextStyle(
-                                          fontSize: 11,
+                                  onTap: () {
+                                    PageLoader.go(context, PageLoader.anuncios);
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(10),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Icon(
+                                          Icons.info_outline,
+                                          size: 18,
                                           color: Colors.black54,
-                                          height: 1.3,
                                         ),
-                                      ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            _unidade!.aviso!,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.black54,
+                                              height: 1.3,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
-
                               const SizedBox(height: 12),
                             ], // =================================================
                             // BOTOES
@@ -550,7 +556,10 @@ class _MapState extends State<Map> {
                                   Expanded(
                                     child: ElevatedButton.icon(
                                       onPressed: () {
-                                        PageLoader.go(context, PageLoader.ecossistema);
+                                        PageLoader.go(
+                                          context,
+                                          PageLoader.ecossistema,
+                                        );
                                       },
                                       icon: const Icon(
                                         Symbols.emoji_nature,
@@ -588,7 +597,9 @@ class _MapState extends State<Map> {
 
                                   Expanded(
                                     child: ElevatedButton.icon(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        PageLoader.go(context, PageLoader.unit);
+                                      },
                                       icon: const Icon(
                                         Symbols.globe_2_question,
                                         size: 20,

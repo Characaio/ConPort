@@ -5,13 +5,15 @@ class HomeCard extends StatelessWidget {
   final IconData icon;
   final String text;
   final Color color;
-  final String pagina;
+  final String? pagina;
+  final VoidCallback? onTap;
 
   HomeCard({
     required this.icon,
     required this.text,
     required this.color,
-    required this.pagina,
+    this.pagina,
+    this.onTap,
   });
 
   @override
@@ -21,9 +23,11 @@ class HomeCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          PageLoader.go(context, pagina);
-        },
+        onTap:
+            onTap ??
+            () {
+              if (pagina != null) PageLoader.go(context, pagina!);
+            },
         child: Container(
           width: double.infinity,
           height: double.infinity,

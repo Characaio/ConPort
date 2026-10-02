@@ -3,6 +3,7 @@ import 'package:conport/widgets/mapembed.dart';
 import 'package:conport/widgets/topbar.dart';
 import 'package:conport/widgets/home/homecard.dart';
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/pages/avistamento.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter/material.dart';
 
@@ -134,7 +135,7 @@ class Home extends StatelessWidget {
                                   icon: Symbols.remove_red_eye,
                                   text: "Enviar Avistamento",
                                   color: Color(0xFF597D59),
-                                  pagina: "placeholder avistamento",
+                                  onTap: () => AvistamentoPage.iniciar(context),
                                 ),
                               ),
 
@@ -145,7 +146,7 @@ class Home extends StatelessWidget {
                                   icon: Symbols.people,
                                   text: "Seus Amigos",
                                   color: Color(0xFFC3917C),
-                                  pagina: "placeholder amigos",
+                                  pagina: PageLoader.friends,
                                 ),
                               ),
                             ],

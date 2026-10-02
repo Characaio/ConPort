@@ -1,63 +1,31 @@
-import 'package:conport/core/navigation/page_loader.dart';
-import 'package:conport/models/usuario.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:conport/widgets/topbar.dart';
+
+import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/models/usuario.dart';
 import 'package:conport/services/usuarioService.dart';
-/*
-class ProfileData {
-  final String username;
-  final String estado;
-  final String cidade;
+import 'package:conport/widgets/topbar.dart';
 
-  final int nivel;
-  final int xp;
-  final int missoesConcluidas;
-  final int recompensas;
+// ============================================================
+// MOCK dos dados que ainda não existem no model Usuario / na API.
+// Quando o backend expor esses campos, adicione-os ao Usuario
+// e apague esta classe.
+// ============================================================
 
-  final int reportsEnviados;
-  final int reportsResolvidos;
-  final int reportsRejeitados;
-  final int reportsPendentes;
-
-  ProfileData({
-    required this.username,
-    required this.estado,
-    required this.cidade,
-
-    required this.nivel,
-    required this.xp,
-    required this.missoesConcluidas,
-    required this.recompensas,
-
-    required this.reportsEnviados,
-    required this.reportsResolvidos,
-    required this.reportsRejeitados,
-    required this.reportsPendentes,
-  });
+class _PerfilMock {
+  static const int seguindo = 12;
+  static const int seguidores = 11;
+  static final DateTime dataCadastro = DateTime(2025, 7, 6);
+  static const int totalConquistas = 4;
 }
-
-final ProfileData profileMock = ProfileData(
-  username: "Jorge",
-  estado: "Bahia",
-  cidade: "Xique-Xique",
-  nivel: 12,
-  xp: 670,
-  missoesConcluidas: 18,
-  recompensas: 1,
-  reportsEnviados: 5,
-  reportsResolvidos: 3,
-  reportsRejeitados: 1,
-  reportsPendentes: 1,
-);
-*/
 
 class Profile extends StatefulWidget {
   const Profile({
     super.key,
     required this.usuarioService,
-    required this.usuarioId});
-  
+    required this.usuarioId,
+  });
+
   final UsuarioService usuarioService;
   final int usuarioId;
 
@@ -66,20 +34,16 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
-  _ProfileState();
-
   Usuario? usuario;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     carregarUsuario();
   }
 
   Future<void> carregarUsuario() async {
-    final dados = await widget.usuarioService.pegarDados(
-      widget.usuarioId,
-    );
+    final dados = await widget.usuarioService.pegarDados(widget.usuarioId);
 
     if (!mounted) return;
 
@@ -88,17 +52,13 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
-    if (usuario == null){
-      return const Scaffold(
-        body: Center(
-          child:CircularProgressIndicator(),
-        ),
-      );
+    if (usuario == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    final colors = Theme.of(context).colorScheme;
+
+    final u = usuario!;
 
     return Scaffold(
       body: Column(
@@ -110,123 +70,149 @@ class _ProfileState extends State<Profile> {
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 600),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Perfil
+                      // Avatar
+                      const Center(child: _Avatar()),
+
+                      const SizedBox(height: 18),
+
+                      // Nome e seguidores
+                      Text(
+                        u.nome,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
                       Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 38,
-                            backgroundColor: colors.primaryContainer,
-                            child: Icon(
-                              Symbols.person,
-                              size: 48,
-                              color: colors.onPrimaryContainer,
-                              fill: 1,
-                            ),
+                        children: const [
+                          _Contador(
+                            valor: _PerfilMock.seguindo,
+                            rotulo: 'Seguindo',
                           ),
-
-                          const SizedBox(width: 16),
-
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                usuario!.nome,
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                              Text(
-                                '${usuario!.estado} • ${usuario!.cidade}',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: colors.onSurfaceVariant),
-                              ),
-                            ],
+                          SizedBox(width: 14),
+                          _Contador(
+                            valor: _PerfilMock.seguidores,
+                            rotulo: 'Seguidores',
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 14),
 
-                      // Estatísticas
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Estatísticas',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                      Text(
+                        'Entrou em ${_dataPorExtenso(_PerfilMock.dataCadastro)}',
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                      Text(
+                        'Em ${u.estado}',
+                        style: const TextStyle(fontSize: 10),
                       ),
 
                       const SizedBox(height: 12),
 
-                      GridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 2.8,
+                      // Adicionar amigos
+                      _BotaoPilula(
+                        icon: Symbols.group,
+                        texto: 'Adicionar Amigos',
+                        cor: const Color(0xFFC3917C),
+                        onPressed: () {
+                          PageLoader.go(context, PageLoader.friends);
+                        },
+                      ),
+
+                      const SizedBox(height: 18),
+                      const Center(
+                        child: SizedBox(width: 200, child: Divider()),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Visão geral
+                      const Text(
+                        'Visão geral',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _Stat('Nível', usuario!.level.toString()),
-                          _Stat('XP', usuario!.xp.toString()),
-                          _Stat(
-                            'Missões concluídas',
-                            usuario!.missoesConcluidas.toString(),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                _Dado(
+                                  icon: Symbols.stars,
+                                  rotulo: 'Nível: ',
+                                  valor: '${u.level}',
+                                ),
+                                _Dado(
+                                  icon: Symbols.keyboard_double_arrow_up,
+                                  rotulo: 'Experiência: ',
+                                  valor: '${u.xp}',
+                                ),
+                              ],
+                            ),
                           ),
-                          _Stat('Recompensas', usuario!.moedas.toString()),
-                          _Stat(
-                            'Reports enviados',
-                            usuario!.reportsEnviados.toString(),
-                          ),
-                          _Stat(
-                            'Reports resolvidos',
-                            usuario!.reportsResolvidos.toString(),
-                          ),
-                          _Stat(
-                            'Reports rejeitados',
-                            usuario!.reportsRejeitados.toString(),
-                          ),
-                          _Stat(
-                            'Reports pendentes',
-                            usuario!.reportsPendentes.toString(),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                _Dado(
+                                  icon: Symbols.redeem,
+                                  rotulo: 'Recompensas: ',
+                                  valor: '${u.moedas}',
+                                ),
+                                _Dado(
+                                  icon: Symbols.flag,
+                                  rotulo: 'Reports: ',
+                                  valor: '${u.reportsEnviados ?? 0}',
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
 
-                      SizedBox(height: 16),
-                      ElevatedButton(
+                      const SizedBox(height: 22),
+
+                      // Conquistas
+                      const Text(
+                        'Conquistas',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      Wrap(
+                        spacing: 14,
+                        runSpacing: 14,
+                        children: [
+                          for (int i = 0; i < _PerfilMock.totalConquistas; i++)
+                            const _Conquista(),
+                        ],
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Seus reports
+                      _BotaoPilula(
+                        icon: Symbols.flag_2,
+                        texto: 'Seus Reports',
+                        cor: const Color(0xFF766057),
                         onPressed: () {
                           PageLoader.go(context, PageLoader.myreports);
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colors.primary,
-                          foregroundColor: colors.surface,
-                          elevation: 5,
-                          padding: const EdgeInsets.all(8.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              const Icon(Symbols.list, size: 28.0),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  "Ver meus reports",
-                                  style: const TextStyle(fontSize: 16.0),
-                                  softWrap: true,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
                     ],
                   ),
@@ -240,37 +226,156 @@ class _ProfileState extends State<Profile> {
   }
 }
 
-class _Stat extends StatelessWidget {
-  final String title;
-  final String value;
+// ============================================================
+// WIDGETS
+// ============================================================
 
-  const _Stat(this.title, this.value);
+class _Avatar extends StatelessWidget {
+  const _Avatar();
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    // TODO: trocar pela foto do usuário quando existir.
+    return const CircleAvatar(
+      radius: 44,
+      backgroundColor: Color(0xFF6A4FA3),
+      child: Icon(Symbols.person, size: 64, color: Colors.black, weight: 600),
+    );
+  }
+}
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        border: Border.all(color: colors.primary),
-        borderRadius: BorderRadius.circular(12),
-      ),
+class _Contador extends StatelessWidget {
+  final int valor;
+  final String rotulo;
+
+  const _Contador({required this.valor, required this.rotulo});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$valor',
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+        ),
+        Text(rotulo, style: const TextStyle(fontSize: 7)),
+      ],
+    );
+  }
+}
+
+class _Dado extends StatelessWidget {
+  final IconData icon;
+  final String rotulo;
+  final String valor;
+
+  const _Dado({required this.icon, required this.rotulo, required this.valor});
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = Theme.of(context).colorScheme.onSurface;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Icon(icon, size: 18, fill: 1),
+          const SizedBox(width: 6),
           Flexible(
-            child: Text(title, style: Theme.of(context).textTheme.bodyMedium),
-          ),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: colors.primary,
+            child: Text.rich(
+              TextSpan(
+                style: TextStyle(fontSize: 12, color: cor),
+                children: [
+                  TextSpan(text: rotulo),
+                  TextSpan(text: valor),
+                ],
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _Conquista extends StatelessWidget {
+  const _Conquista();
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: ícone/imagem de cada conquista quando existir.
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: const BoxDecoration(
+        color: Color(0xFFC25B5B),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+        ],
+      ),
+    );
+  }
+}
+
+class _BotaoPilula extends StatelessWidget {
+  final IconData icon;
+  final String texto;
+  final Color cor;
+  final VoidCallback onPressed;
+
+  const _BotaoPilula({
+    required this.icon,
+    required this.texto,
+    required this.cor,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 34,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 16),
+        label: Text(texto, style: const TextStyle(fontSize: 11)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: cor,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// FORMATADORES
+// ============================================================
+
+String _dataPorExtenso(DateTime data) {
+  const meses = [
+    'janeiro',
+    'fevereiro',
+    'março',
+    'abril',
+    'maio',
+    'junho',
+    'julho',
+    'agosto',
+    'setembro',
+    'outubro',
+    'novembro',
+    'dezembro',
+  ];
+
+  final dia = data.day.toString().padLeft(2, '0');
+
+  return '$dia de ${meses[data.month - 1]}, ${data.year}';
 }

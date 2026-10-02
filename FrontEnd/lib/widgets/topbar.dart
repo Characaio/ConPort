@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/widgets/notifications.dart';
 
 class Topbar extends StatelessWidget {
   final bool hasLogo;
@@ -28,9 +29,7 @@ class Topbar extends StatelessWidget {
         if (text != "") Text(text ?? '', style: TextStyle(fontSize: 20.0)),
         const Spacer(),
         IconButton(
-          onPressed: () {
-            PageLoader.go(context, PageLoader.map);
-          },
+          onPressed: () => mostrarNotificacoes(context),
           icon: Icon(Symbols.notifications, size: 24, weight: 1000),
         ),
         IconButton(

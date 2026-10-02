@@ -41,6 +41,7 @@ dependencies:
   flutter_map_vector_tiles: ^2.9.0
 
   http: ^1.5.0
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:
