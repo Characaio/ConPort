@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:conport/services/reportService.dart';
 import 'package:conport/widgets/topbar.dart';
 
 class Report extends StatefulWidget {
@@ -15,20 +15,39 @@ class Report extends StatefulWidget {
 }
 
 class _ReportState extends State<Report> {
+  final ReportService _reportService = ReportService();
   double urgencia = 0.5;
-
-  // ==========================================
-  // CAMPOS
-  // ==========================================
+  String tipoSelecionado = 'QUEIMADA';
 
   final TextEditingController _descricaoController = TextEditingController();
-
   final TextEditingController _localController = TextEditingController();
+  
+  Future<void> _enviarReport() async{
+    const int usuarioId = 2;
+    const int unidadeId = 1;
 
-  // ==========================================
-  // PESQUISA DE LOCAL
-  // ==========================================
+    try{
+      await _reportService.postarReport(
+        unidadeId: unidadeId,
+        usuarioId: usuarioId,
+        tipo: tipoSelecionado,
+        descricao: _descricaoController.text,
+        prioridade: (urgencia * 5).round(),
+        dataDoOcorrido: DateTime.now(),
+      );
+      if(!mounted) return;
 
+      PageLoader.go(context, PageLoader.myreports);
+
+    }catch (e){
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao enviar Report: $e'),),
+        );
+    }
+  }
+ 
   Timer? _localSearchDebounce;
 
   List<LocalSugestao> _localSugestoes = [];
@@ -244,7 +263,13 @@ class _ReportState extends State<Report> {
                       label: 'Desmatamento',
                     ),
                   ],
-                  onSelected: (value) {},
+                  onSelected: (value) {
+                    if(value !=null){
+                      setState(() {
+                        tipoSelecionado = value.toUpperCase();
+                      });
+                    }
+                  },
                 ),
 
                 const SizedBox(height: 16),
@@ -494,9 +519,7 @@ class _ReportState extends State<Report> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          PageLoader.go(context, PageLoader.myreports);
-                        },
+                        onPressed:_enviarReport,                   
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade400,
                           foregroundColor: Colors.white,
@@ -539,11 +562,6 @@ class _ReportState extends State<Report> {
     );
   }
 }
-
-// ==========================================================
-// MODELO DE SUGESTÃO DE LOCAL
-// ==========================================================
-
 class LocalSugestao {
   final String nome;
   final double latitude;

@@ -2,9 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:conport/widgets/topbar.dart';
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/services/reportService.dart';
+import 'package:conport/models/report.dart';
 
-class SeusReports extends StatelessWidget {
+class SeusReports extends StatefulWidget {
   const SeusReports({super.key});
+
+  @override
+  State<SeusReports> createState() => _SeusReportsState();
+}
+
+class _SeusReportsState extends State<SeusReports> {
+  final ReportService _reportService = ReportService();
+
+  
+  Future<List<Report>> _buscarReports() {
+  return _reportService.buscarReportsDaUnidade(1);
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -22,46 +37,58 @@ class SeusReports extends StatelessWidget {
                 text: 'Seus Reports',
               ),
             ),
+                Expanded(
+                child: FutureBuilder<List<Report>>(
+                  future: _buscarReports(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
 
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          'Erro ao carregar reports: ${snapshot.error}',
+                        ),
+                      );
+                    }
+
+                    final reports = snapshot.data ?? [];
+
+                    if (reports.isEmpty) {
+                      return const Center(
+                        child: Text('Nenhum report encontrado.'),
+                      );
+                    }
+
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      itemCount: reports.length,
+                      itemBuilder: (context, index) {
+                        final report = reports[index];
+
+                        return NovoReportCard(
+                          status: 'Pendente',
+                          motivo: null,
+                          statusColor: const Color(0xFFC7C900),
+                          statusIcon: Symbols.more_horiz,
+                          quantidadeAnexos: 0,
+                        );
+                      },
+                    );
+                  },
                 ),
-                children: const [
-                  NovoReportCard(
-                    status: 'Negado',
-                    motivo: 'Falso Report',
-                    statusColor: Color(0xFFFF6B6B),
-                    statusIcon: Symbols.cancel,
-                    quantidadeAnexos: 0,
-                  ),
-
-                  NovoReportCard(
-                    status: 'Pendente',
-                    motivo: null,
-                    statusColor: Color(0xFFC7C900),
-                    statusIcon: Symbols.more_horiz,
-                    mostrarImagem: true,
-                    quantidadeAnexos: 1,
-                  ),
-
-                  NovoReportCard(
-                    status: 'Resolvido',
-                    motivo: null,
-                    statusColor: Color(0xFF00C83C),
-                    statusIcon: Symbols.check_circle,
-                    autor: 'Joãozinho Biologias da Silva',
-                    mostrarImagem: true,
-                    quantidadeAnexos: 2,
-                  ),
+              ),
+        
+                  
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
+            )
     );
   }
 }
