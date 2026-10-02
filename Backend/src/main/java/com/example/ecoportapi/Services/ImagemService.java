@@ -63,7 +63,9 @@ public class ImagemService {
     @Transactional
     public List<ImagemProcessada> SalvarImagens(List<MultipartFile> imagens) throws IOException{
         List<ImagemProcessada> imagensInfo = new ArrayList<>();
-
+        if(imagens == null){
+          return null;
+        }
         for (MultipartFile imagem : imagens){
             imagensInfo.add(SalvarImagem(imagem));
         }

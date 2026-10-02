@@ -147,7 +147,7 @@ public class ReportService {
             report.setLongitude(localizaoDTO.Longitude());
             report.setLatitude(localizaoDTO.Latitude());
             report.setLocalizacaoOrigem(localizaoDTO.Origem());
-        } else {
+        } else if (imagens != null) {
             for (ImagemProcessada imagem : imagensProcessadas){
                 if (imagem.Latitude() != null && imagem.Longitude() != null){
                     report.setLatitude(imagem.Latitude());
@@ -157,11 +157,15 @@ public class ReportService {
                 }
             }
         }
+        if (imagensProcessadas != null){
+
         List<String> imagensCaminho = imagensProcessadas
                 .stream()
                 .map(ImagemProcessada::NomeArquivo)
                 .toList();
         report.setImagensAnexadas(imagensCaminho);
+        }
+        
         return report;
     }
     private double CalcularDistancia(

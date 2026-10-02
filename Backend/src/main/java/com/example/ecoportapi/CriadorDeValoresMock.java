@@ -49,6 +49,8 @@ public class CriadorDeValoresMock implements CommandLineRunner {
         unidade.setLatitude(10D);
         unidade.setLongitude(8D);
 
+        unidade.setDescricao("Gourmet");
+
         unidade.setTipoDeUnidade(TipoDeUnidade.PARQUE_NACIONAL);
         unidade.setBioma("Mata Atlântica");
 
@@ -95,8 +97,8 @@ public class CriadorDeValoresMock implements CommandLineRunner {
         usuario1.setLevel(10);
         usuario1.setMoedas(69420);
 
-        Usuario usuario2 = new Usuario();
 
+        Usuario usuario2 = new Usuario();
         usuario2.setNome("Tocha Humana");
         usuario2.setDataNasc(LocalDate.of(1939,8,15));
         usuario2.setEmail("JohnyStorms@gmail.com");
@@ -107,6 +109,10 @@ public class CriadorDeValoresMock implements CommandLineRunner {
         usuario2.setXP(10);
         usuario2.setLevel(0);
         usuario2.setMoedas(5);
+
+
+        usuario1.setReputacao(0D);
+        usuario2.setReputacao(0D);
 
         usuarioRepository.saveAll(
                 List.of(usuario1,usuario2)

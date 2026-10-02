@@ -6,61 +6,44 @@ import 'package:http_parser/http_parser.dart';
 import 'package:conport/models/report.dart';
 
 class ReportService {
-  final String urlBase = 'https:/unkeyed-lucy-extenuative.ngrok-free.dev';
+  final String urlBase = 'http://100.88.231.39:8080';
 
   // ============================================================
   // LISTAR REPORTS DA UNIDADE
   // ============================================================
 
-  Future<List<Report>> buscarReportsDaUnidade(
-    int unidadeId,
-  ) async {
-    final url = Uri.parse(
-      '$urlBase/unidade/$unidadeId/reports',
-    );
+  Future<List<Report>> buscarReportsDaUnidade(int unidadeId) async {
+    final url = Uri.parse('$urlBase/unidade/$unidadeId/reports');
 
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
 
-      return json
-          .map((item) => Report.fromJson(item))
-          .toList();
+      return json.map((item) => Report.fromJson(item)).toList();
     }
 
-    throw Exception(
-      'Erro ao buscar reports: ${response.statusCode}',
-    );
+    throw Exception('Erro ao buscar reports: ${response.statusCode}');
   }
 
   // ============================================================
   // BUSCAR REPORT ESPECÍFICO
   // ============================================================
 
-  Future<Report> buscarReport(
-    int unidadeId,
-    int reportId,
-  ) async {
-    final url = Uri.parse(
-      '$urlBase/unidade/$unidadeId/reports/$reportId',
-    );
+  Future<Report> buscarReport(int unidadeId, int reportId) async {
+    final url = Uri.parse('$urlBase/unidade/$unidadeId/reports/$reportId');
 
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
-      return Report.fromJson(
-        jsonDecode(response.body),
-      );
+      return Report.fromJson(jsonDecode(response.body));
     }
 
     if (response.statusCode == 404) {
       throw Exception('Report não encontrado');
     }
 
-    throw Exception(
-      'Erro ao buscar report: ${response.statusCode}',
-    );
+    throw Exception('Erro ao buscar report: ${response.statusCode}');
   }
 
   // ============================================================
@@ -78,74 +61,50 @@ class ReportService {
     double? longitude,
     List<String> caminhosDasImagens = const [],
   }) async {
-    final url = Uri.parse(
-      '$urlBase/unidade/$unidadeId/reports',
-    );
+    final url = Uri.parse('$urlBase/unidade/$unidadeId/reports');
 
-    final request = http.MultipartRequest(
-      'POST',
-      url,
-    );
+    final request = http.MultipartRequest('POST', url);
 
     final reportDTO = {
       'Tipo': tipo,
       'Descricao': descricao,
+      'Prioridade': prioridade,
       'DataDoOcorrido': dataDoOcorrido.toIso8601String(),
       'UsuarioId': usuarioId,
-      'Prioridade': prioridade,
     };
 
     request.files.add(
       http.MultipartFile.fromString(
         'reportDTO',
         jsonEncode(reportDTO),
-        contentType: MediaType(
-          'application',
-          'json',
-        ),
+        contentType: MediaType('application', 'json'),
       ),
     );
 
     // Localização
     if (latitude != null && longitude != null) {
-      final localizacaoDTO = {
-        'Latitude': latitude,
-        'Longitude': longitude,
-      };
+      final localizacaoDTO = {'Latitude': latitude, 'Longitude': longitude};
 
       request.files.add(
         http.MultipartFile.fromString(
           'localizacao',
           jsonEncode(localizacaoDTO),
-          contentType: MediaType(
-            'application',
-            'json',
-          ),
+          contentType: MediaType('application', 'json'),
         ),
       );
     }
 
     // Imagens
     for (final caminho in caminhosDasImagens) {
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'imagens',
-          caminho,
-        ),
-      );
+      request.files.add(await http.MultipartFile.fromPath('imagens', caminho));
     }
 
     final streamedResponse = await request.send();
 
-    final response = await http.Response.fromStream(
-      streamedResponse,
-    );
+    final response = await http.Response.fromStream(streamedResponse);
 
-    if (response.statusCode == 200 ||
-        response.statusCode == 201) {
-      return Report.fromJson(
-        jsonDecode(response.body),
-      );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return Report.fromJson(jsonDecode(response.body));
     }
 
     throw Exception(

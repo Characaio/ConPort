@@ -33,6 +33,7 @@ public class UsuarioController {
         return ResponseEntity.ok(missaoService.GerarMissoes(id));
     }
 
+    /*
     @PostMapping
     public ResponseEntity<?> Signup(
             @RequestBody SignupDTO signupDTO
@@ -45,5 +46,5 @@ public class UsuarioController {
     ){
         return usuarioService.Login(loginDTO);
     }
-
+    */
 }
