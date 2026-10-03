@@ -13,7 +13,7 @@ class Usuario {
   final int xp;
   final int level;
   final int moedas;
-  final String? apelido;
+  final String? username;
   final String? avatar;
   final DateTime? datacadastro;
   final int? seguidores;
@@ -36,7 +36,7 @@ class Usuario {
     required this.xp,
     required this.level,
     required this.moedas,
-    this.apelido,
+    this.username,
     this.avatar,
     this.datacadastro,
     this.seguidores,
@@ -92,7 +92,7 @@ class Usuario {
 
       moedas: json['Moedas'] ?? json['moedas'] ?? 0,
 
-      apelido: json['Apelido'] ?? json['apelido'],
+      username: json['Username'] ?? json['username'],
 
       avatar: json['Avatar'] ?? json['avatar'],
 

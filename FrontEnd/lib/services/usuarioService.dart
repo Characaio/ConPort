@@ -67,12 +67,16 @@ class UsuarioService {
     throw Exception('Erro ao buscar solicitações: ${response.statusCode}');
   }
 
-  Future<List<Amigo>> buscar(String termo) async {
+  Future<List<Amigo>> buscar(String termo, {int? usuarioId}) async {
     if (!AppConfig.usarApi) return AmigoMock.amigos();
 
-    final uri = Uri.parse(
-      '${AppConfig.apiUrl}/usuarios/buscar',
-    ).replace(queryParameters: {'termo': termo});
+    // O id vai junto para o backend não devolver a própria conta.
+    final uri = Uri.parse('${AppConfig.apiUrl}/usuarios/buscar').replace(
+      queryParameters: {
+        'termo': termo,
+        if (usuarioId != null) 'usuarioId': '$usuarioId',
+      },
+    );
 
     final response = await http.get(uri);
 

@@ -5,7 +5,7 @@ class UsuarioMock {
     return Usuario(
       id: id,
       nome: 'Usuário Demo',
-      apelido: 'demo',
+      username: 'demo',
       datanasc: DateTime(2005, 5, 15),
       estado: 'São Paulo',
       cidade: 'Santa Bárbara d\'Oeste',

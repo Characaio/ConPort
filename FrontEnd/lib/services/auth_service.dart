@@ -80,6 +80,7 @@ class AuthService {
 
   Future<ResultadoAutenticacao> cadastrar({
     required String nome,
+    required String username,
     required String email,
     required String senha,
     required DateTime dataNasc,
@@ -89,6 +90,7 @@ class AuthService {
     if (!AppConfig.usarApi) {
       final usuario = await AuthMock.cadastrar(
         nome: nome,
+        username: username,
         email: email,
         senha: senha,
         dataNasc: dataNasc,
@@ -110,6 +112,7 @@ class AuthService {
       headers: const {'Content-Type': 'application/json'},
       body: jsonEncode({
         'nome': nome.trim(),
+        'username': username.trim().toLowerCase(),
         'dataNasc': _dataIso(dataNasc),
         'email': email.trim(),
         'senha': senha,

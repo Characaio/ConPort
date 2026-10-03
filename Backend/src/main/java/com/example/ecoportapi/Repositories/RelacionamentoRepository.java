@@ -12,9 +12,21 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RelacionamentoRepository extends JpaRepository<UsuarioRelacionamento, Long> {
 
-  Optional<UsuarioRelacionamento> findBySeguidorIdAndSeguindoId(Long seguidorId, Long seguindoId);
+  // Queries explicitas pelo mesmo motivo das de UsuarioRepository: com o
+  // Hibernate 7 o nome derivado precisa bater exatamente com o atributo.
+  @Query("""
+          SELECT r FROM UsuarioRelacionamento r
+          WHERE r.Seguidor.Id = :seguidorId AND r.Seguindo.Id = :seguindoId
+      """)
+  Optional<UsuarioRelacionamento> buscar(  @Param("seguidorId") Long seguidorId,
+      @Param("seguindoId") Long seguindoId);
 
-  Optional<UsuarioRelacionamento> findByIdAndSeguindoId(Long id, Long seguidorId);
+  @Query("""
+          SELECT r FROM UsuarioRelacionamento r
+          WHERE r.Id = :id AND r.Seguindo.Id = :seguindoId
+      """)
+  Optional<UsuarioRelacionamento> buscarRecebida(  @Param("id") Long id,
+      @Param("seguindoId") Long seguindoId);
 
   @Query(
       """
@@ -38,6 +50,4 @@ public interface RelacionamentoRepository extends JpaRepository<UsuarioRelaciona
   List<UsuarioRelacionamento> findComStatus(
       @Param("usuarioId") Long usuarioId, @Param("status") StatusRelacionamento status);
 
-  List<UsuarioRelacionamento> findBySeguidorIdAndStatus(
-      Long seguidorId, StatusRelacionamento status);
 }

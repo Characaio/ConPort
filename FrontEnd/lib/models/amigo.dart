@@ -3,7 +3,7 @@ import 'package:conport/config/app_config.dart';
 class Amigo {
   final int id;
   final String nome;
-  final String? apelido;
+  final String? username;
   final String? avatar;
   final int nivel;
   final int xp;
@@ -15,14 +15,14 @@ class Amigo {
     required this.nivel,
     required this.xp,
     this.relacaoId,
-    this.apelido,
+    this.username,
     this.avatar,
   });
 
   factory Amigo.fromJson(Map<String, dynamic> json) => Amigo(
     id: json['Id'] ?? json['id'] ?? 0,
     nome: json['Nome'] ?? json['nome'] ?? 'Nome',
-    apelido: json['Apelido'] ?? json['apelido'],
+    username: json['Username'] ?? json['username'],
     avatar: json['Avatar'] ?? json['avatar'],
     nivel: json['Level'] ?? json['level'] ?? 0,
     xp: json['XP'] ?? json['xp'] ?? 0,

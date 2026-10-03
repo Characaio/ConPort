@@ -14,9 +14,21 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
-  Optional<Usuario> findByEmailAndSenha(String Email, String Senha);
+  // Com o Hibernate 7 (Spring Boot 4) o JPQL derivado exige o nome exato do
+  // atributo, por isso a query e explicita em vez de findByEmailAndSenha.
+  @Query("""
+          SELECT u FROM Usuario u
+          WHERE u.Email = :email AND u.Senha = :senha
+      """)
+  Optional<Usuario> buscarPorEmailESenha(
+      @Param("email") String email, @Param("senha") String senha);
 
-  Boolean existsByEmailAndSenha(String Email, String Senha);
+  @Query("""
+          SELECT COUNT(u) > 0 FROM Usuario u
+          WHERE u.Email = :email AND u.Senha = :senha
+      """)
+  boolean existePorEmailESenha(
+      @Param("email") String email, @Param("senha") String senha);
 
   @Query(
       """
@@ -36,9 +48,11 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
   long countReportsByStatus(Long usuarioId, StatusReport status);
 
   // ~ Cae
-  Optional<Usuario> findByApelidoIgnoreCase(String Apelido);
-
-  boolean existsByApelidoIgnoreCase(String Apelido);
+  @Query("""
+          SELECT COUNT(u) > 0 FROM Usuario u
+          WHERE UPPER(u.Username) = UPPER(:username)
+      """)
+  boolean existePorUsername(@Param("username") String username);
 
   @Query(
       """
@@ -64,9 +78,24 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
       """
           SELECT u FROM Usuario u
           WHERE u.Id <> :usuarioId
-          AND (LOWER(u.Apelido) = LOWER(:termo)
+          AND (LOWER(u.Username) LIKE LOWER(CONCAT('%', :termo, '%'))
                OR LOWER(u.Nome) LIKE LOWER(CONCAT('%', :termo, '%')))
+          ORDER BY
+              CASE WHEN LOWER(u.Username) = LOWER(:termo) THEN 0 ELSE 1 END,
+              u.Nome
       """)
   List<Usuario> buscar(
       @Param("usuarioId") Long usuarioId, @Param("termo") String termo, Pageable pageable);
+
+  // Mesma busca sem excluir ninguem, para quando nao ha sessao.
+  @Query(
+      """
+          SELECT u FROM Usuario u
+          WHERE LOWER(u.Username) LIKE LOWER(CONCAT('%', :termo, '%'))
+             OR LOWER(u.Nome) LIKE LOWER(CONCAT('%', :termo, '%'))
+          ORDER BY
+              CASE WHEN LOWER(u.Username) = LOWER(:termo) THEN 0 ELSE 1 END,
+              u.Nome
+      """)
+  List<Usuario> buscarSemExcluir(@Param("termo") String termo, Pageable pageable);
 }

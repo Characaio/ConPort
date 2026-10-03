@@ -22,6 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final AuthService _authService = AuthService();
 
   final TextEditingController _nomeController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _dataController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _estadoController = TextEditingController();
@@ -31,6 +32,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool _carregando = false;
   String? _erroNome;
+  String? _erroUsername;
   String? _erroData;
   String? _erroEmail;
   String? _erroEstado;
@@ -42,6 +44,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void dispose() {
     _nomeController.dispose();
+    _usernameController.dispose();
     _dataController.dispose();
     _emailController.dispose();
     _estadoController.dispose();
@@ -53,6 +56,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool get _temErroDeCampo =>
       _erroNome != null ||
+      _erroUsername != null ||
       _erroData != null ||
       _erroEmail != null ||
       _erroEstado != null ||
@@ -75,6 +79,11 @@ class _RegisterPageState extends State<RegisterPage> {
     final erroNome = _nomeController.text.trim().length < 2
         ? 'Digite seu nome.'
         : null;
+    // Mesma regra do backend: 3 a 24 caracteres, minusculos, numero, . ou _
+    final username = _usernameController.text.trim().toLowerCase();
+    final erroUsername = !RegExp(r'^[a-z0-9_.]{3,24}$').hasMatch(username)
+        ? 'Use de 3 a 24 caracteres: letras minúsculas, números, ponto ou _.'
+        : null;
     final erroEmail = validarEmail(_emailController.text);
     final erroEstado = _estadoController.text.trim().isEmpty
         ? 'Digite o estado.'
@@ -91,6 +100,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     setState(() {
       _erroNome = erroNome;
+      _erroUsername = erroUsername;
       _erroData = erroData;
       _erroEmail = erroEmail;
       _erroEstado = erroEstado;
@@ -111,6 +121,7 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       resultado = await _authService.cadastrar(
         nome: _nomeController.text,
+        username: username,
         email: _emailController.text,
         senha: senha,
         dataNasc: dataNasc,
@@ -200,13 +211,23 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 20),
                   CampoTexto(
-                    rotulo: 'Nome de usuário',
+                    rotulo: 'Nome',
                     controller: _nomeController,
-                    hint: 'Como você quer ser chamado',
+                    hint: 'Seu nome completo',
                     icone: Symbols.person,
                     erro: _erroNome,
                     teclado: TextInputType.name,
                     autofill: AutofillHints.name,
+                    acao: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 14),
+                  CampoTexto(
+                    rotulo: 'Username',
+                    controller: _usernameController,
+                    hint: 'seu.username',
+                    icone: Symbols.alternate_email,
+                    erro: _erroUsername,
+                    teclado: TextInputType.text,
                     acao: TextInputAction.next,
                   ),
                   const SizedBox(height: 14),

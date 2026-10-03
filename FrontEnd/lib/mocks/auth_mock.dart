@@ -39,6 +39,7 @@ class AuthMock {
 
   static Future<Usuario?> cadastrar({
     required String nome,
+    required String username,
     required String email,
     required String senha,
     required DateTime dataNasc,
@@ -56,6 +57,7 @@ class AuthMock {
     final usuario = Usuario(
       id: _proximoId++,
       nome: nome.trim(),
+      username: username.trim().toLowerCase(),
       // O backend define a regra; o mock só preenche uma data válida.
       datanasc: dataNasc,
       estado: estado.trim(),

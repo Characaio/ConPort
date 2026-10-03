@@ -3,6 +3,8 @@ package com.example.ecoportapi.Controllers;
 // TRABALHAR DE MANEIRA SERIA NESSA CONTROLLER APÓS A QUARTA-FEIRA
 // sergia* ~ Cae
 
+import com.example.ecoportapi.DTOs.Request.LoginDTO;
+import com.example.ecoportapi.DTOs.Request.SignupDTO;
 import com.example.ecoportapi.Services.MissaoService;
 import com.example.ecoportapi.Services.UsuarioService;
 import java.io.IOException;
@@ -47,6 +49,18 @@ public class UsuarioController {
   }
   */
 
+  // As rotas de autenticação ficam em /usuarios/login e /usuarios/signup,
+  // que são as URLs que o frontend já chama.
+  @PostMapping("/signup")
+  public ResponseEntity<?> Signup(@RequestBody SignupDTO signupDTO) {
+    return usuarioService.Signup(signupDTO);
+  }
+
+  @PostMapping("/login")
+  public ResponseEntity<?> Login(@RequestBody LoginDTO loginDTO) {
+    return usuarioService.Login(loginDTO);
+  }
+
   @GetMapping("/{id}/amigos")
   public ResponseEntity<?> ListarAmigos(@PathVariable Long id) {
     return ResponseEntity.ok(usuarioService.listarAmigos(id));
@@ -58,9 +72,11 @@ public class UsuarioController {
   }
 
   @GetMapping("/buscar")
-  public ResponseEntity<?> Buscar(@RequestParam String termo) {
-    // ATENÇÃO: sem autenticação, id fixo. Substituir pelo usuario logado.
-    return ResponseEntity.ok(usuarioService.buscar(1L, termo));
+  public ResponseEntity<?> Buscar(
+      @RequestParam String termo, @RequestParam(required = false) Long usuarioId) {
+    // ATENÇÃO: sem autenticação, quem busca se identifica por query string.
+    // Substituir pelo usuario logado quando existir token.
+    return ResponseEntity.ok(usuarioService.buscar(usuarioId, termo));
   }
 
   @PostMapping("/{id}/seguir/{alvoId}")

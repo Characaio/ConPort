@@ -31,9 +31,11 @@ class Amigos extends StatefulWidget {
 }
 
 class _AmigosState extends State<Amigos> {
-  late List<Amigo> amigos;
-  late List<Amigo> solicitacoes;
+  // Já nascem vazias: o primeiro build() acontece antes da resposta da API.
+  List<Amigo> amigos = [];
+  List<Amigo> solicitacoes = [];
 
+  bool carregando = true;
   String? erro;
 
   _Aba aba = _Aba.amigos;
@@ -55,11 +57,15 @@ class _AmigosState extends State<Amigos> {
       setState(() {
         amigos = a;
         solicitacoes = s;
+        carregando = false;
         _ordenar();
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => erro = 'Não foi possível carregar seus amigos.');
+      setState(() {
+        erro = 'Não foi possível carregar seus amigos.';
+        carregando = false;
+      });
     }
   }
 
@@ -189,7 +195,10 @@ class _AmigosState extends State<Amigos> {
     List<Amigo> resultados;
 
     try {
-      resultados = await widget.usuarioService.buscar(termo);
+      resultados = await widget.usuarioService.buscar(
+        termo,
+        usuarioId: widget.usuarioId,
+      );
     } catch (e) {
       if (mounted) _mensagem('Não foi possível buscar.');
       return;
@@ -219,9 +228,43 @@ class _AmigosState extends State<Amigos> {
 
   @override
   Widget build(BuildContext context) {
-    final filtrados = _amigosFiltrados;
     final appColors =
         Theme.of(context).extension<AppColors>() ?? AppColors.light;
+
+    if (carregando) {
+      return const Scaffold(
+        body: SafeArea(child: Center(child: CircularProgressIndicator())),
+      );
+    }
+
+    if (erro != null) {
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(erro!, style: const TextStyle(fontSize: 12)),
+                const SizedBox(height: 12),
+                _BotaoPilula(
+                  texto: 'Tentar de novo',
+                  cor: appColors.accentSalmon,
+                  onPressed: () {
+                    setState(() {
+                      carregando = true;
+                      erro = null;
+                    });
+                    _carregar();
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final filtrados = _amigosFiltrados;
 
     return Scaffold(
       body: SafeArea(
@@ -770,7 +813,7 @@ class _AdicionarAmigoDialogState extends State<_AdicionarAmigoDialog> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Envie uma solicitação pelo nome de usuário.',
+                'Envie uma solicitação buscando pelo username.',
                 style: TextStyle(fontSize: 11),
               ),
               const SizedBox(height: 14),
@@ -783,7 +826,7 @@ class _AdicionarAmigoDialogState extends State<_AdicionarAmigoDialog> {
                 onSubmitted: (_) => _enviar(),
                 style: const TextStyle(fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: 'Nome de usuário',
+                  hintText: 'Username',
                   hintStyle: const TextStyle(fontSize: 13),
                   errorText: _erro,
                   prefixIcon: const Icon(Symbols.person_search, size: 20),

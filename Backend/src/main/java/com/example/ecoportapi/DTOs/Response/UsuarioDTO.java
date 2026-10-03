@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 public record UsuarioDTO(
     Long Id,
     String Nome,
-    String Apelido,
+    String Username,
     LocalDate DataNasc,
     String Email,
     String Estado,
@@ -24,7 +24,7 @@ public record UsuarioDTO(
     this(
         usuario.getId(),
         usuario.getNome(),
-        usuario.getApelido(),
+        usuario.getUsername(),
         usuario.getDataNasc(),
         usuario.getEmail(),
         usuario.getEstado(),

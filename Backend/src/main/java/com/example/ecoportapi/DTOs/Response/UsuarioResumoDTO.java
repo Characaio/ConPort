@@ -5,7 +5,7 @@ import com.example.ecoportapi.Models.Usuario;
 public record UsuarioResumoDTO(
     Long Id,
     String Nome,
-    String Apelido,
+    String Username,
     String Avatar,
     Integer Level,
     Integer XP,
@@ -22,7 +22,7 @@ public record UsuarioResumoDTO(
     this(
         usuario.getId(),
         usuario.getNome(),
-        usuario.getApelido(),
+        usuario.getUsername(),
         usuario.getAvatar(),
         usuario.getLevel(),
         usuario.getXP(),

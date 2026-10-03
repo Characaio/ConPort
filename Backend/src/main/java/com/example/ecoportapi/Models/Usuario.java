@@ -48,8 +48,8 @@ public class Usuario {
   @Column(name = "Reputacao", nullable = false)
   private Double Reputacao;
 
-  @Column(name = "Apelido", nullable = false, unique = true)
-  private String Apelido;
+  @Column(name = "Username", nullable = false, unique = true)
+  private String Username;
 
   @Column(
       name = "DataCadastro",
@@ -163,12 +163,12 @@ public class Usuario {
     Reputacao = reputacao;
   }
 
-  public String getApelido() {
-    return Apelido;
+  public String getUsername() {
+    return Username;
   }
 
-  public void setApelido(String apelido) {
-    Apelido = apelido;
+  public void setUsername(String username) {
+    Username = username;
   }
 
   public LocalDateTime getDataCadastro() {

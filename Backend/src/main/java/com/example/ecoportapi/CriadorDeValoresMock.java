@@ -85,7 +85,7 @@ public class CriadorDeValoresMock implements CommandLineRunner {
 
     Usuario usuario1 = new Usuario();
     usuario1.setNome("Carlos Silva");
-    usuario1.setApelido("carlos");
+    usuario1.setUsername("carlos");
     usuario1.setDataNasc(LocalDate.of(2001, 5, 14));
     usuario1.setEmail("carlos.silva@gmail.com");
     usuario1.setSenha("123456");
@@ -99,7 +99,7 @@ public class CriadorDeValoresMock implements CommandLineRunner {
 
     Usuario usuario2 = new Usuario();
     usuario2.setNome("Ana Oliveira");
-    usuario2.setApelido("ana");
+    usuario2.setUsername("ana");
     usuario2.setDataNasc(LocalDate.of(2003, 8, 22));
     usuario2.setEmail("ana.oliveira@gmail.com");
     usuario2.setSenha("123456");
@@ -113,7 +113,7 @@ public class CriadorDeValoresMock implements CommandLineRunner {
 
     Usuario usuario3 = new Usuario();
     usuario3.setNome("Lucas Santos");
-    usuario3.setApelido("lucas");
+    usuario3.setUsername("lucas");
     usuario3.setDataNasc(LocalDate.of(2000, 11, 3));
     usuario3.setEmail("lucas.santos@gmail.com");
     usuario3.setSenha("123456");

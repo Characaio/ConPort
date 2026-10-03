@@ -45,7 +45,7 @@ public class UsuarioService {
   public ResponseEntity<?> Signup(SignupDTO signupDTO) {
     Usuario usuario = new Usuario();
 
-    if (usuarioRepository.existsByEmailAndSenha(signupDTO.email(), signupDTO.senha())) {
+    if (usuarioRepository.existePorEmailESenha(signupDTO.email(), signupDTO.senha())) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body("Usuario Ja existe");
     }
 
@@ -60,20 +60,20 @@ public class UsuarioService {
     usuario.setLevel(0);
     usuario.setMoedas(0);
     usuario.setReputacao(0D);
-    String apelido = signupDTO.apelido() == null ? null : signupDTO.apelido().trim().toLowerCase();
+    String username = signupDTO.username() == null ? null : signupDTO.username().trim().toLowerCase();
 
-    if (apelido == null || !apelido.matches("^[a-z0-9_.]{3,24}$")) {
+    if (username == null || !username.matches("^[a-z0-9_.]{3,24}$")) {
       return ResponseEntity.badRequest()
           .body(
-              "Apelido deve ter de 3 a 24 caracteres, "
+              "Username deve ter de 3 a 24 caracteres, "
                   + "apenas letras minúsculas, números, ponto ou _");
     }
 
-    if (usuarioRepository.existsByApelidoIgnoreCase(apelido)) {
-      return ResponseEntity.status(HttpStatus.CONFLICT).body("Apelido já em uso");
+    if (usuarioRepository.existePorUsername(username)) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).body("Username já em uso");
     }
 
-    usuario.setApelido(apelido);
+    usuario.setUsername(username);
     usuario.setAvatar(null);
     usuarioRepository.save(usuario);
 
@@ -83,9 +83,13 @@ public class UsuarioService {
   public ResponseEntity<?> Login(LoginDTO loginDTO) {
     Usuario usuario =
         usuarioRepository
-            .findByEmailAndSenha(loginDTO.email(), loginDTO.senha())
+            .buscarPorEmailESenha(loginDTO.email(), loginDTO.senha())
             .orElseThrow(() -> new UsuarioNaoEncontrado("Usuario não encontrado"));
-    return ResponseEntity.ok(new UsuarioDTO(usuario, 0L, 0L));
+    return ResponseEntity.ok(
+        new UsuarioDTO(
+            usuario,
+            usuarioRepository.countSeguidores(usuario.getId(), StatusRelacionamento.ACEITO),
+            usuarioRepository.countSeguindo(usuario.getId(), StatusRelacionamento.ACEITO)));
   }
 
   // ~ Cae
@@ -121,9 +125,13 @@ public class UsuarioService {
       return List.of();
     }
 
-    return usuarioRepository.buscar(usuarioId, limpo, PageRequest.of(0, 20)).stream()
-        .map(UsuarioResumoDTO::new)
-        .toList();
+    // Sem sessao, a busca nao exclui ninguem (usuarioId nulo).
+    List<Usuario> encontrados =
+        usuarioId == null
+            ? usuarioRepository.buscarSemExcluir(limpo, PageRequest.of(0, 20))
+            : usuarioRepository.buscar(usuarioId, limpo, PageRequest.of(0, 20));
+
+    return encontrados.stream().map(UsuarioResumoDTO::new).toList();
   }
 
   public ResponseEntity<?> enviarSolicitacao(Long usuarioId, Long alvoId) {
@@ -135,7 +143,7 @@ public class UsuarioService {
         .findById(alvoId)
         .orElseThrow(() -> new UsuarioNaoEncontrado("Usuario não encontrado"));
 
-    var existente = relacionamentoRepository.findBySeguidorIdAndSeguindoId(usuarioId, alvoId);
+    var existente = relacionamentoRepository.buscar(usuarioId, alvoId);
 
     if (existente.isPresent()) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -162,7 +170,7 @@ public class UsuarioService {
   public ResponseEntity<?> aceitar(Long usuarioId, Long relacaoId) {
     UsuarioRelacionamento relacao =
         relacionamentoRepository
-            .findByIdAndSeguindoId(relacaoId, usuarioId)
+            .buscarRecebida(relacaoId, usuarioId)
             .orElseThrow(() -> new UsuarioNaoEncontrado("Solicitação não encontrada"));
 
     relacao.setStatus(StatusRelacionamento.ACEITO);
@@ -170,7 +178,7 @@ public class UsuarioService {
 
     boolean espelhoExiste =
         relacionamentoRepository
-            .findBySeguidorIdAndSeguindoId(
+            .buscar(
                 relacao.getSeguindo().getId(), relacao.getSeguidor().getId())
             .isPresent();
 
@@ -188,7 +196,7 @@ public class UsuarioService {
   public ResponseEntity<?> recusar(Long usuarioId, Long relacaoId) {
     UsuarioRelacionamento relacao =
         relacionamentoRepository
-            .findByIdAndSeguindoId(relacaoId, usuarioId)
+            .buscarRecebida(relacaoId, usuarioId)
             .orElseThrow(() -> new UsuarioNaoEncontrado("Solicitação não encontrada"));
 
     if (relacao.getStatus() == StatusRelacionamento.ACEITO) {
@@ -200,8 +208,8 @@ public class UsuarioService {
   }
 
   public ResponseEntity<?> removerAmizade(Long usuarioId, Long alvoId) {
-    var minha = relacionamentoRepository.findBySeguidorIdAndSeguindoId(usuarioId, alvoId);
-    var dele = relacionamentoRepository.findBySeguidorIdAndSeguindoId(alvoId, usuarioId);
+    var minha = relacionamentoRepository.buscar(usuarioId, alvoId);
+    var dele = relacionamentoRepository.buscar(alvoId, usuarioId);
 
     minha.ifPresent(relacionamentoRepository::delete);
     dele.ifPresent(relacionamentoRepository::delete);

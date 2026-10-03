@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/pages/profile.dart';
 import 'package:conport/pages/map.dart';
 import 'package:conport/pages/home.dart';
@@ -72,16 +73,10 @@ class PageLoader {
         return MaterialPageRoute(builder: (_) => const Anuncios());
 
       case friends:
-        return MaterialPageRoute(
-          builder: (_) =>
-              Amigos(usuarioService: const UsuarioService(), usuarioId: 2),
-        );
+        return MaterialPageRoute(builder: (_) => _amigosDaSessao());
 
       case profile:
-        return MaterialPageRoute(
-          builder: (_) =>
-              Profile(usuarioId: 2, usuarioService: const UsuarioService()),
-        );
+        return MaterialPageRoute(builder: (_) => _perfilDaSessao());
 
       case missions:
         return MaterialPageRoute(builder: (_) => const Missions());
@@ -109,6 +104,34 @@ class PageLoader {
     }
   }
 
+  /// Perfil e amigos são sempre os da sessão: sem id fixo, quem loga vê o
+  /// próprio perfil. Sem login, pede a conta em vez de abrir o de outra pessoa.
+  static Widget _perfilDaSessao() {
+    final usuario = AuthSession.instance.usuario;
+
+    if (usuario == null) {
+      return const _PrecisaLogin();
+    }
+
+    return Profile(
+      usuarioId: usuario.id,
+      usuarioService: const UsuarioService(),
+    );
+  }
+
+  static Widget _amigosDaSessao() {
+    final usuario = AuthSession.instance.usuario;
+
+    if (usuario == null) {
+      return const _PrecisaLogin();
+    }
+
+    return Amigos(
+      usuarioId: usuario.id,
+      usuarioService: const UsuarioService(),
+    );
+  }
+
   static void go(BuildContext context, String route) {
     Navigator.pushNamed(context, route);
   }
@@ -119,5 +142,41 @@ class PageLoader {
 
   static void back(BuildContext context) {
     Navigator.pop(context);
+  }
+}
+
+/// Página e amigos exigem conta: em vez de abrir o perfil de outra pessoa,
+/// manda para o login.
+class _PrecisaLogin extends StatelessWidget {
+  const _PrecisaLogin();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, size: 40),
+                const SizedBox(height: 12),
+                const Text(
+                  'Entre na sua conta para ver isso.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 18),
+                ElevatedButton(
+                  onPressed: () => PageLoader.replace(context, PageLoader.login),
+                  child: const Text('Entrar'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
