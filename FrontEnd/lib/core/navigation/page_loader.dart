@@ -18,7 +18,6 @@ import 'package:conport/pages/educacao.dart';
 import 'package:conport/services/unidadeService.dart';
 import 'package:conport/services/usuarioService.dart';
 
-
 class PageLoader {
   static const String home = '/';
   static const String map = '/mapa';
@@ -38,87 +37,55 @@ class PageLoader {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case home:
-        return MaterialPageRoute(builder: (_) => SafeArea(child: Home()));
+        return MaterialPageRoute(builder: (_) => const Home());
 
       case map:
-        return MaterialPageRoute(builder: (_) => const SafeArea(child: Map()));
+        return MaterialPageRoute(builder: (_) => const Map());
 
       case ecossistema:
-        return MaterialPageRoute(
-          builder: (_) => SafeArea(child: EcossistemaPage()),
-        );
+        return MaterialPageRoute(builder: (_) => const EcossistemaPage());
 
       case criarreport:
-        return MaterialPageRoute(
-          builder: (_) => const SafeArea(child: Report()),
-        );
+        return MaterialPageRoute(builder: (_) => const Report());
 
       case myreports:
-        return MaterialPageRoute(
-          builder: (_) => const SafeArea(child: SeusReports()),
-        );
+        return MaterialPageRoute(builder: (_) => const SeusReports());
 
       case report:
-        return MaterialPageRoute(
-          builder: (_) => const SafeArea(child: ReportDetails()),
-        );
+        return MaterialPageRoute(builder: (_) => const ReportDetails());
 
       case unit:
         return MaterialPageRoute(
-          builder: (_) => SafeArea(
-            child: MaisInfo(
-              unidadeId: 1,
-              unidadeService: const UnidadeService(),
-            ),
-          ),
+          builder: (_) =>
+              MaisInfo(unidadeId: 1, unidadeService: const UnidadeService()),
         );
 
       case anuncios:
-        return MaterialPageRoute(
-          builder: (_) => const SafeArea(child: Anuncios()),
-        );
+        return MaterialPageRoute(builder: (_) => const Anuncios());
 
       case friends:
-        return MaterialPageRoute(
-          builder: (_) => const SafeArea(child: Amigos()),
-        );
+        return MaterialPageRoute(builder: (_) => const Amigos());
 
       case profile:
         return MaterialPageRoute(
-          builder: (_) => SafeArea(
-            child: Profile(
-              usuarioId: 2,
-              usuarioService: const UsuarioService(),
-            ),
-          ),
+          builder: (_) =>
+              Profile(usuarioId: 2, usuarioService: const UsuarioService()),
         );
 
       case missions:
-        return MaterialPageRoute(
-          builder: (_) => const SafeArea(child: Missions()),
-        );
+        return MaterialPageRoute(builder: (_) => const Missions());
 
       case rewards:
-        return MaterialPageRoute(
-          builder: (_) => const SafeArea(child: Rewards()),
-        );
+        return MaterialPageRoute(builder: (_) => const Rewards());
 
       case settingsPage:
-        return MaterialPageRoute(
-          builder: (_) => const SafeArea(child: SettingsPage()),
-        );
+        return MaterialPageRoute(builder: (_) => const SettingsPage());
 
       case educacao:
-        return MaterialPageRoute(
-          builder: (_) => const SafeArea(child: EducacaoPage(),),
-        );
+        return MaterialPageRoute(builder: (_) => const EducacaoPage());
 
       default:
-        return MaterialPageRoute(
-          builder: (_) =>
-              // Home(unidadeId: 1, unidadeService: const UnidadeService()),
-              SafeArea(child: Home()),
-        );
+        return MaterialPageRoute(builder: (_) => const Home());
     }
   }
 

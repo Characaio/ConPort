@@ -53,71 +53,73 @@ class Rewards extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.surface,
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Topbar(hasLogo: false, hasReturn: true, text: 'Recompensas'),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _BalanceCard(),
-                      const SizedBox(height: 24),
-                      const _SectionTitle(
-                        icon: Symbols.redeem,
-                        title: 'Troque suas moedas',
-                      ),
-                      const SizedBox(height: 10),
-                      for (final reward in redeemable) ...[
-                        _RewardCard(reward: reward),
-                        const SizedBox(height: 12),
-                      ],
-                      const SizedBox(height: 8),
-                      const _SectionTitle(
-                        icon: Symbols.workspace_premium,
-                        title: 'Conquistas',
-                      ),
-                      const SizedBox(height: 10),
-                      for (final reward in achievements) ...[
-                        _RewardCard(reward: reward),
-                        const SizedBox(height: 12),
-                      ],
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 36,
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            PageLoader.go(context, PageLoader.missions);
-                          },
-                          icon: Icon(Symbols.flag, size: 16),
-                          label: Text(
-                            'Voltar para missões',
-                            style: TextStyle(fontSize: 11),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: colors.primary,
-                            side: BorderSide(color: colors.primary),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Topbar(hasLogo: false, hasReturn: true, text: 'Recompensas'),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _BalanceCard(),
+                        const SizedBox(height: 24),
+                        const _SectionTitle(
+                          icon: Symbols.redeem,
+                          title: 'Troque suas moedas',
+                        ),
+                        const SizedBox(height: 10),
+                        for (final reward in redeemable) ...[
+                          _RewardCard(reward: reward),
+                          const SizedBox(height: 12),
+                        ],
+                        const SizedBox(height: 8),
+                        const _SectionTitle(
+                          icon: Symbols.workspace_premium,
+                          title: 'Conquistas',
+                        ),
+                        const SizedBox(height: 10),
+                        for (final reward in achievements) ...[
+                          _RewardCard(reward: reward),
+                          const SizedBox(height: 12),
+                        ],
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 36,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              PageLoader.go(context, PageLoader.missions);
+                            },
+                            icon: Icon(Symbols.flag, size: 16),
+                            label: Text(
+                              'Voltar para missões',
+                              style: TextStyle(fontSize: 11),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: colors.primary,
+                              side: BorderSide(color: colors.primary),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

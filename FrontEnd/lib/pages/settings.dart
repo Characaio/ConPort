@@ -37,206 +37,208 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return Scaffold(
       backgroundColor: colors.surface,
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Topbar(
-              hasLogo: false,
-              hasReturn: true,
-              text: 'Configurações',
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Topbar(
+                hasLogo: false,
+                hasReturn: true,
+                text: 'Configurações',
+              ),
             ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Column(
-                    children: [
-                      _SettingsSection(
-                        icon: Icons.palette_outlined,
-                        title: 'Tema',
-                        subtitle: 'Cores e estilo do aplicativo',
-                        children: [
-                          _ThemeSelector(
-                            value: settings.themeMode,
-                            onChanged: settings.setThemeMode,
-                          ),
-                          const SizedBox(height: 12),
-                          _SettingsSwitch(
-                            title: 'Usar Material 3',
-                            subtitle:
-                                'Ativa os componentes mais recentes do Material.',
-                            value: settings.useMaterial3,
-                            onChanged: settings.setUseMaterial3,
-                          ),
-                        ],
-                      ),
-                      _SettingsSection(
-                        icon: Icons.text_fields,
-                        title: 'Tamanho de fonte',
-                        subtitle: 'Ajuste o tamanho dos textos na tela',
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Pequena',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                              Text(
-                                '${(settings.fontScale * 100).round()}%',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const Text(
-                                'Grande',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                            ],
-                          ),
-                          Slider(
-                            value: settings.fontScale,
-                            min: 0.85,
-                            max: 1.3,
-                            divisions: 9,
-                            label: '${(settings.fontScale * 100).round()}%',
-                            onChanged: settings.setFontScale,
-                          ),
-                        ],
-                      ),
-                      _SettingsSection(
-                        icon: Icons.visibility_outlined,
-                        title: 'Aparência',
-                        subtitle: 'Preferências de leitura e animação',
-                        children: [
-                          _SettingsSwitch(
-                            title: 'Alto contraste',
-                            subtitle:
-                                'Aumenta a diferença entre textos e fundos.',
-                            value: settings.highContrast,
-                            onChanged: settings.setHighContrast,
-                          ),
-                          _SettingsSwitch(
-                            title: 'Reduzir animações',
-                            subtitle:
-                                'Diminui movimentos e transições da interface.',
-                            value: settings.reduceMotion,
-                            onChanged: settings.setReduceMotion,
-                          ),
-                        ],
-                      ),
-                      _SettingsSection(
-                        icon: Icons.manage_accounts_outlined,
-                        title: 'Ações da conta',
-                        subtitle: 'Ações disponíveis para sua conta',
-                        children: [
-                          _ActionButton(
-                            icon: Icons.person_outline,
-                            label: 'Editar perfil',
-                            onPressed: () {
-                              PageLoader.go(context, PageLoader.profile);
-                            },
-                          ),
-                          SizedBox(height: 16),
-                          _ActionButton(
-                            icon: Icons.logout,
-                            label: 'Sair da conta',
-                            onPressed: () =>
-                                _showMessage('Logout disponível em breve.'),
-                          ),
-                          SizedBox(height: 16),
-                          _ActionButton(
-                            icon: Icons.delete_outline,
-                            label: 'Excluir conta',
-                            destructive: true,
-                            onPressed: _confirmAccountDeletion,
-                          ),
-                        ],
-                      ),
-                      _SettingsSection(
-                        icon: Icons.notifications_none,
-                        title: 'Notificações',
-                        subtitle: 'Escolha como deseja receber novidades',
-                        children: [
-                          _SettingsSwitch(
-                            title: 'Notificações no aplicativo',
-                            subtitle:
-                                'Alertas sobre missões, reports e novidades.',
-                            value: settings.pushNotifications,
-                            onChanged: settings.setPushNotifications,
-                          ),
-                          _SettingsSwitch(
-                            title: 'Notificações por e-mail',
-                            subtitle: 'Receba um resumo ocasional por e-mail.',
-                            value: settings.emailNotifications,
-                            onChanged: settings.setEmailNotifications,
-                          ),
-                        ],
-                      ),
-                      _SettingsSection(
-                        icon: Icons.person_outline,
-                        title: 'Perfil',
-                        subtitle: 'Controle como outras pessoas encontram você',
-                        children: [
-                          _SettingsSwitch(
-                            title: 'Perfil público',
-                            subtitle:
-                                'Permite que outros usuários vejam seu perfil.',
-                            value: settings.profilePublic,
-                            onChanged: settings.setProfilePublic,
-                          ),
-                          _SettingsSwitch(
-                            title: 'Permitir solicitações de amizade',
-                            subtitle:
-                                'Outros usuários poderão enviar convites.',
-                            value: settings.allowFriendRequests,
-                            onChanged: settings.setAllowFriendRequests,
-                          ),
-                        ],
-                      ),
-                      _SettingsSection(
-                        icon: Icons.lock_outline,
-                        title: 'Privacidade',
-                        subtitle: 'Controle o uso de seus dados',
-                        children: [
-                          _SettingsSwitch(
-                            title: 'Compartilhar localização',
-                            subtitle:
-                                'Usa sua localização em recursos compatíveis.',
-                            value: settings.shareLocation,
-                            onChanged: settings.setShareLocation,
-                          ),
-                          _SettingsSwitch(
-                            title: 'Dados de uso anônimos',
-                            subtitle:
-                                'Ajuda a melhorar o aplicativo sem identificar você.',
-                            value: settings.analytics,
-                            onChanged: settings.setAnalytics,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      _LegalLinks(onMessage: _showMessage),
-                      const SizedBox(height: 10),
-                      Text(
-                        'ConPort • configurações desta sessão',
-                        style: TextStyle(
-                          color: colors.onSurface.withValues(alpha: 0.55),
-                          fontSize: 9,
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Column(
+                      children: [
+                        _SettingsSection(
+                          icon: Icons.palette_outlined,
+                          title: 'Tema',
+                          subtitle: 'Cores e estilo do aplicativo',
+                          children: [
+                            _ThemeSelector(
+                              value: settings.themeMode,
+                              onChanged: settings.setThemeMode,
+                            ),
+                            const SizedBox(height: 12),
+                            _SettingsSwitch(
+                              title: 'Usar Material 3',
+                              subtitle:
+                                  'Ativa os componentes mais recentes do Material.',
+                              value: settings.useMaterial3,
+                              onChanged: settings.setUseMaterial3,
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                        _SettingsSection(
+                          icon: Icons.text_fields,
+                          title: 'Tamanho de fonte',
+                          subtitle: 'Ajuste o tamanho dos textos na tela',
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Pequena',
+                                  style: TextStyle(fontSize: 10),
+                                ),
+                                Text(
+                                  '${(settings.fontScale * 100).round()}%',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const Text(
+                                  'Grande',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                            Slider(
+                              value: settings.fontScale,
+                              min: 0.85,
+                              max: 1.3,
+                              divisions: 9,
+                              label: '${(settings.fontScale * 100).round()}%',
+                              onChanged: settings.setFontScale,
+                            ),
+                          ],
+                        ),
+                        _SettingsSection(
+                          icon: Icons.visibility_outlined,
+                          title: 'Aparência',
+                          subtitle: 'Preferências de leitura e animação',
+                          children: [
+                            _SettingsSwitch(
+                              title: 'Alto contraste',
+                              subtitle:
+                                  'Aumenta a diferença entre textos e fundos.',
+                              value: settings.highContrast,
+                              onChanged: settings.setHighContrast,
+                            ),
+                            _SettingsSwitch(
+                              title: 'Reduzir animações',
+                              subtitle:
+                                  'Diminui movimentos e transições da interface.',
+                              value: settings.reduceMotion,
+                              onChanged: settings.setReduceMotion,
+                            ),
+                          ],
+                        ),
+                        _SettingsSection(
+                          icon: Icons.manage_accounts_outlined,
+                          title: 'Ações da conta',
+                          subtitle: 'Ações disponíveis para sua conta',
+                          children: [
+                            _ActionButton(
+                              icon: Icons.person_outline,
+                              label: 'Editar perfil',
+                              onPressed: () {
+                                PageLoader.go(context, PageLoader.profile);
+                              },
+                            ),
+                            SizedBox(height: 16),
+                            _ActionButton(
+                              icon: Icons.logout,
+                              label: 'Sair da conta',
+                              onPressed: () =>
+                                  _showMessage('Logout disponível em breve.'),
+                            ),
+                            SizedBox(height: 16),
+                            _ActionButton(
+                              icon: Icons.delete_outline,
+                              label: 'Excluir conta',
+                              destructive: true,
+                              onPressed: _confirmAccountDeletion,
+                            ),
+                          ],
+                        ),
+                        _SettingsSection(
+                          icon: Icons.notifications_none,
+                          title: 'Notificações',
+                          subtitle: 'Escolha como deseja receber novidades',
+                          children: [
+                            _SettingsSwitch(
+                              title: 'Notificações no aplicativo',
+                              subtitle:
+                                  'Alertas sobre missões, reports e novidades.',
+                              value: settings.pushNotifications,
+                              onChanged: settings.setPushNotifications,
+                            ),
+                            _SettingsSwitch(
+                              title: 'Notificações por e-mail',
+                              subtitle: 'Receba um resumo ocasional por e-mail.',
+                              value: settings.emailNotifications,
+                              onChanged: settings.setEmailNotifications,
+                            ),
+                          ],
+                        ),
+                        _SettingsSection(
+                          icon: Icons.person_outline,
+                          title: 'Perfil',
+                          subtitle: 'Controle como outras pessoas encontram você',
+                          children: [
+                            _SettingsSwitch(
+                              title: 'Perfil público',
+                              subtitle:
+                                  'Permite que outros usuários vejam seu perfil.',
+                              value: settings.profilePublic,
+                              onChanged: settings.setProfilePublic,
+                            ),
+                            _SettingsSwitch(
+                              title: 'Permitir solicitações de amizade',
+                              subtitle:
+                                  'Outros usuários poderão enviar convites.',
+                              value: settings.allowFriendRequests,
+                              onChanged: settings.setAllowFriendRequests,
+                            ),
+                          ],
+                        ),
+                        _SettingsSection(
+                          icon: Icons.lock_outline,
+                          title: 'Privacidade',
+                          subtitle: 'Controle o uso de seus dados',
+                          children: [
+                            _SettingsSwitch(
+                              title: 'Compartilhar localização',
+                              subtitle:
+                                  'Usa sua localização em recursos compatíveis.',
+                              value: settings.shareLocation,
+                              onChanged: settings.setShareLocation,
+                            ),
+                            _SettingsSwitch(
+                              title: 'Dados de uso anônimos',
+                              subtitle:
+                                  'Ajuda a melhorar o aplicativo sem identificar você.',
+                              value: settings.analytics,
+                              onChanged: settings.setAnalytics,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _LegalLinks(onMessage: _showMessage),
+                        const SizedBox(height: 10),
+                        Text(
+                          'ConPort • configurações desta sessão',
+                          style: TextStyle(
+                            color: colors.onSurface.withValues(alpha: 0.55),
+                            fontSize: 9,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -22,64 +22,66 @@ class Missions extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.surface,
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Topbar(hasLogo: false, hasReturn: true, text: 'Missões'),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _MissionSummary(
-                        activeCount: activeMissions.length,
-                        onRewards: () {
-                          PageLoader.go(context, PageLoader.rewards);
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      if (activeMissions.isNotEmpty) ...[
-                        const _SectionTitle(
-                          icon: Symbols.autorenew,
-                          title: 'Em andamento',
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Topbar(hasLogo: false, hasReturn: true, text: 'Missões'),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _MissionSummary(
+                          activeCount: activeMissions.length,
+                          onRewards: () {
+                            PageLoader.go(context, PageLoader.rewards);
+                          },
                         ),
-                        const SizedBox(height: 10),
-                        for (final mission in activeMissions) ...[
-                          _MissionCard(mission: mission),
-                          const SizedBox(height: 12),
+                        const SizedBox(height: 24),
+                        if (activeMissions.isNotEmpty) ...[
+                          const _SectionTitle(
+                            icon: Symbols.autorenew,
+                            title: 'Em andamento',
+                          ),
+                          const SizedBox(height: 10),
+                          for (final mission in activeMissions) ...[
+                            _MissionCard(mission: mission),
+                            const SizedBox(height: 12),
+                          ],
                         ],
-                      ],
-                      if (availableMissions.isNotEmpty) ...[
+                        if (availableMissions.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          const _SectionTitle(
+                            icon: Symbols.flag,
+                            title: 'Disponíveis',
+                          ),
+                          const SizedBox(height: 10),
+                          for (final mission in availableMissions) ...[
+                            _MissionCard(mission: mission),
+                            const SizedBox(height: 12),
+                          ],
+                        ],
                         const SizedBox(height: 8),
-                        const _SectionTitle(
-                          icon: Symbols.flag,
-                          title: 'Disponíveis',
+                        _RewardsShortcut(
+                          onTap: () {
+                            PageLoader.go(context, PageLoader.rewards);
+                          },
                         ),
-                        const SizedBox(height: 10),
-                        for (final mission in availableMissions) ...[
-                          _MissionCard(mission: mission),
-                          const SizedBox(height: 12),
-                        ],
                       ],
-                      const SizedBox(height: 8),
-                      _RewardsShortcut(
-                        onTap: () {
-                          PageLoader.go(context, PageLoader.rewards);
-                        },
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -96,11 +96,9 @@ class _AmigosState extends State<Amigos> {
     // usuário demo; com a API ligada, abre o perfil do amigo de verdade.
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => SafeArea(
-          child: Profile(
-            usuarioId: amigo.id,
-            usuarioService: const UsuarioService(),
-          ),
+        builder: (_) => Profile(
+          usuarioId: amigo.id,
+          usuarioService: const UsuarioService(),
         ),
       ),
     );

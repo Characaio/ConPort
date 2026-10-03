@@ -65,171 +65,173 @@ class _ProfileState extends State<Profile> {
     final u = usuario!;
 
     return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Topbar(
-              hasLogo: false,
-              hasReturn: true,
-              showSettings: true,
-              text: 'Perfil',
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Topbar(
+                hasLogo: false,
+                hasReturn: true,
+                showSettings: true,
+                text: 'Perfil',
+              ),
             ),
-          ),
 
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Avatar
-                      const Center(child: _Avatar()),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Avatar
+                        const Center(child: _Avatar()),
 
-                      const SizedBox(height: 18),
+                        const SizedBox(height: 18),
 
-                      // Nome e seguidores
-                      Text(
-                        u.nome,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: const [
-                          _Contador(
-                            valor: _PerfilMock.seguindo,
-                            rotulo: 'Seguindo',
+                        // Nome e seguidores
+                        Text(
+                          u.nome,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
                           ),
-                          SizedBox(width: 14),
-                          _Contador(
-                            valor: _PerfilMock.seguidores,
-                            rotulo: 'Seguidores',
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      Text(
-                        'Entrou em ${_dataPorExtenso(_PerfilMock.dataCadastro)}',
-                        style: const TextStyle(fontSize: 10),
-                      ),
-                      Text(
-                        'Em ${u.estado}',
-                        style: const TextStyle(fontSize: 10),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Adicionar amigos
-                      _BotaoPilula(
-                        icon: Symbols.group,
-                        texto: 'Adicionar Amigos',
-                        cor: appColors.accentSalmon,
-                        onPressed: () {
-                          PageLoader.go(context, PageLoader.friends);
-                        },
-                      ),
-
-                      const SizedBox(height: 18),
-                      const Center(
-                        child: SizedBox(width: 200, child: Divider()),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Visão geral
-                      const Text(
-                        'Visão geral',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
                         ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              children: [
-                                _Dado(
-                                  icon: Symbols.stars,
-                                  rotulo: 'Nível: ',
-                                  valor: '${u.level}',
-                                ),
-                                _Dado(
-                                  icon: Symbols.keyboard_double_arrow_up,
-                                  rotulo: 'Experiência: ',
-                                  valor: '${u.xp}',
-                                ),
-                              ],
+                        const SizedBox(height: 2),
+                        Row(
+                          children: const [
+                            _Contador(
+                              valor: _PerfilMock.seguindo,
+                              rotulo: 'Seguindo',
                             ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                _Dado(
-                                  icon: Symbols.redeem,
-                                  rotulo: 'Recompensas: ',
-                                  valor: '${u.moedas}',
-                                ),
-                                _Dado(
-                                  icon: Symbols.flag,
-                                  rotulo: 'Reports: ',
-                                  valor: '${u.reportsEnviados ?? 0}',
-                                ),
-                              ],
+                            SizedBox(width: 14),
+                            _Contador(
+                              valor: _PerfilMock.seguidores,
+                              rotulo: 'Seguidores',
                             ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 22),
-
-                      // Conquistas
-                      const Text(
-                        'Conquistas',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 10),
 
-                      Wrap(
-                        spacing: 14,
-                        runSpacing: 14,
-                        children: [
-                          for (int i = 0; i < _PerfilMock.totalConquistas; i++)
-                            const _Conquista(),
-                        ],
-                      ),
+                        const SizedBox(height: 14),
 
-                      const SizedBox(height: 32),
+                        Text(
+                          'Entrou em ${_dataPorExtenso(_PerfilMock.dataCadastro)}',
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                        Text(
+                          'Em ${u.estado}',
+                          style: const TextStyle(fontSize: 10),
+                        ),
 
-                      // Seus reports
-                      _BotaoPilula(
-                        icon: Symbols.flag_2,
-                        texto: 'Seus Reports',
-                        cor: appColors.accentBrown,
-                        onPressed: () {
-                          PageLoader.go(context, PageLoader.myreports);
-                        },
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+
+                        // Adicionar amigos
+                        _BotaoPilula(
+                          icon: Symbols.group,
+                          texto: 'Adicionar Amigos',
+                          cor: appColors.accentSalmon,
+                          onPressed: () {
+                            PageLoader.go(context, PageLoader.friends);
+                          },
+                        ),
+
+                        const SizedBox(height: 18),
+                        const Center(
+                          child: SizedBox(width: 200, child: Divider()),
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Visão geral
+                        const Text(
+                          'Visão geral',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  _Dado(
+                                    icon: Symbols.stars,
+                                    rotulo: 'Nível: ',
+                                    valor: '${u.level}',
+                                  ),
+                                  _Dado(
+                                    icon: Symbols.keyboard_double_arrow_up,
+                                    rotulo: 'Experiência: ',
+                                    valor: '${u.xp}',
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  _Dado(
+                                    icon: Symbols.redeem,
+                                    rotulo: 'Recompensas: ',
+                                    valor: '${u.moedas}',
+                                  ),
+                                  _Dado(
+                                    icon: Symbols.flag,
+                                    rotulo: 'Reports: ',
+                                    valor: '${u.reportsEnviados ?? 0}',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        // Conquistas
+                        const Text(
+                          'Conquistas',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        Wrap(
+                          spacing: 14,
+                          runSpacing: 14,
+                          children: [
+                            for (int i = 0; i < _PerfilMock.totalConquistas; i++)
+                              const _Conquista(),
+                          ],
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Seus reports
+                        _BotaoPilula(
+                          icon: Symbols.flag_2,
+                          texto: 'Seus Reports',
+                          cor: appColors.accentBrown,
+                          onPressed: () {
+                            PageLoader.go(context, PageLoader.myreports);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
