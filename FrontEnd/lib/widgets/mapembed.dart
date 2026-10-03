@@ -428,9 +428,9 @@ class MapEmbedState extends State<MapEmbed> {
                         point: _currentPosition!,
                         width: 40,
                         height: 40,
-                        child: const Icon(
+                        child: Icon(
                           Icons.location_on,
-                          color: Colors.red,
+                          color: colors.primary,
                           size: 40,
                         ),
                       ),

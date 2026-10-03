@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:conport/core/theme/app_theme.dart';
 
 // ============================================================
 // API PÚBLICA
@@ -8,7 +9,7 @@ import 'package:flutter/material.dart';
 Future<void> mostrarNotificacoes(BuildContext context) {
   return showDialog(
     context: context,
-    barrierColor: Colors.black54,
+    barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.54),
     builder: (_) => const _NotificacoesPopup(),
   );
 }
@@ -100,8 +101,9 @@ class _NotificacoesPopupState extends State<_NotificacoesPopup> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Dialog(
-      backgroundColor: const Color(0xFFCDE8C3),
+      backgroundColor: colors.surfaceContainerHighest,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
@@ -168,18 +170,18 @@ class _CardNotificacao extends StatelessWidget {
 
   const _CardNotificacao({required this.notificacao, required this.onTap});
 
-  // Não lida: verde mais vivo. Lida: verde acinzentado.
-  static const Color _corNaoLida = Color(0xFFA9CF92);
-  static const Color _corLida = Color(0xFF9CB592);
-  static const Color _corPonto = Color(0xFFE05555);
-
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Material(
-          color: notificacao.lida ? _corLida : _corNaoLida,
+          color: notificacao.lida
+              ? appColors.mutedBackground
+              : scheme.primaryContainer,
           borderRadius: BorderRadius.circular(12),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
@@ -217,8 +219,8 @@ class _CardNotificacao extends StatelessWidget {
             child: Container(
               width: 10,
               height: 10,
-              decoration: const BoxDecoration(
-                color: _corPonto,
+              decoration: BoxDecoration(
+                color: scheme.error,
                 shape: BoxShape.circle,
               ),
             ),

@@ -1,30 +1,49 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:conport/main.dart';
+import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/theme/app_theme.dart';
+import 'package:conport/pages/missions.dart';
+import 'package:conport/pages/rewards.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('exibe as missões mockadas', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.lightTheme, home: const Missions()),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Plantar 2 mudas'), findsOneWidget);
+    expect(find.text('Recicle 3 garrafas'), findsOneWidget);
+    expect(find.text('Pote de planta'), findsOneWidget);
+    expect(find.text('Em andamento'), findsNWidgets(3));
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('navega de missões para recompensas', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.lightTheme,
+        home: const Missions(),
+        onGenerateRoute: PageLoader.generateRoute,
+      ),
+    );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('Recompensas').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Seu saldo'), findsOneWidget);
+    expect(find.text('Muda nativa'), findsOneWidget);
+  });
+
+  testWidgets('a tela de recompensas possui retorno para missões', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.lightTheme, home: const Rewards()),
+    );
+
+    expect(find.text('Voltar para missões'), findsOneWidget);
+    expect(find.text('Caneca reutilizável'), findsOneWidget);
   });
 }

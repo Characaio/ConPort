@@ -6,9 +6,15 @@ import 'package:conport/widgets/notifications.dart';
 class Topbar extends StatelessWidget {
   final bool hasLogo;
   final bool hasReturn;
+  final bool showSettings;
   final String? text;
 
-  Topbar({required this.hasLogo, required this.hasReturn, this.text});
+  Topbar({
+    required this.hasLogo,
+    required this.hasReturn,
+    this.showSettings = false,
+    this.text,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +40,17 @@ class Topbar extends StatelessWidget {
         ),
         IconButton(
           onPressed: () {
-            PageLoader.go(context, PageLoader.profile);
+            PageLoader.go(
+              context,
+              showSettings ? PageLoader.settingsPage : PageLoader.profile,
+            );
           },
-          icon: Icon(Symbols.account_circle, size: 32, weight: 1000.0, fill: 1),
+          icon: Icon(
+            showSettings ? Symbols.settings : Symbols.account_circle,
+            size: showSettings ? 27 : 32,
+            weight: 1000.0,
+            fill: showSettings ? 0 : 1,
+          ),
         ),
       ],
     );

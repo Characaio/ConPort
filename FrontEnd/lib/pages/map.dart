@@ -5,6 +5,7 @@ import 'package:conport/widgets/mapembed.dart';
 import 'package:conport/models/unidade_mapa.dart';
 import 'package:conport/services/map_service.dart';
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/theme/app_theme.dart';
 
 class Map extends StatefulWidget {
   const Map({super.key});
@@ -116,8 +117,11 @@ class _MapState extends State<Map> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return Scaffold(
-      backgroundColor: Colors.grey.shade800,
+      backgroundColor: colors.surface,
       body: SafeArea(
         child: Stack(
           children: [
@@ -136,11 +140,11 @@ class _MapState extends State<Map> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD8C7B8),
+                  color: colors.secondaryContainer,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
+                      color: colors.shadow.withValues(alpha: 0.18),
                       blurRadius: 5,
                       offset: const Offset(0, 2),
                     ),
@@ -150,9 +154,9 @@ class _MapState extends State<Map> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.arrow_back,
-                    color: Colors.black54,
+                    color: colors.onSurfaceVariant,
                     size: 20,
                   ),
                 ),
@@ -169,11 +173,11 @@ class _MapState extends State<Map> {
               child: Container(
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD8C7B8),
+                  color: colors.secondaryContainer,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
+                      color: colors.shadow.withValues(alpha: 0.18),
                       blurRadius: 5,
                       offset: const Offset(0, 2),
                     ),
@@ -192,13 +196,16 @@ class _MapState extends State<Map> {
 
                     _mapKey.currentState?.pesquisarLocal(value);
                   },
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Pesquisar...',
-                    hintStyle: TextStyle(fontSize: 12, color: Colors.black54),
+                    hintStyle: TextStyle(
+                      fontSize: 12,
+                      color: colors.onSurfaceVariant,
+                    ),
                     prefixIcon: Icon(
                       Icons.search,
                       size: 18,
-                      color: Colors.black54,
+                      color: colors.onSurfaceVariant,
                     ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(vertical: 8),
@@ -214,7 +221,7 @@ class _MapState extends State<Map> {
                 child: Material(
                   elevation: 8,
                   borderRadius: BorderRadius.circular(16),
-                  color: const Color(0xFFE8E0D8),
+                  color: colors.surfaceContainerHighest,
                   clipBehavior: Clip.antiAlias,
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 280),
@@ -224,7 +231,7 @@ class _MapState extends State<Map> {
                       itemCount: _sugestoes.length,
                       separatorBuilder: (_, __) => Divider(
                         height: 1,
-                        color: Colors.black.withValues(alpha: 0.08),
+                        color: colors.outline.withValues(alpha: 0.18),
                       ),
                       itemBuilder: (context, index) {
                         final sugestao = _sugestoes[index];
@@ -241,12 +248,12 @@ class _MapState extends State<Map> {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Padding(
+                                Padding(
                                   padding: EdgeInsets.only(top: 2),
                                   child: Icon(
                                     Icons.location_on_outlined,
                                     size: 19,
-                                    color: Colors.black54,
+                                    color: colors.onSurfaceVariant,
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -255,9 +262,9 @@ class _MapState extends State<Map> {
                                     sugestao.nome,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.black87,
+                                      color: colors.onSurface,
                                     ),
                                   ),
                                 ),
@@ -283,11 +290,11 @@ class _MapState extends State<Map> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD8C7B8),
+                  color: colors.secondaryContainer,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
+                      color: colors.shadow.withValues(alpha: 0.18),
                       blurRadius: 5,
                       offset: const Offset(0, 2),
                     ),
@@ -297,9 +304,9 @@ class _MapState extends State<Map> {
                   onPressed: () async {
                     await _mapKey.currentState?.centralizarLocalizacao();
                   },
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.my_location,
-                    color: Colors.black54,
+                    color: colors.onSurfaceVariant,
                     size: 20,
                   ),
                 ),
@@ -320,8 +327,10 @@ class _MapState extends State<Map> {
                 elevation: 12,
                 color: Colors.transparent,
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE8E0D8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF2E2A25)
+                        : Color(0xFFE8E0D8),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(24),
                       topRight: Radius.circular(24),
@@ -382,7 +391,7 @@ class _MapState extends State<Map> {
                               width: 48,
                               height: 5,
                               decoration: BoxDecoration(
-                                color: Colors.black26,
+                                color: colors.outline,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
@@ -404,7 +413,7 @@ class _MapState extends State<Map> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: colors.onSurface,
                               ),
                             ),
 
@@ -414,7 +423,7 @@ class _MapState extends State<Map> {
                               _unidade?.tipo ?? '',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.black54,
+                                color: colors.onSurfaceVariant,
                               ),
                             ),
 
@@ -424,7 +433,7 @@ class _MapState extends State<Map> {
                                 Icon(
                                   Icons.location_on_outlined,
                                   size: 17,
-                                  color: Colors.black54,
+                                  color: colors.onSurfaceVariant,
                                 ),
                                 SizedBox(width: 6),
                                 Expanded(
@@ -432,7 +441,7 @@ class _MapState extends State<Map> {
                                     _unidade?.local ?? '',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.black87,
+                                      color: colors.onSurface,
                                     ),
                                   ),
                                 ),
@@ -447,14 +456,14 @@ class _MapState extends State<Map> {
                                 Icon(
                                   Icons.phone,
                                   size: 17,
-                                  color: Colors.black54,
+                                  color: colors.onSurfaceVariant,
                                 ),
                                 SizedBox(width: 6),
                                 Text(
                                   'Telefone: ${_unidade?.telefone ?? ''}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.black87,
+                                    color: colors.onSurface,
                                   ),
                                 ),
                               ],
@@ -468,14 +477,14 @@ class _MapState extends State<Map> {
                                 Icon(
                                   Icons.access_time,
                                   size: 17,
-                                  color: Colors.black54,
+                                  color: colors.onSurfaceVariant,
                                 ),
                                 SizedBox(width: 6),
                                 Text(
                                   _unidade?.horario ?? '',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.black87,
+                                    color: colors.onSurface,
                                   ),
                                 ),
                               ],
@@ -487,7 +496,7 @@ class _MapState extends State<Map> {
                             Container(
                               width: double.infinity,
                               height: 1,
-                              color: Colors.black.withValues(alpha: 0.10),
+                              color: colors.outline.withValues(alpha: 0.20),
                             ),
 
                             const SizedBox(height: 12),
@@ -497,7 +506,7 @@ class _MapState extends State<Map> {
                               _unidade?.descricao ?? '',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.black54,
+                                color: colors.onSurfaceVariant,
                                 height: 1.4,
                               ),
                             ),
@@ -509,7 +518,7 @@ class _MapState extends State<Map> {
                             // =================================================
                             if (_unidade?.aviso != null) ...[
                               Material(
-                                color: const Color(0xFFF0E4D5),
+                                color: colors.tertiaryContainer,
                                 borderRadius: BorderRadius.circular(12),
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(12),
@@ -523,18 +532,18 @@ class _MapState extends State<Map> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Icon(
+                                        Icon(
                                           Icons.info_outline,
                                           size: 18,
-                                          color: Colors.black54,
+                                          color: colors.onSurfaceVariant,
                                         ),
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
                                             _unidade!.aviso!,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 11,
-                                              color: Colors.black54,
+                                              color: colors.onSurfaceVariant,
                                               height: 1.3,
                                             ),
                                           ),
@@ -561,7 +570,7 @@ class _MapState extends State<Map> {
                                           PageLoader.ecossistema,
                                         );
                                       },
-                                      icon: const Icon(
+                                      icon: Icon(
                                         Symbols.emoji_nature,
                                         size: 20,
                                         weight: 12,
@@ -574,12 +583,8 @@ class _MapState extends State<Map> {
                                         ),
                                       ),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFF5E7654,
-                                        ),
-                                        foregroundColor: const Color(
-                                          0xFFE8E4DC,
-                                        ),
+                                        backgroundColor: appColors.accentGreen,
+                                        foregroundColor: appColors.onAccent,
                                         elevation: 0,
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 10,
@@ -600,7 +605,7 @@ class _MapState extends State<Map> {
                                       onPressed: () {
                                         PageLoader.go(context, PageLoader.unit);
                                       },
-                                      icon: const Icon(
+                                      icon: Icon(
                                         Symbols.globe_2_question,
                                         size: 20,
                                         weight: 12,
@@ -613,12 +618,8 @@ class _MapState extends State<Map> {
                                         ),
                                       ),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFF5E7654,
-                                        ),
-                                        foregroundColor: const Color(
-                                          0xFFE8E4DC,
-                                        ),
+                                        backgroundColor: appColors.accentGreen,
+                                        foregroundColor: appColors.onAccent,
                                         elevation: 0,
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 10,

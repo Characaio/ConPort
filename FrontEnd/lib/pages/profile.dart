@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/models/usuario.dart';
 import 'package:conport/services/usuarioService.dart';
 import 'package:conport/widgets/topbar.dart';
@@ -54,6 +55,9 @@ class _ProfileState extends State<Profile> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     if (usuario == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -65,7 +69,12 @@ class _ProfileState extends State<Profile> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: Topbar(hasLogo: false, hasReturn: true, text: 'Perfil'),
+            child: Topbar(
+              hasLogo: false,
+              hasReturn: true,
+              showSettings: true,
+              text: 'Perfil',
+            ),
           ),
 
           Expanded(
@@ -122,7 +131,7 @@ class _ProfileState extends State<Profile> {
                       _BotaoPilula(
                         icon: Symbols.group,
                         texto: 'Adicionar Amigos',
-                        cor: const Color(0xFFC3917C),
+                        cor: appColors.accentSalmon,
                         onPressed: () {
                           PageLoader.go(context, PageLoader.friends);
                         },
@@ -209,7 +218,7 @@ class _ProfileState extends State<Profile> {
                       _BotaoPilula(
                         icon: Symbols.flag_2,
                         texto: 'Seus Reports',
-                        cor: const Color(0xFF766057),
+                        cor: appColors.accentBrown,
                         onPressed: () {
                           PageLoader.go(context, PageLoader.myreports);
                         },
@@ -236,10 +245,17 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // TODO: trocar pela foto do usuário quando existir.
-    return const CircleAvatar(
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    return CircleAvatar(
       radius: 44,
-      backgroundColor: Color(0xFF6A4FA3),
-      child: Icon(Symbols.person, size: 64, color: Colors.black, weight: 600),
+      backgroundColor: appColors.accentSalmon,
+      child: Icon(
+        Symbols.person,
+        size: 64,
+        color: appColors.onAccent,
+        weight: 600,
+      ),
     );
   }
 }
@@ -305,15 +321,17 @@ class _Conquista extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     // TODO: ícone/imagem de cada conquista quando existir.
     return Container(
       width: 40,
       height: 40,
-      decoration: const BoxDecoration(
-        color: Color(0xFFC25B5B),
+      decoration: BoxDecoration(
+        color: Theme.of(context).extension<AppColors>()?.statusDenied ??
+            const Color(0xFFC25B5B),
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+          BoxShadow(color: colors.shadow.withValues(alpha: 0.18), blurRadius: 4, offset: const Offset(0, 2)),
         ],
       ),
     );
@@ -335,6 +353,8 @@ class _BotaoPilula extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return SizedBox(
       width: double.infinity,
       height: 34,
@@ -344,7 +364,7 @@ class _BotaoPilula extends StatelessWidget {
         label: Text(texto, style: const TextStyle(fontSize: 11)),
         style: ElevatedButton.styleFrom(
           backgroundColor: cor,
-          foregroundColor: Colors.white,
+          foregroundColor: appColors.onAccent,
           elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),

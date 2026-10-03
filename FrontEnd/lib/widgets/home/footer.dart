@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import 'package:conport/core/navigation/page_loader.dart';
+
 class Footer extends StatelessWidget {
   const Footer({super.key});
 
@@ -24,7 +26,11 @@ class Footer extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _FooterItem(icon: Symbols.home, text: "Início", onTap: () {}),
-          _FooterItem(icon: Symbols.flag, text: "Missões", onTap: () {}),
+          _FooterItem(
+            icon: Symbols.flag,
+            text: "Missões",
+            onTap: () => PageLoader.go(context, PageLoader.missions),
+          ),
           _FooterItem(icon: Symbols.school, text: "Aprender", onTap: () {}),
         ],
       ),

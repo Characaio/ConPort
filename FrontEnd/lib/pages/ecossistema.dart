@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:conport/widgets/topbar.dart';
+import 'package:conport/core/theme/app_theme.dart';
 
 class EcossistemaPage extends StatefulWidget {
   const EcossistemaPage({super.key});
@@ -112,21 +113,12 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
             Column(
               children: [
                 // TOPBAR FIXA
-                Topbar(
-                  hasLogo: false,
-                  hasReturn: true,
-                  text: 'Ecossistema',
-                ),
+                Topbar(hasLogo: false, hasReturn: true, text: 'Ecossistema'),
 
                 // CONTEÚDO COM SCROLL
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(
-                      28,
-                      22,
-                      28,
-                      40,
-                    ),
+                    padding: const EdgeInsets.fromLTRB(28, 22, 28, 40),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -161,7 +153,7 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
                     duration: const Duration(milliseconds: 350),
                     opacity: gavetaAberta ? 0.35 : 0,
                     child: Container(
-                      color: Colors.black,
+                      color: colors.scrim.withValues(alpha: 0.35),
                     ),
                   ),
                 ),
@@ -194,13 +186,11 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
                     }
                   },
                   onVerticalDragEnd: (details) {
-                    final velocidade =
-                        details.primaryVelocity ?? 0;
+                    final velocidade = details.primaryVelocity ?? 0;
 
                     // Se arrastou bastante ou rapidamente para baixo,
                     // fecha a gaveta.
-                    if (deslocamentoGaveta > 120 ||
-                        velocidade > 700) {
+                    if (deslocamentoGaveta > 120 || velocidade > 700) {
                       _fecharGaveta();
                     } else {
                       // Caso contrário, volta para a posição aberta.
@@ -209,9 +199,7 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
                       });
                     }
                   },
-                  child: _buildEspecieSelecionada(
-                    especieSelecionada!,
-                  ),
+                  child: _buildEspecieSelecionada(especieSelecionada!),
                 ),
               ),
           ],
@@ -229,25 +217,19 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
     required IconData icone,
     required List<Especie> especies,
   }) {
+    final colors = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(
-              icone,
-              size: 27,
-              color: Colors.black,
-            ),
+            Icon(icone, size: 27, color: colors.onSurface),
 
             const SizedBox(width: 12),
 
             Text(
               titulo,
-              style: const TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -258,8 +240,7 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: especies.length,
-          gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: 24,
             mainAxisSpacing: 16,
@@ -280,8 +261,8 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
   // ==========================================
 
   Widget _buildCard(Especie especie) {
-    final bool selecionada =
-        especieSelecionada == especie && gavetaAberta;
+    final colors = Theme.of(context).colorScheme;
+    final bool selecionada = especieSelecionada == especie && gavetaAberta;
 
     return GestureDetector(
       onTap: () {
@@ -292,10 +273,7 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
           border: selecionada
-              ? Border.all(
-                  color: Colors.blue,
-                  width: 2,
-                )
+              ? Border.all(color: colors.primary, width: 2)
               : null,
         ),
         child: ClipRRect(
@@ -306,17 +284,10 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
               Image.network(
                 especie.imagem,
                 fit: BoxFit.cover,
-                errorBuilder: (
-                  context,
-                  error,
-                  stackTrace,
-                ) {
+                errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: Colors.grey.shade300,
-                    child: const Icon(
-                      Icons.image_not_supported,
-                      size: 40,
-                    ),
+                    color: colors.surfaceContainerHigh,
+                    child: const Icon(Icons.image_not_supported, size: 40),
                   );
                 },
               ),
@@ -326,13 +297,13 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
                 alignment: Alignment.bottomCenter,
                 child: Container(
                   height: 55,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black87,
+                        colors.onSurface.withValues(alpha: 0.87),
                       ],
                     ),
                   ),
@@ -350,17 +321,17 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
                         especie.nome,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: colors.onSurface,
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
                     ),
 
-                    const Icon(
+                    Icon(
                       Icons.chevron_right,
-                      color: Colors.white,
+                      color: colors.onSurface,
                       size: 27,
                     ),
                   ],
@@ -377,23 +348,16 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
   // CONTEÚDO DA GAVETA
   // ==========================================
 
-  Widget _buildEspecieSelecionada(
-    Especie especie,
-  ) {
+  Widget _buildEspecieSelecionada(Especie especie) {
     return Container(
       height: 385,
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        19,
-        10,
-        19,
-        20,
-      ),
-      decoration: const BoxDecoration(
-        color: Color(0xFF4E7D43),
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
+      padding: const EdgeInsets.fromLTRB(19, 10, 19, 20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF2C4734)
+            : Color(0xFF5E7654),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,7 +368,9 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
               width: 52,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white70,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -414,8 +380,8 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
 
           Text(
             especie.nome,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 21,
               fontWeight: FontWeight.w500,
             ),
@@ -425,8 +391,10 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
 
           Text(
             especie.nomeCientifico,
-            style: const TextStyle(
-              color: Colors.white70,
+            style: TextStyle(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               fontSize: 13,
               fontStyle: FontStyle.italic,
             ),
@@ -438,8 +406,10 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
             child: SingleChildScrollView(
               child: Text(
                 especie.descricao,
-                style: const TextStyle(
-                  color: Colors.white70,
+                style: TextStyle(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                   fontSize: 12.5,
                   height: 1.25,
                 ),
@@ -457,17 +427,10 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
               child: Image.network(
                 especie.imagem,
                 fit: BoxFit.cover,
-                errorBuilder: (
-                  context,
-                  error,
-                  stackTrace,
-                ) {
+                errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: Colors.grey.shade300,
-                    child: const Icon(
-                      Icons.image_not_supported,
-                      size: 40,
-                    ),
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    child: const Icon(Icons.image_not_supported, size: 40),
                   );
                 },
               ),
@@ -514,18 +477,15 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
 
     // Espera a animação terminar antes de
     // remover o conteúdo da gaveta.
-    Future.delayed(
-      const Duration(milliseconds: 450),
-      () {
-        if (!mounted) return;
+    Future.delayed(const Duration(milliseconds: 450), () {
+      if (!mounted) return;
 
-        setState(() {
-          gavetaAberta = false;
-          especieSelecionada = null;
-          deslocamentoGaveta = 385;
-        });
-      },
-    );
+      setState(() {
+        gavetaAberta = false;
+        especieSelecionada = null;
+        deslocamentoGaveta = 385;
+      });
+    });
   }
 }
 
@@ -533,10 +493,7 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
 // MODELO
 // ==========================================
 
-enum TipoEspecie {
-  fauna,
-  flora,
-}
+enum TipoEspecie { fauna, flora }
 
 class Especie {
   final String nome;
@@ -553,3 +510,4 @@ class Especie {
     required this.tipo,
   });
 }
+

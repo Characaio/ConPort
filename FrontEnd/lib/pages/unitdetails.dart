@@ -52,6 +52,7 @@ class _MaisInfoState extends State<MaisInfo> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     if (erro != null) {
       return Scaffold(body: Center(child: Text(erro!)));
     }
@@ -121,11 +122,11 @@ class _MaisInfoState extends State<MaisInfo> {
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Colors.black38,
+                      color: colors.shadow.withValues(alpha: 0.22),
                       blurRadius: 8,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/widgets/topbar.dart';
 
 // ============================================================
@@ -90,7 +91,7 @@ class _AnunciosState extends State<Anuncios> {
   void _abrirAnuncio(Anuncio anuncio) {
     showDialog(
       context: context,
-      barrierColor: Colors.black54,
+      barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.54),
       builder: (_) => _AnuncioExpandido(anuncio: anuncio),
     );
   }
@@ -166,12 +167,19 @@ class _CardAnuncio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFCFCFCF),
+        color: appColors.mutedBackground,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, 3)),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: 0.18),
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       child: Material(
@@ -232,8 +240,9 @@ class _AnuncioExpandido extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Dialog(
-      backgroundColor: const Color(0xFFCDE8C3),
+      backgroundColor: scheme.surfaceContainerHighest,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: ConstrainedBox(
@@ -276,11 +285,11 @@ class _AnuncioExpandido extends StatelessWidget {
                 Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.black38,
+                        color: scheme.shadow.withValues(alpha: 0.24),
                         blurRadius: 6,
-                        offset: Offset(0, 3),
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),

@@ -4,6 +4,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:conport/pages/profile.dart';
 import 'package:conport/services/usuarioService.dart';
 import 'package:conport/widgets/topbar.dart';
+import 'package:conport/core/theme/app_theme.dart';
 
 // ============================================================
 // MODELO + MOCK (temporário, até existir na API)
@@ -63,10 +64,6 @@ class _AmigosState extends State<Amigos> {
   _Aba aba = _Aba.amigos;
   String busca = '';
 
-  static const Color _verde = Color(0xFF5E7654);
-  static const Color _marrom = Color(0xFF6B5750);
-  static const Color _salmao = Color(0xFFC3917C);
-
   @override
   void initState() {
     super.initState();
@@ -110,10 +107,12 @@ class _AmigosState extends State<Amigos> {
   }
 
   Future<void> _remover(Amigo amigo) async {
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     final confirmou = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFFCDE8C3),
+        backgroundColor: appColors.accentGreen,
         title: const Text(
           'Remover amigo',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
@@ -174,6 +173,8 @@ class _AmigosState extends State<Amigos> {
   @override
   Widget build(BuildContext context) {
     final filtrados = _amigosFiltrados;
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
 
     return Scaffold(
       body: SafeArea(
@@ -193,7 +194,7 @@ class _AmigosState extends State<Amigos> {
                     aba: aba,
                     qtdAmigos: amigos.length,
                     qtdSolicitacoes: solicitacoes.length,
-                    verde: _verde,
+                    verde: appColors.accentGreen,
                     onChanged: (nova) => setState(() => aba = nova),
                   ),
 
@@ -208,7 +209,7 @@ class _AmigosState extends State<Amigos> {
                         hintStyle: const TextStyle(fontSize: 13),
                         prefixIcon: const Icon(Symbols.search, size: 20),
                         filled: true,
-                        fillColor: const Color(0xFFE6E6E6),
+                        fillColor: appColors.cardBackground,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 10,
@@ -234,7 +235,7 @@ class _AmigosState extends State<Amigos> {
                   _BotaoPilula(
                     icon: Symbols.person_add,
                     texto: 'Adicionar Amigos',
-                    cor: _salmao,
+                    cor: appColors.accentSalmon,
                     onPressed: _adicionar,
                   ),
                 ],
@@ -285,6 +286,9 @@ class _AmigosState extends State<Amigos> {
   }
 
   Widget _listaSolicitacoes() {
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
+
     if (solicitacoes.isEmpty) {
       return const _Vazio(
         icon: Symbols.inbox,
@@ -301,8 +305,8 @@ class _AmigosState extends State<Amigos> {
 
         return _CardSolicitacao(
           amigo: amigo,
-          verde: _verde,
-          marrom: _marrom,
+          verde: appColors.accentGreen,
+          marrom: appColors.accentBrown,
           onAceitar: () => _aceitar(amigo),
           onRecusar: () => _recusar(amigo),
         );
@@ -451,8 +455,10 @@ class _CardAmigo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return Container(
-      decoration: _decoracaoCard(const Color(0xFFCFCFCF)),
+      decoration: _decoracaoCard(appColors.cardBackground),
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(14),
@@ -525,8 +531,10 @@ class _CardSolicitacao extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return Container(
-      decoration: _decoracaoCard(const Color(0xFFCDE8C3)),
+      decoration: _decoracaoCard(appColors.inputBackground),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -619,16 +627,18 @@ class _Vazio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 40, color: Colors.black45),
+          Icon(icon, size: 40, color: appColors.onAccent),
           const SizedBox(height: 10),
           Text(
             texto,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: Colors.black54),
+            style: TextStyle(fontSize: 12, color: appColors.onAccent),
           ),
         ],
       ),
@@ -717,8 +727,10 @@ class _AdicionarAmigoDialogState extends State<_AdicionarAmigoDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return Dialog(
-      backgroundColor: const Color(0xFFCDE8C3),
+      backgroundColor: appColors.cardBackground,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
@@ -753,7 +765,7 @@ class _AdicionarAmigoDialogState extends State<_AdicionarAmigoDialog> {
                   errorText: _erro,
                   prefixIcon: const Icon(Symbols.person_search, size: 20),
                   filled: true,
-                  fillColor: Colors.white70,
+                  fillColor: appColors.inputBackground,
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(
                     vertical: 10,

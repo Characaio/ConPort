@@ -6,6 +6,7 @@ import 'package:conport/core/navigation/page_loader.dart';
 import 'package:conport/pages/avistamento.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter/material.dart';
+import 'package:conport/core/theme/app_theme.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -13,6 +14,8 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
@@ -37,7 +40,7 @@ class Home extends StatelessWidget {
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16.0),
-                  color: Colors.white,
+                  color: colors.surfaceContainerLowest,
                   boxShadow: [
                     BoxShadow(
                       color: colors.onSurface.withValues(alpha: 0.5),
@@ -69,7 +72,7 @@ class Home extends StatelessWidget {
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     Colors.transparent,
-                                    Colors.black.withValues(alpha: 0.5),
+                                    colors.scrim.withValues(alpha: 0.5),
                                   ],
                                 ),
                               ),
@@ -118,7 +121,7 @@ class Home extends StatelessWidget {
                           child: HomeCard(
                             icon: Symbols.flag,
                             text: "Criar Report",
-                            color: Color(0xFF766057),
+                            color: appColors.accentBrown,
                             pagina: PageLoader.criarreport,
                           ),
                         ),
@@ -134,7 +137,7 @@ class Home extends StatelessWidget {
                                 child: HomeCard(
                                   icon: Symbols.remove_red_eye,
                                   text: "Enviar Avistamento",
-                                  color: Color(0xFF597D59),
+                                  color: appColors.accentGreen,
                                   onTap: () => AvistamentoPage.iniciar(context),
                                 ),
                               ),
@@ -145,7 +148,7 @@ class Home extends StatelessWidget {
                                 child: HomeCard(
                                   icon: Symbols.people,
                                   text: "Seus Amigos",
-                                  color: Color(0xFFC3917C),
+                                  color: appColors.accentSalmon,
                                   pagina: PageLoader.friends,
                                 ),
                               ),
@@ -191,17 +194,17 @@ class Home extends StatelessWidget {
                       Container(
                         width: double.infinity,
                         height: double.infinity,
-                        color: Colors.black87,
+                        color: colors.surfaceContainerLowest,
                       ),
 
-                      Icon(Symbols.play_circle, size: 64, color: Colors.white),
+                      Icon(Symbols.play_circle, size: 64, color: colors.onSurface),
 
                       Positioned(
                         left: 16,
                         bottom: 12,
                         child: Text(
                           "Continue assistindo",
-                          style: TextStyle(color: Colors.white, fontSize: 14),
+                          style: TextStyle(color: colors.onSurface, fontSize: 14),
                         ),
                       ),
                     ],

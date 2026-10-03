@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/widgets/topbar.dart';
 
 class ReportDetails extends StatelessWidget {
@@ -24,8 +25,12 @@ class ReportDetails extends StatelessWidget {
     // Pode ser null quando não existir comentário.
     const String? comentarioRevisor = null;
 
+    final scheme = Theme.of(context).colorScheme;
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFE5E8E6),
+      backgroundColor: scheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -45,36 +50,39 @@ class ReportDetails extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8EBE9),
-                    border: Border.all(
-                      color: const Color(0xFF19C735),
-                      width: 1,
-                    ),
+                    color: appColors.cardBackground,
+                    border: Border.all(color: appColors.accentGreen, width: 1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildHeader(tipo: tipo, local: local),
+                      _buildHeader(context, tipo: tipo, local: local),
 
                       const SizedBox(height: 8),
 
                       _buildInfoLine(
+                        context,
                         icon: Icons.calendar_month,
                         text: dataHora,
                       ),
 
                       const SizedBox(height: 7),
 
-                      _buildStatusLine(status),
-
-                      const SizedBox(height: 8),
-
-                      _buildInfoLine(icon: Icons.person, text: revisor),
+                      _buildStatusLine(context, status),
 
                       const SizedBox(height: 8),
 
                       _buildInfoLine(
+                        context,
+                        icon: Icons.person,
+                        text: revisor,
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      _buildInfoLine(
+                        context,
                         icon: Icons.calendar_month,
                         text: 'Revisado e aprovado em $dataRevisao',
                       ),
@@ -109,11 +117,11 @@ class ReportDetails extends StatelessWidget {
 
                       const SizedBox(height: 3),
 
-                      _buildUrgency(urgencia),
+                      _buildUrgency(context, urgencia),
 
                       const SizedBox(height: 25),
 
-                      _buildAttachments(),
+                      _buildAttachments(context),
 
                       const SizedBox(height: 55),
                     ],
@@ -127,7 +135,14 @@ class ReportDetails extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader({required String tipo, required String local}) {
+  Widget _buildHeader(
+    BuildContext context, {
+    required String tipo,
+    required String local,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -135,10 +150,10 @@ class ReportDetails extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: const Color(0xFF00D639),
+            color: appColors.accentGreen,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Icon(Icons.pets, color: Colors.black, size: 24),
+          child: Icon(Icons.pets, color: scheme.onPrimary, size: 24),
         ),
 
         const SizedBox(width: 5),
@@ -173,11 +188,15 @@ class ReportDetails extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoLine({required IconData icon, required String text}) {
+  Widget _buildInfoLine(
+    BuildContext context, {
+    required IconData icon,
+    required String text,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(icon, size: 14, color: Colors.black),
+        Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurface),
 
         const SizedBox(width: 5),
 
@@ -186,16 +205,17 @@ class ReportDetails extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusLine(String status) {
+  Widget _buildStatusLine(BuildContext context, String status) {
+    final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return Row(
       children: [
-        const Icon(Icons.check_circle, size: 14, color: Color(0xFF00B82B)),
+        Icon(Icons.check_circle, size: 14, color: colors.statusTreated),
 
         const SizedBox(width: 5),
 
         Text(
           status,
-          style: const TextStyle(fontSize: 11, color: Color(0xFF009B25)),
+          style: TextStyle(fontSize: 11, color: colors.statusTreated),
         ),
       ],
     );
@@ -208,7 +228,8 @@ class ReportDetails extends StatelessWidget {
     );
   }
 
-  Widget _buildUrgency(double value) {
+  Widget _buildUrgency(BuildContext context, double value) {
+    final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -218,7 +239,7 @@ class ReportDetails extends StatelessWidget {
               height: 4,
               margin: const EdgeInsets.only(top: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFFD2D2D2),
+                color: scheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -229,7 +250,7 @@ class ReportDetails extends StatelessWidget {
                 height: 4,
                 margin: const EdgeInsets.only(top: 3),
                 decoration: BoxDecoration(
-                  color: Colors.amber,
+                  color: scheme.tertiary,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -241,17 +262,23 @@ class ReportDetails extends StatelessWidget {
 
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            Text('Pouco', style: TextStyle(fontSize: 10, color: Colors.grey)),
-
-            Text('Muito', style: TextStyle(fontSize: 10, color: Colors.grey)),
+          children: [
+            Text(
+              'Pouco',
+              style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+            ),
+            Text(
+              'Muito',
+              style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildAttachments() {
+  Widget _buildAttachments(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Column(
       children: [
         // Imagem principal
@@ -260,8 +287,8 @@ class ReportDetails extends StatelessWidget {
           child: Container(
             width: double.infinity,
             height: 116,
-            color: const Color(0xFFB4B4B4),
-            child: const Icon(Icons.image, size: 35, color: Colors.white54),
+            color: scheme.surfaceContainerHigh,
+            child: Icon(Icons.image, size: 35, color: scheme.onSurfaceVariant),
           ),
         ),
 
@@ -275,11 +302,11 @@ class ReportDetails extends StatelessWidget {
                 borderRadius: BorderRadius.circular(7),
                 child: Container(
                   height: 149,
-                  color: const Color(0xFFB4B4B4),
-                  child: const Icon(
+                  color: scheme.surfaceContainerHigh,
+                  child: Icon(
                     Icons.image,
                     size: 30,
-                    color: Colors.white54,
+                    color: scheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -292,11 +319,11 @@ class ReportDetails extends StatelessWidget {
                 borderRadius: BorderRadius.circular(7),
                 child: Container(
                   height: 149,
-                  color: const Color(0xFFB4B4B4),
-                  child: const Icon(
+                  color: scheme.surfaceContainerHigh,
+                  child: Icon(
                     Icons.image,
                     size: 30,
-                    color: Colors.white54,
+                    color: scheme.onSurfaceVariant,
                   ),
                 ),
               ),

@@ -3,16 +3,22 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
+import 'package:conport/config/app_config.dart';
+import 'package:conport/mocks/report_mock.dart';
 import 'package:conport/models/report.dart';
 
 class ReportService {
-  final String urlBase = 'http://100.88.231.39:8080';
+  final String urlBase = AppConfig.apiUrl;
 
   // ============================================================
   // LISTAR REPORTS DA UNIDADE
   // ============================================================
 
   Future<List<Report>> buscarReportsDaUnidade(int unidadeId) async {
+    if (!AppConfig.usarApi) {
+      return ReportMock.buscarReportsDaUnidade(unidadeId);
+    }
+
     final url = Uri.parse('$urlBase/unidade/$unidadeId/reports');
 
     final response = await http.get(url);

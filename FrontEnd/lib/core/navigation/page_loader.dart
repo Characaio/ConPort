@@ -10,6 +10,9 @@ import 'package:conport/pages/ecossistema.dart';
 import 'package:conport/pages/unitdetails.dart';
 import 'package:conport/pages/unitannouncements.dart';
 import 'package:conport/pages/friends.dart';
+import 'package:conport/pages/missions.dart';
+import 'package:conport/pages/rewards.dart';
+import 'package:conport/pages/settings.dart';
 
 import 'package:conport/services/unidadeService.dart';
 import 'package:conport/services/usuarioService.dart';
@@ -25,6 +28,9 @@ class PageLoader {
   static const String report = '/report';
   static const String friends = '/amigos';
   static const String profile = '/profile';
+  static const String missions = '/missoes';
+  static const String rewards = '/recompensas';
+  static const String settingsPage = '/configuracoes';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -82,6 +88,21 @@ class PageLoader {
               usuarioService: const UsuarioService(),
             ),
           ),
+        );
+
+      case missions:
+        return MaterialPageRoute(
+          builder: (_) => const SafeArea(child: Missions()),
+        );
+
+      case rewards:
+        return MaterialPageRoute(
+          builder: (_) => const SafeArea(child: Rewards()),
+        );
+
+      case settingsPage:
+        return MaterialPageRoute(
+          builder: (_) => const SafeArea(child: SettingsPage()),
         );
 
       default:

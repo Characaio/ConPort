@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/theme/app_theme.dart';
 
 class HomeCard extends StatelessWidget {
   final IconData icon;
@@ -19,6 +20,8 @@ class HomeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -38,8 +41,8 @@ class HomeCard extends StatelessWidget {
               BoxShadow(
                 spreadRadius: 1,
                 blurRadius: 10,
-                offset: Offset(0, 5),
-                color: colors.onSurface,
+                offset: const Offset(0, 5),
+                color: colors.shadow.withValues(alpha: 0.22),
               ),
             ],
           ),
@@ -65,7 +68,7 @@ class HomeCard extends StatelessWidget {
                 ),
                 Text(
                   text,
-                  style: TextStyle(color: colors.surface, fontSize: 20),
+                  style: TextStyle(color: appColors.onAccent, fontSize: 20),
                 ),
               ],
             ),
