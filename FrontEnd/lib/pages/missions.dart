@@ -25,7 +25,7 @@ class Missions extends StatelessWidget {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(16),
             child: Topbar(hasLogo: false, hasReturn: true, text: 'Missões'),
           ),
           Expanded(

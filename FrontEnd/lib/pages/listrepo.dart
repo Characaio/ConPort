@@ -30,7 +30,7 @@ class _SeusReportsState extends State<SeusReports> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.all(16),
               child: Topbar(
                 hasLogo: false,
                 hasReturn: true,

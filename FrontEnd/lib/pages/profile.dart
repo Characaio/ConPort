@@ -68,7 +68,7 @@ class _ProfileState extends State<Profile> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            padding: const EdgeInsets.all(16),
             child: Topbar(
               hasLogo: false,
               hasReturn: true,

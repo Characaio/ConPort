@@ -68,10 +68,13 @@ class EducacaoPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Topbar(
-              hasLogo: false,
-              hasReturn: true,
-              text: 'Aprender',
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Topbar(
+                hasLogo: false,
+                hasReturn: true,
+                text: 'Aprender',
+              ),
             ),
 
             Expanded(

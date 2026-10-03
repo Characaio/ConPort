@@ -113,7 +113,14 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
             Column(
               children: [
                 // TOPBAR FIXA
-                Topbar(hasLogo: false, hasReturn: true, text: 'Ecossistema'),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Topbar(
+                    hasLogo: false,
+                    hasReturn: true,
+                    text: 'Ecossistema',
+                  ),
+                ),
 
                 // CONTEÚDO COM SCROLL
                 Expanded(

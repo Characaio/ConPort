@@ -9,7 +9,8 @@ class Topbar extends StatelessWidget {
   final bool showSettings;
   final String? text;
 
-  Topbar({
+  const Topbar({
+    super.key,
     required this.hasLogo,
     required this.hasReturn,
     this.showSettings = false,
@@ -18,7 +19,6 @@ class Topbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return Row(
       children: [
         if (hasLogo) ...[
@@ -32,7 +32,8 @@ class Topbar extends StatelessWidget {
             },
           ),
 
-        if (text != "") Text(text ?? '', style: TextStyle(fontSize: 20.0)),
+        if (text != null && text!.isNotEmpty)
+          Text(text!, style: const TextStyle(fontSize: 20.0)),
         const Spacer(),
         IconButton(
           onPressed: () => mostrarNotificacoes(context),
