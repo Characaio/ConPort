@@ -1,36 +1,41 @@
 package com.example.ecoportapi.DTOs.Response;
 
 import com.example.ecoportapi.Models.Usuario;
-
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public record UsuarioDTO(
     Long Id,
     String Nome,
+    String Apelido,
     LocalDate DataNasc,
     String Email,
-    String Senha,
     String Estado,
     String Cidade,
+    String Avatar,
+    LocalDateTime DataCadastro,
     boolean Confiavel,
     Integer XP,
     Integer Level,
-    Integer Moedas
-) {
-    public UsuarioDTO(Usuario usuario
-    ){
-        this(
-                usuario.getId(),
-                usuario.getNome(),
-                usuario.getDataNasc(),
-                usuario.getEmail(),
-                usuario.getSenha(),
-                usuario.getEstado(),
-                usuario.getCidade(),
-                usuario.isConfiavel(),
-                usuario.getXP(),
-                usuario.getLevel(),
-                usuario.getMoedas()
-        );
-    }
+    Integer Moedas,
+    long Seguidores,
+    long Seguindo) {
+  public UsuarioDTO(Usuario usuario, long seguidores, long seguindo) {
+    this(
+        usuario.getId(),
+        usuario.getNome(),
+        usuario.getApelido(),
+        usuario.getDataNasc(),
+        usuario.getEmail(),
+        usuario.getEstado(),
+        usuario.getCidade(),
+        usuario.getAvatar(),
+        usuario.getDataCadastro(),
+        usuario.isConfiavel(),
+        usuario.getXP(),
+        usuario.getLevel(),
+        usuario.getMoedas(),
+        seguidores,
+        seguindo);
+  }
 }

@@ -8,18 +8,6 @@ import 'package:conport/models/usuario.dart';
 import 'package:conport/services/usuarioService.dart';
 import 'package:conport/widgets/topbar.dart';
 
-// ============================================================
-// MOCK dos dados que ainda não existem no model Usuario / na API.
-// Quando o backend expor esses campos, adicione-os ao Usuario
-// e apague esta classe.
-// ============================================================
-
-class _PerfilMock {
-  static const int seguindo = 12;
-  static const int seguidores = 11;
-  static final DateTime dataCadastro = DateTime(2025, 7, 6);
-}
-
 class Profile extends StatefulWidget {
   const Profile({
     super.key,
@@ -100,7 +88,7 @@ class _ProfileState extends State<Profile> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Avatar
-                        const Center(child: _Avatar()),
+                        Center(child: _Avatar(url: u.avatarUrl)),
 
                         const SizedBox(height: 18),
 
@@ -114,23 +102,23 @@ class _ProfileState extends State<Profile> {
                         ),
                         const SizedBox(height: 2),
                         Row(
-                          children: const [
+                          children: [
                             _Contador(
-                              valor: _PerfilMock.seguindo,
+                              valor: u.seguindo ?? 0,
                               rotulo: 'Seguindo',
                             ),
-                            SizedBox(width: 14),
+                            const SizedBox(width: 14),
                             _Contador(
-                              valor: _PerfilMock.seguidores,
+                              valor: u.seguidores ?? 0,
                               rotulo: 'Seguidores',
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 14),
-
                         Text(
-                          'Entrou em ${_dataPorExtenso(_PerfilMock.dataCadastro)}',
+                          u.datacadastro != null
+                              ? 'Entrou em ${_dataPorExtenso(u.datacadastro!)}'
+                              : 'Entrou há pouco tempo',
                           style: const TextStyle(fontSize: 10),
                         ),
                         Text(
@@ -267,24 +255,29 @@ class _ProfileState extends State<Profile> {
 // ============================================================
 // WIDGETS
 // ============================================================
-
 class _Avatar extends StatelessWidget {
-  const _Avatar();
+  final String? url;
+
+  const _Avatar({this.url});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: trocar pela foto do usuário quando existir.
     final appColors =
         Theme.of(context).extension<AppColors>() ?? AppColors.light;
+
     return CircleAvatar(
       radius: 44,
       backgroundColor: appColors.accentSalmon,
-      child: Icon(
-        Symbols.person,
-        size: 64,
-        color: appColors.onAccent,
-        weight: 600,
-      ),
+      backgroundImage: url == null ? null : NetworkImage(url!),
+      onBackgroundImageError: url == null ? null : (error, stackTrace) {},
+      child: url == null
+          ? Icon(
+              Symbols.person,
+              size: 64,
+              color: appColors.onAccent,
+              weight: 600,
+            )
+          : null,
     );
   }
 }

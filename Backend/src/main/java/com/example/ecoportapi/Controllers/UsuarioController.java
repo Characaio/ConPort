@@ -1,50 +1,91 @@
 package com.example.ecoportapi.Controllers;
 
-//TRABALHAR DE MANEIRA SERIA NESSA CONTROLLER APÓS A QUARTA-FEIRA
+// TRABALHAR DE MANEIRA SERIA NESSA CONTROLLER APÓS A QUARTA-FEIRA
+// sergia* ~ Cae
 
-import com.example.ecoportapi.DTOs.Request.LoginDTO;
-import com.example.ecoportapi.DTOs.Request.SignupDTO;
 import com.example.ecoportapi.Services.MissaoService;
 import com.example.ecoportapi.Services.UsuarioService;
-import org.apache.catalina.connector.Response;
-import org.springframework.http.HttpStatus;
+import java.io.IOException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/usuarios")
 public class UsuarioController {
 
-    private final UsuarioService usuarioService;
-    private final MissaoService missaoService;
+  private final UsuarioService usuarioService;
+  private final MissaoService missaoService;
 
-    public UsuarioController(UsuarioService usuarioService, MissaoService missaoService) {
-        this.usuarioService = usuarioService;
-        this.missaoService = missaoService;
-    }
+  public UsuarioController(UsuarioService usuarioService, MissaoService missaoService) {
+    this.usuarioService = usuarioService;
+    this.missaoService = missaoService;
+  }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> PegarUsuario(@PathVariable Long id){
-        return ResponseEntity.ok(usuarioService.pegarUsuario(id));
-    }
+  @GetMapping("/{id}")
+  public ResponseEntity<?> PegarUsuario(@PathVariable Long id) {
+    return ResponseEntity.ok(usuarioService.pegarUsuario(id));
+  }
 
-    @PostMapping("/{id}/missoes/gerar")
-    public ResponseEntity<?> GerarMissoes(@PathVariable Long id){
-        return ResponseEntity.ok(missaoService.GerarMissoes(id));
-    }
+  @PostMapping("/{id}/missoes/gerar")
+  public ResponseEntity<?> GerarMissoes(@PathVariable Long id) {
+    return ResponseEntity.ok(missaoService.GerarMissoes(id));
+  }
 
-    /*
-    @PostMapping
-    public ResponseEntity<?> Signup(
-            @RequestBody SignupDTO signupDTO
-            ){
-        return usuarioService.Signup(signupDTO);
-    }
-    @PostMapping
-    public ResponseEntity<?> Login(
-            @RequestBody LoginDTO loginDTO
-    ){
-        return usuarioService.Login(loginDTO);
-    }
-    */
+  /*
+  @PostMapping
+  public ResponseEntity<?> Signup(
+          @RequestBody SignupDTO signupDTO
+          ){
+      return usuarioService.Signup(signupDTO);
+  }
+  @PostMapping
+  public ResponseEntity<?> Login(
+          @RequestBody LoginDTO loginDTO
+  ){
+      return usuarioService.Login(loginDTO);
+  }
+  */
+
+  @GetMapping("/{id}/amigos")
+  public ResponseEntity<?> ListarAmigos(@PathVariable Long id) {
+    return ResponseEntity.ok(usuarioService.listarAmigos(id));
+  }
+
+  @GetMapping("/{id}/solicitacoes")
+  public ResponseEntity<?> ListarSolicitacoes(@PathVariable Long id) {
+    return ResponseEntity.ok(usuarioService.listarSolicitacoes(id));
+  }
+
+  @GetMapping("/buscar")
+  public ResponseEntity<?> Buscar(@RequestParam String termo) {
+    // ATENÇÃO: sem autenticação, id fixo. Substituir pelo usuario logado.
+    return ResponseEntity.ok(usuarioService.buscar(1L, termo));
+  }
+
+  @PostMapping("/{id}/seguir/{alvoId}")
+  public ResponseEntity<?> Seguir(@PathVariable Long id, @PathVariable Long alvoId) {
+    return usuarioService.enviarSolicitacao(id, alvoId);
+  }
+
+  @PostMapping("/{id}/aceitar/{relacaoId}")
+  public ResponseEntity<?> Aceitar(@PathVariable Long id, @PathVariable Long relacaoId) {
+    return usuarioService.aceitar(id, relacaoId);
+  }
+
+  @PostMapping("/{id}/recusar/{relacaoId}")
+  public ResponseEntity<?> Recusar(@PathVariable Long id, @PathVariable Long relacaoId) {
+    return usuarioService.recusar(id, relacaoId);
+  }
+
+  @DeleteMapping("/{id}/seguir/{alvoId}")
+  public ResponseEntity<?> RemoverAmigo(@PathVariable Long id, @PathVariable Long alvoId) {
+    return usuarioService.removerAmizade(id, alvoId);
+  }
+
+  @PostMapping("/{id}/avatar")
+  public ResponseEntity<?> AtualizarAvatar(
+      @PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
+    return usuarioService.atualizarAvatar(id, file);
+  }
 }

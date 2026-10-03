@@ -6,42 +6,7 @@ import 'package:conport/pages/profile.dart';
 import 'package:conport/services/usuarioService.dart';
 import 'package:conport/widgets/topbar.dart';
 import 'package:conport/core/theme/app_theme.dart';
-
-// ============================================================
-// MODELO + MOCK (temporário, até existir na API)
-// Quando o backend tiver o endpoint, mova Amigo para
-// lib/models/amigo.dart e crie um AmigoService no padrão dos outros.
-// ============================================================
-
-class Amigo {
-  final int id;
-  final String nome;
-  final int nivel;
-  final int xp;
-
-  const Amigo({
-    required this.id,
-    required this.nome,
-    required this.nivel,
-    required this.xp,
-  });
-}
-
-class _AmigosMock {
-  static List<Amigo> amigos() => [
-    const Amigo(id: 101, nome: 'Ana Beatriz', nivel: 14, xp: 1320),
-    const Amigo(id: 102, nome: 'Carlos Eduardo', nivel: 9, xp: 740),
-    const Amigo(id: 103, nome: 'Júlia Alves', nivel: 12, xp: 1023),
-    const Amigo(id: 104, nome: 'Marina Souza', nivel: 5, xp: 310),
-    const Amigo(id: 105, nome: 'Pedro Lima', nivel: 17, xp: 1850),
-    const Amigo(id: 106, nome: 'Rafael Costa', nivel: 3, xp: 120),
-  ];
-
-  static List<Amigo> solicitacoes() => [
-    const Amigo(id: 201, nome: 'Lucas Martins', nivel: 7, xp: 560),
-    const Amigo(id: 202, nome: 'Fernanda Rocha', nivel: 11, xp: 980),
-  ];
-}
+import 'package:conport/models/amigo.dart';
 
 // ============================================================
 // PÁGINA
@@ -52,7 +17,14 @@ enum _Aba { amigos, solicitacoes }
 enum _AcaoAmigo { perfil, remover }
 
 class Amigos extends StatefulWidget {
-  const Amigos({super.key});
+  const Amigos({
+    super.key,
+    required this.usuarioService,
+    required this.usuarioId,
+  });
+
+  final UsuarioService usuarioService;
+  final int usuarioId;
 
   @override
   State<Amigos> createState() => _AmigosState();
@@ -62,16 +34,33 @@ class _AmigosState extends State<Amigos> {
   late List<Amigo> amigos;
   late List<Amigo> solicitacoes;
 
+  String? erro;
+
   _Aba aba = _Aba.amigos;
   String busca = '';
 
   @override
   void initState() {
     super.initState();
+    _carregar();
+  }
 
-    amigos = _AmigosMock.amigos();
-    solicitacoes = _AmigosMock.solicitacoes();
-    _ordenar();
+  Future<void> _carregar() async {
+    try {
+      final a = await widget.usuarioService.listarAmigos(widget.usuarioId);
+      final s = await widget.usuarioService.listarSolicitacoes(
+        widget.usuarioId,
+      );
+      if (!mounted) return;
+      setState(() {
+        amigos = a;
+        solicitacoes = s;
+        _ordenar();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => erro = 'Não foi possível carregar seus amigos.');
+    }
   }
 
   void _ordenar() {
@@ -97,10 +86,8 @@ class _AmigosState extends State<Amigos> {
     // usuário demo; com a API ligada, abre o perfil do amigo de verdade.
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => Profile(
-          usuarioId: amigo.id,
-          usuarioService: const UsuarioService(),
-        ),
+        builder: (_) =>
+            Profile(usuarioId: amigo.id, usuarioService: widget.usuarioService),
       ),
     );
   }
@@ -134,14 +121,35 @@ class _AmigosState extends State<Amigos> {
     );
 
     if (confirmou != true || !mounted) return;
+    if (confirmou != true || !mounted) return;
 
-    // TODO: chamar a API para remover a amizade.
+    try {
+      await widget.usuarioService.remover(widget.usuarioId, amigo.id);
+    } catch (e) {
+      if (mounted) _mensagem('Não foi possível remover ${amigo.nome}.');
+      return;
+    }
+
+    if (!mounted) return;
     setState(() => amigos.removeWhere((a) => a.id == amigo.id));
     _mensagem('${amigo.nome} foi removido dos seus amigos.');
   }
 
-  void _aceitar(Amigo amigo) {
-    // TODO: chamar a API para aceitar a solicitação.
+  Future<void> _aceitar(Amigo amigo) async {
+    final relacaoId = amigo.relacaoId;
+    if (relacaoId == null) {
+      if (mounted) _mensagem('Não foi possível aceitar ${amigo.nome}.');
+      return;
+    }
+
+    try {
+      await widget.usuarioService.aceitar(widget.usuarioId, relacaoId);
+    } catch (e) {
+      if (mounted) _mensagem('Não foi possível aceitar ${amigo.nome}.');
+      return;
+    }
+
+    if (!mounted) return;
     setState(() {
       solicitacoes.removeWhere((a) => a.id == amigo.id);
       amigos.add(amigo);
@@ -150,24 +158,62 @@ class _AmigosState extends State<Amigos> {
     _mensagem('Agora você e ${amigo.nome} são amigos!');
   }
 
-  void _recusar(Amigo amigo) {
-    // TODO: chamar a API para recusar a solicitação.
+  Future<void> _recusar(Amigo amigo) async {
+    final relacaoId = amigo.relacaoId;
+    if (relacaoId == null) {
+      if (mounted) _mensagem('Não foi possível recusar ${amigo.nome}.');
+      return;
+    }
+
+    try {
+      await widget.usuarioService.recusar(widget.usuarioId, relacaoId);
+    } catch (e) {
+      if (mounted) _mensagem('Não foi possível recusar ${amigo.nome}.');
+      return;
+    }
+
+    if (!mounted) return;
     setState(() => solicitacoes.removeWhere((a) => a.id == amigo.id));
     _mensagem('Solicitação de ${amigo.nome} recusada.');
   }
 
   Future<void> _adicionar() async {
-    final usuario = await showDialog<String>(
+    final termo = await showDialog<String>(
       context: context,
       barrierColor: Colors.black54,
       builder: (_) => const _AdicionarAmigoDialog(),
     );
 
-    if (usuario == null || !mounted) return;
+    if (termo == null || termo.isEmpty || !mounted) return;
 
-    // TODO: chamar a API para enviar a solicitação.
-    _mensagem('Solicitação enviada para $usuario.');
+    List<Amigo> resultados;
 
+    try {
+      resultados = await widget.usuarioService.buscar(termo);
+    } catch (e) {
+      if (mounted) _mensagem('Não foi possível buscar.');
+      return;
+    }
+
+    if (!mounted) return;
+
+    if (resultados.isEmpty) {
+      _mensagem('Nenhum usuário encontrado para "$termo".');
+      return;
+    }
+
+    try {
+      await widget.usuarioService.enviarSolicitacao(
+        widget.usuarioId,
+        resultados.first.id,
+      );
+    } catch (e) {
+      if (mounted) _mensagem('$e');
+      return;
+    }
+
+    if (!mounted) return;
+    _mensagem('Solicitação enviada para ${resultados.first.nome}.');
     await registrarConquista(context, TipoConquista.amigoAdicionado);
   }
 
@@ -470,7 +516,7 @@ class _CardAmigo extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
             child: Row(
               children: [
-                _AvatarAmigo(id: amigo.id),
+                _AvatarAmigo(amigo: amigo),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -542,7 +588,7 @@ class _CardSolicitacao extends StatelessWidget {
         children: [
           Row(
             children: [
-              _AvatarAmigo(id: amigo.id),
+              _AvatarAmigo(amigo: amigo),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -588,30 +634,6 @@ class _CardSolicitacao extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _AvatarAmigo extends StatelessWidget {
-  final int id;
-
-  const _AvatarAmigo({required this.id});
-
-  static const List<Color> _paleta = [
-    Color(0xFF6A4FA3),
-    Color(0xFFC3917C),
-    Color(0xFF5E7654),
-    Color(0xFF766057),
-    Color(0xFFC25B5B),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    // TODO: trocar pela foto do usuário quando existir.
-    return CircleAvatar(
-      radius: 22,
-      backgroundColor: _paleta[id % _paleta.length],
-      child: const Icon(Symbols.person, size: 28, color: Colors.black),
     );
   }
 }
@@ -802,6 +824,30 @@ class _AdicionarAmigoDialogState extends State<_AdicionarAmigoDialog> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// AVATAR DO AMIGO
+//
+// Usa a foto do usuário quando a API devolve uma; sem foto, cai no ícone.
+
+class _AvatarAmigo extends StatelessWidget {
+  final Amigo amigo;
+
+  const _AvatarAmigo({required this.amigo});
+
+  @override
+  Widget build(BuildContext context) {
+    final url = amigo.avatarUrl;
+
+    return CircleAvatar(
+      radius: 22,
+      backgroundImage: url == null ? null : NetworkImage(url),
+      onBackgroundImageError: url == null ? null : (error, stackTrace) {},
+      child: url == null
+          ? const Icon(Symbols.person, size: 28, color: Colors.black)
+          : null,
     );
   }
 }

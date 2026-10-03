@@ -72,7 +72,10 @@ class PageLoader {
         return MaterialPageRoute(builder: (_) => const Anuncios());
 
       case friends:
-        return MaterialPageRoute(builder: (_) => const Amigos());
+        return MaterialPageRoute(
+          builder: (_) =>
+              Amigos(usuarioService: const UsuarioService(), usuarioId: 2),
+        );
 
       case profile:
         return MaterialPageRoute(
