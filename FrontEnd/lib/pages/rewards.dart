@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import 'package:conport/core/conquistas/conquistas.dart';
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/widgets/topbar.dart';
@@ -344,12 +345,20 @@ class _RewardCard extends StatelessWidget {
     );
   }
 
-  void _showMockMessage(BuildContext context, String rewardTitle) {
+  Future<void> _showMockMessage(
+    BuildContext context,
+    String rewardTitle,
+  ) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('$rewardTitle selecionada (demonstração).'),
         duration: const Duration(seconds: 2),
       ),
+    );
+
+    await registrarConquista(
+      context,
+      TipoConquista.recompensaResgatada,
     );
   }
 }

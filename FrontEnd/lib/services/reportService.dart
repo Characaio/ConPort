@@ -68,6 +68,19 @@ class ReportService {
     double? longitude,
     List<XFile> imagens = const [],
   }) async {
+    if (!AppConfig.usarApi) {
+      // Simula a latência da rede enquanto o endpoint não existe.
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      return ReportMock.postarReport(
+        unidadeId: unidadeId,
+        usuarioId: usuarioId,
+        tipo: tipo,
+        descricao: descricao,
+        dataDoOcorrido: dataDoOcorrido,
+      );
+    }
+
     final url = Uri.parse('$urlBase/unidade/$unidadeId/reports');
 
     final request = http.MultipartRequest('POST', url);

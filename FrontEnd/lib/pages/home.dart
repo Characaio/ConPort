@@ -3,6 +3,7 @@ import 'package:conport/widgets/mapembed.dart';
 import 'package:conport/widgets/topbar.dart';
 import 'package:conport/widgets/home/homecard.dart';
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/pages/avistamento.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,8 @@ class Home extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final appColors =
         Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    // Visitantes não têm nome de conta.
+    final nome = AuthSession.instance.usuario?.nome ?? 'Visitante';
     return Scaffold(
       // O inset inferior pertence ao rodapé: o Scaffold já dimensiona o
       // body acima do bottomNavigationBar, e o Footer aplica o seu
@@ -36,7 +39,7 @@ class Home extends StatelessWidget {
                   children: [
                     Text("Olá,", style: TextStyle(fontSize: 20)),
                     Text(
-                      "Username!",
+                      "$nome!",
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w500,

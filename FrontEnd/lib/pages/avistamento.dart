@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import 'package:conport/core/conquistas/conquistas.dart';
 import 'package:conport/services/avistamento_service.dart';
 import 'package:conport/widgets/topbar.dart';
 
@@ -64,6 +65,11 @@ class _AvistamentoPageState extends State<AvistamentoPage> {
       messenger.showSnackBar(
         const SnackBar(content: Text('Avistamento enviado!')),
       );
+
+      if (mounted) {
+        await registrarConquista(context, TipoConquista.avistamentoEnviado);
+      }
+
       navigator.pop();
     } catch (e) {
       if (!mounted) return;

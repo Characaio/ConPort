@@ -13,6 +13,9 @@ import 'package:conport/pages/friends.dart';
 import 'package:conport/pages/missions.dart';
 import 'package:conport/pages/rewards.dart';
 import 'package:conport/pages/settings.dart';
+import 'package:conport/pages/welcome.dart';
+import 'package:conport/pages/login.dart';
+import 'package:conport/pages/register.dart';
 
 import 'package:conport/pages/educacao.dart';
 import 'package:conport/services/unidadeService.dart';
@@ -33,6 +36,11 @@ class PageLoader {
   static const String rewards = '/recompensas';
   static const String settingsPage = '/configuracoes';
   static const String educacao = '/educacao';
+
+  // Acesso
+  static const String welcome = '/bem-vindo';
+  static const String login = '/entrar';
+  static const String register = '/cadastro';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -83,6 +91,15 @@ class PageLoader {
 
       case educacao:
         return MaterialPageRoute(builder: (_) => const EducacaoPage());
+
+      case welcome:
+        return MaterialPageRoute(builder: (_) => const WelcomePage());
+
+      case login:
+        return MaterialPageRoute(builder: (_) => const LoginPage());
+
+      case register:
+        return MaterialPageRoute(builder: (_) => const RegisterPage());
 
       default:
         return MaterialPageRoute(builder: (_) => const Home());

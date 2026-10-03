@@ -1,6 +1,37 @@
 import 'package:conport/models/report.dart';
 
 class ReportMock {
+  /// Report criado no modo mockado: nasce "pendente", igual ao que o
+  /// backend faria antes da análise de um supervisor.
+  static Report postarReport({
+    required int unidadeId,
+    required int usuarioId,
+    required String tipo,
+    required String descricao,
+    required DateTime dataDoOcorrido,
+  }) {
+    return Report(
+      id: 999,
+      tipoDeIncidente: _tipoPorNome(tipo),
+      statusReport: StatusReport.PENDNTE,
+      dataDoOcorrido: dataDoOcorrido,
+      descricao: descricao,
+      localizacao: 'Local informado no report',
+      usuarioId: usuarioId,
+      unidadeId: unidadeId,
+      usuarioNome: 'Usuário Demo',
+      unidadeNome: 'Parque Estadual de Exemplo',
+    );
+  }
+
+  static TipoDeIncidente _tipoPorNome(String tipo) {
+    for (final incidente in TipoDeIncidente.values) {
+      if (incidente.name == tipo.toUpperCase()) return incidente;
+    }
+
+    return TipoDeIncidente.QUEIMADA;
+  }
+
   static List<Report> buscarReportsDaUnidade(int unidadeId) {
     return [
       Report(

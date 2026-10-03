@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:conport/core/conquistas/conquistas.dart';
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -72,6 +73,8 @@ class _ReportState extends State<Report> {
         imagens: _anexos,
       );
       if (!mounted) return;
+
+      await registrarConquista(context, TipoConquista.reportEnviado);
     } catch (e) {
       if (!mounted) return;
 

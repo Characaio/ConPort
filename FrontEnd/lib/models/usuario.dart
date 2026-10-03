@@ -69,7 +69,7 @@ class Usuario{
 
           confiavel: json['Confiavel'] ?? json['confiavel'] ?? false,
 
-          xp: json['Xp'] ?? json['xp'] ?? 0,
+          xp: json['Xp'] ?? json['xp'] ?? json['XP'] ?? 0,
 
           level: json['Level'] ?? json['level'] ?? 0,
 

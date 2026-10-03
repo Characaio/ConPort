@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:conport/core/settings/app_settings.dart';
 import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/session/auth_session.dart';
 
 void main() {
   runApp(const Conport());
@@ -56,7 +57,10 @@ class _ConportState extends State<Conport> {
           child: child ?? const SizedBox.shrink(),
         );
       },
-      initialRoute: PageLoader.home,
+      // Sem sessão, o app começa na tela intermediária de acesso.
+      initialRoute: AuthSession.instance.temSessao
+          ? PageLoader.home
+          : PageLoader.welcome,
       onGenerateRoute: PageLoader.generateRoute,
     );
   }

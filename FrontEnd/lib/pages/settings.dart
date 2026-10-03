@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/core/settings/app_settings.dart';
 import 'package:conport/widgets/topbar.dart';
 
@@ -147,8 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             _ActionButton(
                               icon: Icons.logout,
                               label: 'Sair da conta',
-                              onPressed: () =>
-                                  _showMessage('Logout disponível em breve.'),
+                              onPressed: _sairDaConta,
                             ),
                             SizedBox(height: 16),
                             _ActionButton(
@@ -247,6 +247,16 @@ class _SettingsPageState extends State<SettingsPage> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _sairDaConta() {
+    AuthSession.instance.encerrar();
+
+    // Mostra a mensagem antes de navegar: o mensageiro fica acima do
+    // Navigator e o aviso sobrevive à troca de rota.
+    _showMessage('Você saiu da sua conta.');
+
+    PageLoader.replace(context, PageLoader.welcome);
   }
 
   Future<void> _confirmAccountDeletion() async {

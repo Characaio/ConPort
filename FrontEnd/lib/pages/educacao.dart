@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:conport/core/conquistas/conquistas.dart';
 import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/widgets/topbar.dart';
 
@@ -185,7 +186,7 @@ class _VideoCard extends StatelessWidget {
     required this.video,
   });
 
-  Future<void> _abrirVideo() async {
+  Future<void> _abrirVideo(BuildContext context) async {
     final query = Uri.encodeQueryComponent(
       video.buscaYoutube,
     );
@@ -194,12 +195,12 @@ class _VideoCard extends StatelessWidget {
       'https://www.youtube.com/results?search_query=$query',
     );
 
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-    }
+    final abriu = await canLaunchUrl(uri) &&
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+    if (!abriu || !context.mounted) return;
+
+    await registrarConquista(context, TipoConquista.videoAssistido);
   }
 
   @override
@@ -211,7 +212,7 @@ class _VideoCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       elevation: 2,
       child: InkWell(
-        onTap: _abrirVideo,
+        onTap: () => _abrirVideo(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

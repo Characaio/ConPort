@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import 'package:conport/core/conquistas/conquistas.dart';
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/models/usuario.dart';
@@ -17,7 +18,6 @@ class _PerfilMock {
   static const int seguindo = 12;
   static const int seguidores = 11;
   static final DateTime dataCadastro = DateTime(2025, 7, 6);
-  static const int totalConquistas = 4;
 }
 
 class Profile extends StatefulWidget {
@@ -40,7 +40,19 @@ class _ProfileState extends State<Profile> {
   @override
   void initState() {
     super.initState();
+    Conquistas.instance.addListener(_conquistasMudaram);
+    Conquistas.instance.carregar();
     carregarUsuario();
+  }
+
+  @override
+  void dispose() {
+    Conquistas.instance.removeListener(_conquistasMudaram);
+    super.dispose();
+  }
+
+  void _conquistasMudaram() {
+    if (mounted) setState(() {});
   }
 
   Future<void> carregarUsuario() async {
@@ -208,9 +220,24 @@ class _ProfileState extends State<Profile> {
                           spacing: 14,
                           runSpacing: 14,
                           children: [
-                            for (int i = 0; i < _PerfilMock.totalConquistas; i++)
-                              const _Conquista(),
+                            for (final conquista in Conquistas.instance.todas)
+                              _Conquista(
+                                conquista: conquista,
+                                desbloqueada: Conquistas.instance
+                                    .estaDesbloqueada(conquista.tipo),
+                              ),
                           ],
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Text(
+                          '${Conquistas.instance.quantidadeDesbloqueadas} de '
+                          '${Conquistas.instance.total} desbloqueadas',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: colors.onSurfaceVariant,
+                          ),
                         ),
 
                         const SizedBox(height: 32),
@@ -319,23 +346,63 @@ class _Dado extends StatelessWidget {
 }
 
 class _Conquista extends StatelessWidget {
-  const _Conquista();
+  final Conquista conquista;
+  final bool desbloqueada;
+
+  const _Conquista({required this.conquista, required this.desbloqueada});
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    // TODO: ícone/imagem de cada conquista quando existir.
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Theme.of(context).extension<AppColors>()?.statusDenied ??
-            const Color(0xFFC25B5B),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(color: colors.shadow.withValues(alpha: 0.18), blurRadius: 4, offset: const Offset(0, 2)),
-        ],
-      ),
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
+
+    return Column(
+      children: [
+        Tooltip(
+          message: conquista.descricao,
+          child: Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: desbloqueada
+                  ? appColors.accentGreen
+                  : colors.surfaceContainerHighest,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: colors.shadow.withValues(alpha: 0.18),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              desbloqueada ? conquista.icone : Symbols.lock,
+              size: 22,
+              color: desbloqueada
+                  ? appColors.onAccent
+                  : colors.onSurface.withValues(alpha: 0.4),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        SizedBox(
+          width: 72,
+          child: Text(
+            conquista.titulo,
+            textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: desbloqueada ? FontWeight.w700 : FontWeight.w500,
+              color: desbloqueada ? colors.onSurface : colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

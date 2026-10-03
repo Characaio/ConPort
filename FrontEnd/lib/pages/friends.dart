@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import 'package:conport/core/conquistas/conquistas.dart';
 import 'package:conport/pages/profile.dart';
 import 'package:conport/services/usuarioService.dart';
 import 'package:conport/widgets/topbar.dart';
@@ -166,6 +167,8 @@ class _AmigosState extends State<Amigos> {
 
     // TODO: chamar a API para enviar a solicitação.
     _mensagem('Solicitação enviada para $usuario.');
+
+    await registrarConquista(context, TipoConquista.amigoAdicionado);
   }
 
   @override
