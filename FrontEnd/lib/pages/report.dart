@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:conport/services/reportService.dart';
 import 'package:conport/widgets/topbar.dart';
@@ -53,8 +54,120 @@ class _ReportState extends State<Report> {
   List<LocalSugestao> _localSugestoes = [];
 
   bool _pesquisandoLocal = false;
+  bool _obtendoLocalizacao = false;
 
   LocalSugestao? _localSelecionado;
+
+  // ==========================================
+  // LOCALIZAÇÃO ATUAL
+  // ==========================================
+
+  Future<void> _usarLocalizacaoAtual() async {
+    if (_obtendoLocalizacao) return;
+
+    setState(() => _obtendoLocalizacao = true);
+
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        throw Exception('Ative o serviço de localização do dispositivo.');
+      }
+
+      var permissao = await Geolocator.checkPermission();
+
+      if (permissao == LocationPermission.denied) {
+        permissao = await Geolocator.requestPermission();
+      }
+
+      if (permissao == LocationPermission.denied) {
+        throw Exception('Permissão de localização negada.');
+      }
+
+      if (permissao == LocationPermission.deniedForever) {
+        throw Exception(
+          'Permissão de localização bloqueada. Habilite-a nas configurações.',
+        );
+      }
+
+      final posicao = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      final local = await _buscarEnderecoPorCoordenadas(
+        posicao.latitude,
+        posicao.longitude,
+      );
+
+      if (!mounted) return;
+
+      if (local != null) {
+        _selecionarLocal(local);
+      } else {
+        final coordenadas = posicao.latitude.toStringAsFixed(6) +
+            ', ' +
+            posicao.longitude.toStringAsFixed(6);
+
+        _localController.text = coordenadas;
+        _localSelecionado = LocalSugestao(
+          nome: coordenadas,
+          latitude: posicao.latitude,
+          longitude: posicao.longitude,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _obtendoLocalizacao = false);
+      }
+    }
+  }
+
+  Future<LocalSugestao?> _buscarEnderecoPorCoordenadas(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      final uri = Uri.https('nominatim.openstreetmap.org', '/reverse', {
+        'lat': latitude.toString(),
+        'lon': longitude.toString(),
+        'format': 'jsonv2',
+        'addressdetails': '1',
+        'zoom': '18',
+      });
+
+      final response = await http.get(
+        uri,
+        headers: const {'User-Agent': 'ConPort/1.0'},
+      );
+
+      if (response.statusCode != 200) return null;
+
+      final resultado = jsonDecode(response.body);
+
+      if (resultado is! Map) return null;
+
+      final nome = resultado['display_name']?.toString();
+
+      if (nome == null || nome.isEmpty) return null;
+
+      return LocalSugestao(
+        nome: nome,
+        latitude: latitude,
+        longitude: longitude,
+      );
+    } catch (e) {
+      debugPrint('LOCAL REVERSE ERROR: $e');
+      return null;
+    }
+  }
 
   // ==========================================
   // BUSCAR SUGESTÕES
@@ -362,7 +475,19 @@ class _ReportState extends State<Report> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           )
-                        : null,
+                        : IconButton(
+                            tooltip: 'Usar localização atual',
+                            onPressed: _usarLocalizacaoAtual,
+                            icon: _obtendoLocalizacao
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.my_location),
+                          ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: const BorderSide(color: Colors.grey),
