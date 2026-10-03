@@ -21,12 +21,12 @@ class _ReportState extends State<Report> {
 
   final TextEditingController _descricaoController = TextEditingController();
   final TextEditingController _localController = TextEditingController();
-
-  Future<void> _enviarReport() async {
+  
+  Future<void> _enviarReport() async{
     const int usuarioId = 2;
     const int unidadeId = 1;
 
-    try {
+    try{
       await _reportService.postarReport(
         unidadeId: unidadeId,
         usuarioId: usuarioId,
@@ -35,18 +35,19 @@ class _ReportState extends State<Report> {
         prioridade: (urgencia * 5).round(),
         dataDoOcorrido: DateTime.now(),
       );
-      if (!mounted) return;
-    } catch (e) {
+      if(!mounted) return;
+    }catch (e){
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro ao enviar Report: $e')));
-    } finally {
-      PageLoader.go(context, PageLoader.myreports);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao enviar Report: $e'),),
+        );
+    }
+    finally{
+         PageLoader.go(context, PageLoader.myreports);  
     }
   }
-
+ 
   Timer? _localSearchDebounce;
 
   List<LocalSugestao> _localSugestoes = [];
@@ -263,7 +264,7 @@ class _ReportState extends State<Report> {
                     ),
                   ],
                   onSelected: (value) {
-                    if (value != null) {
+                    if(value !=null){
                       setState(() {
                         tipoSelecionado = value.toUpperCase();
                       });
@@ -518,7 +519,7 @@ class _ReportState extends State<Report> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _enviarReport,
+                        onPressed:_enviarReport,                   
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade400,
                           foregroundColor: Colors.white,
@@ -561,7 +562,6 @@ class _ReportState extends State<Report> {
     );
   }
 }
-
 class LocalSugestao {
   final String nome;
   final double latitude;
@@ -573,3 +573,4 @@ class LocalSugestao {
     required this.longitude,
   });
 }
+

@@ -14,8 +14,10 @@ import 'package:conport/pages/missions.dart';
 import 'package:conport/pages/rewards.dart';
 import 'package:conport/pages/settings.dart';
 
+import 'package:conport/pages/educacao.dart';
 import 'package:conport/services/unidadeService.dart';
 import 'package:conport/services/usuarioService.dart';
+
 
 class PageLoader {
   static const String home = '/';
@@ -31,6 +33,7 @@ class PageLoader {
   static const String missions = '/missoes';
   static const String rewards = '/recompensas';
   static const String settingsPage = '/configuracoes';
+  static const String educacao = '/educacao';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -103,6 +106,11 @@ class PageLoader {
       case settingsPage:
         return MaterialPageRoute(
           builder: (_) => const SafeArea(child: SettingsPage()),
+        );
+
+      case educacao:
+        return MaterialPageRoute(
+          builder: (_) => const SafeArea(child: EducacaoPage(),),
         );
 
       default:

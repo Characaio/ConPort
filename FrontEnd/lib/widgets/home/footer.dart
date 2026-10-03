@@ -31,7 +31,9 @@ class Footer extends StatelessWidget {
             text: "Missões",
             onTap: () => PageLoader.go(context, PageLoader.missions),
           ),
-          _FooterItem(icon: Symbols.school, text: "Aprender", onTap: () {}),
+          _FooterItem(icon: Symbols.school, text: "Aprender", onTap: () =>PageLoader.go(context,PageLoader.educacao,
+          ),
+          ),
         ],
       ),
     );
