@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:conport/config/app_config.dart';
 import 'package:conport/mocks/report_mock.dart';
@@ -65,7 +66,7 @@ class ReportService {
     required DateTime dataDoOcorrido,
     double? latitude,
     double? longitude,
-    List<String> caminhosDasImagens = const [],
+    List<XFile> imagens = const [],
   }) async {
     final url = Uri.parse('$urlBase/unidade/$unidadeId/reports');
 
@@ -100,9 +101,15 @@ class ReportService {
       );
     }
 
-    // Imagens
-    for (final caminho in caminhosDasImagens) {
-      request.files.add(await http.MultipartFile.fromPath('imagens', caminho));
+    // Imagens (bytes em vez de caminho: funciona também na web)
+    for (final imagem in imagens) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'imagens',
+          await imagem.readAsBytes(),
+          filename: imagem.name,
+        ),
+      );
     }
 
     final streamedResponse = await request.send();

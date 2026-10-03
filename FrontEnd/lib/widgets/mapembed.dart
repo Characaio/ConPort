@@ -428,6 +428,12 @@ class MapEmbedState extends State<MapEmbed> {
                         point: _currentPosition!,
                         width: 40,
                         height: 40,
+
+                        // Counter-rotaciona o ícone para compensar a
+                        // rotação do mapa, mantendo-o sempre apontando
+                        // para baixo.
+                        rotate: true,
+
                         child: Icon(
                           Icons.location_on,
                           color: colors.primary,

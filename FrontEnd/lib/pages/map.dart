@@ -107,10 +107,8 @@ class _MapState extends State<Map> {
     });
   }
 
-  void _alternarGaveta() {
-    if (_drawerSize > 0.4) {
-      _fecharGaveta();
-    } else {
+  void _abrirGavetaSeFechada() {
+    if (_drawerSize < 0.4) {
       _abrirGaveta();
     }
   }
@@ -314,76 +312,101 @@ class _MapState extends State<Map> {
             ),
 
             // ============================================================
+            // FUNDO ESCURO ATRÁS DA GAVETA
+            // ============================================================
+            //
+            // Mesmo comportamento da gaveta da página de ecossistema:
+            // escurece o mapa e, ao tocar fora, fecha a gaveta.
+            //
+            // O IgnorePointer garante que, com a gaveta fechada,
+            // o mapa continue interativo.
+            //
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: _drawerSize < 0.4,
+                child: GestureDetector(
+                  onTap: _fecharGaveta,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 350),
+                    opacity: _drawerSize >= 0.4 ? 1 : 0,
+                    child: Container(
+                      color: colors.scrim.withValues(alpha: 0.35),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // ============================================================
             // GAVETA
             // ============================================================
             AnimatedPositioned(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOut,
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.easeOutCubic,
               left: 0,
               right: 0,
               bottom: 0,
               height: MediaQuery.of(context).size.height * _drawerSize,
-              child: Material(
-                elevation: 12,
-                color: Colors.transparent,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF2E2A25)
-                        : Color(0xFFE8E0D8),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
+
+              // O arrasto vale para toda a superfície da gaveta,
+              // e não apenas para a alça.
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _abrirGavetaSeFechada,
+                onVerticalDragStart: (_) {
+                  _dragStartSize = _drawerSize;
+                },
+                onVerticalDragUpdate: (details) {
+                  final screenHeight = MediaQuery.of(context).size.height;
+
+                  final delta = -details.delta.dy / screenHeight;
+
+                  setState(() {
+                    _drawerSize = (_dragStartSize + delta).clamp(0.12, 0.75);
+                  });
+                },
+                onVerticalDragEnd: (details) {
+                  final velocidade = details.primaryVelocity ?? 0;
+
+                  // Arrastou para cima com força.
+                  if (velocidade < -700) {
+                    _abrirGaveta();
+                    return;
+                  }
+
+                  // Arrastou para baixo com força.
+                  if (velocidade > 700) {
+                    _fecharGaveta();
+                    return;
+                  }
+
+                  // Soltou sem impulso:
+                  // decide pelo ponto onde ficou.
+                  if (_drawerSize >= 0.4) {
+                    _abrirGaveta();
+                  } else {
+                    _fecharGaveta();
+                  }
+                },
+                child: Material(
+                  elevation: 12,
+                  color: Colors.transparent,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF2E2A25)
+                          : Color(0xFFE8E0D8),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      // ==================================================
-                      // ALÇA ARRASTÁVEL
-                      // ==================================================
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onVerticalDragStart: (_) {
-                          _dragStartSize = _drawerSize;
-                        },
-                        onVerticalDragUpdate: (details) {
-                          final screenHeight = MediaQuery.of(
-                            context,
-                          ).size.height;
-
-                          final delta = -details.delta.dy / screenHeight;
-
-                          setState(() {
-                            _drawerSize = (_dragStartSize + delta).clamp(
-                              0.12,
-                              0.75,
-                            );
-                          });
-                        },
-                        onVerticalDragEnd: (details) {
-                          final velocity = details.primaryVelocity ?? 0;
-
-                          // Arrastou para cima
-                          if (velocity < -300) {
-                            _abrirGaveta();
-                            return;
-                          }
-
-                          // Arrastou para baixo
-                          if (velocity > 300) {
-                            _fecharGaveta();
-                            return;
-                          }
-
-                          // Soltou no meio:
-                          // decide pelo ponto onde ficou.
-                          if (_drawerSize >= 0.4) {
-                            _abrirGaveta();
-                          } else {
-                            _fecharGaveta();
-                          }
-                        },
-                        child: SizedBox(
+                    child: Column(
+                      children: [
+                        // ==================================================
+                        // ALÇA
+                        // ==================================================
+                        SizedBox(
                           width: double.infinity,
                           height: 44,
                           child: Center(
@@ -397,285 +420,282 @@ class _MapState extends State<Map> {
                             ),
                           ),
                         ),
-                      ),
 
-                      // ==================================================
-                      // CONTEÚDO DA GAVETA
-                      // ==================================================
-                      Expanded(
-                        child: ListView(
-                          physics: const ClampingScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                          children: [
-                            // TÍTULO
-                            Text(
-                              _unidade?.nome ?? '',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: colors.onSurface,
+                        // ==================================================
+                        // CONTEÚDO DA GAVETA
+                        // ==================================================
+                        Expanded(
+                          child: ListView(
+                            // Enquanto a gaveta não está totalmente aberta, o
+                            // arrasto precisa chegar até ela. Sem isso, a lista
+                            // engole o gesto e a gaveta fica difícil de mover.
+                            // Com a gaveta aberta, a lista volta a rolar.
+                            physics: _drawerSize >= 0.75
+                                ? const ClampingScrollPhysics()
+                                : const NeverScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                            children: [
+                              // TÍTULO
+                              Text(
+                                _unidade?.nome ?? '',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.onSurface,
+                                ),
                               ),
-                            ),
 
-                            const SizedBox(height: 4),
+                              const SizedBox(height: 4),
 
-                            Text(
-                              _unidade?.tipo ?? '',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colors.onSurfaceVariant,
-                              ),
-                            ),
-
-                            // LOCALIZAÇÃO
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.location_on_outlined,
-                                  size: 17,
+                              Text(
+                                _unidade?.tipo ?? '',
+                                style: TextStyle(
+                                  fontSize: 12,
                                   color: colors.onSurfaceVariant,
                                 ),
-                                SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    _unidade?.local ?? '',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: colors.onSurface,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 6),
-
-                            // TELEFONE
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.phone,
-                                  size: 17,
-                                  color: colors.onSurfaceVariant,
-                                ),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Telefone: ${_unidade?.telefone ?? ''}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: colors.onSurface,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 6),
-
-                            // HORÁRIO
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.access_time,
-                                  size: 17,
-                                  color: colors.onSurfaceVariant,
-                                ),
-                                SizedBox(width: 6),
-                                Text(
-                                  _unidade?.horario ?? '',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: colors.onSurface,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 26),
-
-                            // DIVISÓRIA
-                            Container(
-                              width: double.infinity,
-                              height: 1,
-                              color: colors.outline.withValues(alpha: 0.20),
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // DESCRIÇÃO
-                            Text(
-                              _unidade?.descricao ?? '',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colors.onSurfaceVariant,
-                                height: 1.4,
                               ),
-                            ),
 
-                            const SizedBox(height: 12),
-
-                            // =================================================
-                            // AVISO
-                            // =================================================
-                            if (_unidade?.aviso != null) ...[
-                              Material(
-                                color: colors.tertiaryContainer,
-                                borderRadius: BorderRadius.circular(12),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(12),
-                                  onTap: () {
-                                    PageLoader.go(context, PageLoader.anuncios);
-                                  },
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(10),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Icon(
-                                          Icons.info_outline,
-                                          size: 18,
-                                          color: colors.onSurfaceVariant,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            _unidade!.aviso!,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: colors.onSurfaceVariant,
-                                              height: 1.3,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                            ], // =================================================
-                            // BOTOES
-                            // =================================================
-                            SizedBox(
-                              width: double.infinity,
-                              height: 54,
-                              child: Row(
+                              // LOCALIZAÇÃO
+                              Row(
                                 children: [
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: () {
-                                        PageLoader.go(
-                                          context,
-                                          PageLoader.ecossistema,
-                                        );
-                                      },
-                                      icon: Icon(
-                                        Symbols.emoji_nature,
-                                        size: 20,
-                                        weight: 12,
-                                      ),
-                                      label: const Text(
-                                        'Ecossistema',
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: appColors.accentGreen,
-                                        foregroundColor: appColors.onAccent,
-                                        elevation: 0,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            30,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                  Icon(
+                                    Icons.location_on_outlined,
+                                    size: 17,
+                                    color: colors.onSurfaceVariant,
                                   ),
-
-                                  const SizedBox(width: 12),
-
+                                  SizedBox(width: 6),
                                   Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: () {
-                                        PageLoader.go(context, PageLoader.unit);
-                                      },
-                                      icon: Icon(
-                                        Symbols.globe_2_question,
-                                        size: 20,
-                                        weight: 12,
-                                      ),
-                                      label: const Text(
-                                        'Saiba mais...',
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: appColors.accentGreen,
-                                        foregroundColor: appColors.onAccent,
-                                        elevation: 0,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            30,
-                                          ),
-                                        ),
+                                    child: Text(
+                                      _unidade?.local ?? '',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: colors.onSurface,
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                            // =================================================
-                            // IMAGEM
-                            // =================================================
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child: SizedBox(
+
+                              const SizedBox(height: 6),
+
+                              // TELEFONE
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.phone,
+                                    size: 17,
+                                    color: colors.onSurfaceVariant,
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Telefone: ${_unidade?.telefone ?? ''}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: colors.onSurface,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              // HORÁRIO
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 17,
+                                    color: colors.onSurfaceVariant,
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    _unidade?.horario ?? '',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: colors.onSurface,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 26),
+
+                              // DIVISÓRIA
+                              Container(
                                 width: double.infinity,
-                                height: 250,
-                                child: Image.network(
-                                  _unidade?.imagens.first ?? '',
-                                  fit: BoxFit.cover,
+                                height: 1,
+                                color: colors.outline.withValues(alpha: 0.20),
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              // DESCRIÇÃO
+                              Text(
+                                _unidade?.descricao ?? '',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colors.onSurfaceVariant,
+                                  height: 1.4,
                                 ),
                               ),
-                            ),
 
-                            const SizedBox(height: 20),
-                          ],
+                              const SizedBox(height: 12),
+
+                              // =================================================
+                              // AVISO
+                              // =================================================
+                              if (_unidade?.aviso != null) ...[
+                                Material(
+                                  color: colors.tertiaryContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () {
+                                      PageLoader.go(
+                                        context,
+                                        PageLoader.anuncios,
+                                      );
+                                    },
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(10),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Icon(
+                                            Icons.info_outline,
+                                            size: 18,
+                                            color: colors.onSurfaceVariant,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              _unidade!.aviso!,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: colors.onSurfaceVariant,
+                                                height: 1.3,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                              ], // =================================================
+                              // BOTOES
+                              // =================================================
+                              SizedBox(
+                                width: double.infinity,
+                                height: 54,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        onPressed: () {
+                                          PageLoader.go(
+                                            context,
+                                            PageLoader.ecossistema,
+                                          );
+                                        },
+                                        icon: Icon(
+                                          Symbols.emoji_nature,
+                                          size: 20,
+                                          weight: 12,
+                                        ),
+                                        label: const Text(
+                                          'Ecossistema',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              appColors.accentGreen,
+                                          foregroundColor: appColors.onAccent,
+                                          elevation: 0,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              30,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                    const SizedBox(width: 12),
+
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        onPressed: () {
+                                          PageLoader.go(
+                                            context,
+                                            PageLoader.unit,
+                                          );
+                                        },
+                                        icon: Icon(
+                                          Symbols.globe_2_question,
+                                          size: 20,
+                                          weight: 12,
+                                        ),
+                                        label: const Text(
+                                          'Saiba mais...',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              appColors.accentGreen,
+                                          foregroundColor: appColors.onAccent,
+                                          elevation: 0,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              30,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // =================================================
+                              // IMAGEM
+                              // =================================================
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(14),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  height: 250,
+                                  child: Image.network(
+                                    _unidade?.imagens.first ?? '',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-
-            // ============================================================
-            // BOTÃO PARA ABRIR/FECHAR A GAVETA
-            // ============================================================
-            //
-            // Fica escondido quando a gaveta está aberta.
-            //
-            if (_drawerSize < 0.4)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onTap: _alternarGaveta,
-                  child: const SizedBox(height: 55),
-                ),
-              ),
           ],
         ),
       ),

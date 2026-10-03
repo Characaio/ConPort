@@ -1,15 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:conport/pages/avistamento.dart';
 import 'package:conport/services/reportService.dart';
 import 'package:conport/widgets/topbar.dart';
 
 class Report extends StatefulWidget {
-  const Report({super.key});
+  /// Permite trocar o seletor de anexos (usado nos testes).
+  /// Por padrão usa o mesmo seletor de imagem do "Enviar Avistamento".
+  final Future<XFile?> Function(BuildContext context)? seletorDeImagem;
+
+  const Report({super.key, this.seletorDeImagem});
 
   @override
   State<Report> createState() => _ReportState();
@@ -22,12 +29,39 @@ class _ReportState extends State<Report> {
 
   final TextEditingController _descricaoController = TextEditingController();
   final TextEditingController _localController = TextEditingController();
-  
-  Future<void> _enviarReport() async{
+
+  /// Anexos selecionados para o report (imagens).
+  final List<XFile> _anexos = [];
+
+  // ==========================================
+  // ANEXOS
+  // ==========================================
+
+  Future<void> _adicionarAnexo() async {
+    final seletor = widget.seletorDeImagem ?? escolherImagem;
+
+    final anexo = await seletor(context);
+
+    if (anexo == null || !mounted) return;
+
+    setState(() => _anexos.add(anexo));
+  }
+
+  void _removerAnexo(XFile anexo) {
+    setState(() => _anexos.remove(anexo));
+  }
+
+  Widget _caixaDoAnexo(int indice) {
+    final anexo = _anexos[indice];
+
+    return _CaixaAnexo(anexo: anexo, onRemover: () => _removerAnexo(anexo));
+  }
+
+  Future<void> _enviarReport() async {
     const int usuarioId = 2;
     const int unidadeId = 1;
 
-    try{
+    try {
       await _reportService.postarReport(
         unidadeId: unidadeId,
         usuarioId: usuarioId,
@@ -35,20 +69,20 @@ class _ReportState extends State<Report> {
         descricao: _descricaoController.text,
         prioridade: (urgencia * 5).round(),
         dataDoOcorrido: DateTime.now(),
+        imagens: _anexos,
       );
-      if(!mounted) return;
-    }catch (e){
+      if (!mounted) return;
+    } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao enviar Report: $e'),),
-        );
-    }
-    finally{
-         PageLoader.go(context, PageLoader.myreports);  
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao enviar Report: $e')));
+    } finally {
+      PageLoader.go(context, PageLoader.myreports);
     }
   }
- 
+
   Timer? _localSearchDebounce;
 
   List<LocalSugestao> _localSugestoes = [];
@@ -104,7 +138,8 @@ class _ReportState extends State<Report> {
       if (local != null) {
         _selecionarLocal(local);
       } else {
-        final coordenadas = posicao.latitude.toStringAsFixed(6) +
+        final coordenadas =
+            posicao.latitude.toStringAsFixed(6) +
             ', ' +
             posicao.longitude.toStringAsFixed(6);
 
@@ -119,9 +154,7 @@ class _ReportState extends State<Report> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-        ),
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
     } finally {
       if (mounted) {
@@ -377,7 +410,7 @@ class _ReportState extends State<Report> {
                     ),
                   ],
                   onSelected: (value) {
-                    if(value !=null){
+                    if (value != null) {
                       setState(() {
                         tipoSelecionado = value.toUpperCase();
                       });
@@ -396,7 +429,7 @@ class _ReportState extends State<Report> {
 
                 Container(
                   width: double.infinity,
-                  constraints: const BoxConstraints(minHeight: 170),
+                  constraints: const BoxConstraints(minHeight: 100),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey),
                     borderRadius: BorderRadius.circular(16),
@@ -408,11 +441,11 @@ class _ReportState extends State<Report> {
                       TextField(
                         controller: _descricaoController,
                         maxLines: 5,
-                        minLines: 3,
+                        minLines: 1,
                         decoration: const InputDecoration(
                           hintText: 'Descreva o que aconteceu...',
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
+                          contentPadding: EdgeInsets.all(4),
                         ),
                       ),
 
@@ -420,29 +453,37 @@ class _ReportState extends State<Report> {
 
                       Row(
                         children: [
-                          Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade400,
-                              borderRadius: BorderRadius.circular(8),
+                          Expanded(
+                            child: SizedBox(
+                              height: 72,
+                              child: _anexos.isNotEmpty
+                                  ? SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      padding: EdgeInsets.zero,
+                                      child: Row(
+                                        children: [
+                                          for (
+                                            var i = 0;
+                                            i < _anexos.length;
+                                            i++
+                                          ) ...[
+                                            if (i > 0) const SizedBox(width: 8),
+                                            _caixaDoAnexo(i),
+                                          ],
+                                        ],
+                                      ),
+                                    )
+                                  : SizedBox.shrink(),
                             ),
                           ),
 
                           const SizedBox(width: 8),
 
-                          Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade400,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                          IconButton(
+                            tooltip: 'Adicionar anexo',
+                            onPressed: _adicionarAnexo,
+                            icon: const Icon(Icons.attach_file, size: 18),
                           ),
-
-                          const Spacer(),
-
-                          const Icon(Icons.attach_file, size: 18),
                         ],
                       ),
                     ],
@@ -465,8 +506,7 @@ class _ReportState extends State<Report> {
                   onSubmitted: _pesquisarLocalAoEnviar,
                   decoration: InputDecoration(
                     hintText: 'Pesquisar local...',
-                    prefixIcon: const Icon(Icons.location_on_outlined),
-                    suffixIcon: _pesquisandoLocal
+                    prefixIcon: _pesquisandoLocal
                         ? const Padding(
                             padding: EdgeInsets.all(12),
                             child: SizedBox(
@@ -644,7 +684,7 @@ class _ReportState extends State<Report> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed:_enviarReport,                   
+                        onPressed: _enviarReport,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade400,
                           foregroundColor: Colors.white,
@@ -687,6 +727,7 @@ class _ReportState extends State<Report> {
     );
   }
 }
+
 class LocalSugestao {
   final String nome;
   final double latitude;
@@ -699,3 +740,107 @@ class LocalSugestao {
   });
 }
 
+// ============================================================
+// ANEXOS
+// ============================================================
+
+/// Caixa exibida enquanto o report não tem anexos, só para indicar
+/// onde as imagens vão aparecer.
+class _CaixaAnexoVazia extends StatelessWidget {
+  const _CaixaAnexoVazia();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 72,
+      height: 72,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade400,
+        borderRadius: BorderRadius.circular(8),
+      ),
+    );
+  }
+}
+
+/// Uma caixa de anexo: preview da imagem e botão para removê-la.
+class _CaixaAnexo extends StatefulWidget {
+  final XFile anexo;
+  final VoidCallback onRemover;
+
+  const _CaixaAnexo({required this.anexo, required this.onRemover});
+
+  @override
+  State<_CaixaAnexo> createState() => _CaixaAnexoState();
+}
+
+class _CaixaAnexoState extends State<_CaixaAnexo> {
+  Uint8List? _bytes;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarBytes();
+  }
+
+  // Usar bytes (em vez de File) faz o preview funcionar também na web.
+  Future<void> _carregarBytes() async {
+    try {
+      final bytes = await widget.anexo.readAsBytes();
+
+      if (!mounted) return;
+
+      setState(() => _bytes = bytes);
+    } catch (e) {
+      debugPrint('ANEXO PREVIEW ERROR: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 72,
+      height: 72,
+      child: Stack(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade400,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: _bytes == null
+                  ? const Center(
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : Image.memory(_bytes!, fit: BoxFit.cover),
+            ),
+          ),
+
+          Positioned(
+            top: 2,
+            right: 2,
+            child: Material(
+              color: Colors.black.withValues(alpha: 0.55),
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: widget.onRemover,
+                child: const Padding(
+                  padding: EdgeInsets.all(2),
+                  child: Icon(Icons.close, size: 14, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

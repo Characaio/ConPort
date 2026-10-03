@@ -22,7 +22,7 @@ class AvistamentoPage extends StatefulWidget {
   /// Pede a imagem (câmera/galeria no celular, seletor de arquivos no PC)
   /// e, se o usuário escolher uma, abre a tela de confirmação.
   static Future<void> iniciar(BuildContext context) async {
-    final imagem = await _escolherImagem(context);
+    final imagem = await escolherImagem(context);
 
     if (imagem == null || !context.mounted) return;
 
@@ -210,7 +210,7 @@ bool get _temCamera =>
     (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS);
 
-Future<XFile?> _escolherImagem(BuildContext context) async {
+Future<XFile?> escolherImagem(BuildContext context) async {
   ImageSource? origem = ImageSource.gallery;
 
   if (_temCamera) {
