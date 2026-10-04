@@ -17,10 +17,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class CriadorDeValoresMock implements CommandLineRunner {
 
+  // Imagens do seed: a tela usa a URL direto, e sem foto cadastrada o card
+  // cai no placeholder.
+  private static final String IMAGEM_UNIDADE =
+      "https://upload.wikimedia.org/wikipedia/commons/7/71/Capybaracropped.jpg";
+  private static final String IMAGEM_MATA =
+      "https://upload.wikimedia.org/wikipedia/commons/b/b9/The_tree_in_forest.jpg";
+  private static final String IMAGEM_CAPIVARA =
+      "https://upload.wikimedia.org/wikipedia/commons/f/fb/Lone_capybara.jpg";
+
   private final UnidadeRepository unidadeRepository;
   private final ReportRepository reportRepository;
   private final UsuarioRepository usuarioRepository;
   private final SupervisorRepository supervisorRepository;
+  private final AvisoRepository avisoRepository;
+  private final EspecieRepository especieRepository;
   private final com.example.ecoportapi.Services.CatalogoMissoes catalogoMissoes;
 
   public CriadorDeValoresMock(
@@ -28,11 +39,15 @@ public class CriadorDeValoresMock implements CommandLineRunner {
       ReportRepository reportRepository,
       UsuarioRepository usuarioRepository,
       SupervisorRepository supervisorRepository,
+      AvisoRepository avisoRepository,
+      EspecieRepository especieRepository,
       com.example.ecoportapi.Services.CatalogoMissoes catalogoMissoes) {
     this.unidadeRepository = unidadeRepository;
     this.reportRepository = reportRepository;
     this.usuarioRepository = usuarioRepository;
     this.supervisorRepository = supervisorRepository;
+    this.avisoRepository = avisoRepository;
+    this.especieRepository = especieRepository;
     this.catalogoMissoes = catalogoMissoes;
   }
 
@@ -49,6 +64,8 @@ public class CriadorDeValoresMock implements CommandLineRunner {
     unidade.setLongitude(8D);
 
     unidade.setDescricao("Gourmet");
+
+    unidade.setImagem(IMAGEM_UNIDADE);
 
     unidade.setTipoDeUnidade(TipoDeUnidade.PARQUE_NACIONAL);
     unidade.setBioma("Mata Atlântica");
@@ -246,6 +263,153 @@ public class CriadorDeValoresMock implements CommandLineRunner {
     catalogoMissoes.criarPara(usuario);
   }
 
+  private UnidadeDeConservacao primeiraUnidade() {
+    return unidadeRepository
+        .findById(1L)
+        .orElseThrow(() -> new UnidadeNaoEncontrada("Unidade Não Encontrada"));
+  }
+
+  /**
+   * Unidade que ja existia antes da coluna Imagem: sem isso ela ficaria sem
+   * foto para sempre, porque CriarUnidade so roda em banco vazio.
+   */
+  private void GarantirImagemDaUnidade() {
+    UnidadeDeConservacao unidade = primeiraUnidade();
+
+    if (unidade.getImagem() != null && !unidade.getImagem().isBlank()) {
+      return;
+    }
+
+    unidade.setImagem(IMAGEM_UNIDADE);
+    unidadeRepository.save(unidade);
+  }
+
+  private Aviso aviso(String titulo, String conteudo, LocalDateTime horario, Boolean fixo, String imagem) {
+    Aviso aviso = new Aviso();
+    aviso.setUnidade(primeiraUnidade());
+    aviso.setTitulo(titulo);
+    aviso.setConteudo(conteudo);
+    aviso.setHorarioDoAviso(horario);
+    aviso.setFixo(fixo);
+    aviso.setImagem(imagem);
+    return aviso;
+  }
+
+  /**
+   * Anuncios da unidade.
+   *
+   * Antes nao havia nenhum aviso no banco, entao a tela de anuncios e a
+   * faixa do mapa vinham vazias.
+   */
+  private void CriarAvisos() {
+    if (avisoRepository.count() > 0) {
+      return;
+    }
+
+    LocalDateTime agora = LocalDateTime.now();
+
+    avisoRepository.saveAll(List.of(
+        aviso(
+            "Trilhas reabertas",
+            "As trilhas da mata voltaram a receber visitantes depois da "
+                + "limpeza da semana passada. Continue excessive a sinalizacao.",
+            agora.minusDays(2),
+            true,
+            IMAGEM_MATA),
+        aviso(
+            "Monitoramento da qualidade da agua",
+            "A campanha de coleta de agua do mes comeca na proxima segunda. "
+                + "Os pontos de monitoramento seront sinalizados na trilha principal.",
+            agora.minusDays(6),
+            false,
+            null),
+        aviso(
+            "Campanha de-fauna",
+            "Encontro de identificacao de fauna com especialistas. As inscricoes "
+                + "ficam abertas ate o fim do mes.",
+            agora.minusDays(12),
+            false,
+            null),
+        aviso(
+            "Areas de descanso",
+            "As areas de descanso continuam fechadas para visitacao para "
+                + "proteger a nidificacao. Use as dependencias tracejadas.",
+            agora.minusDays(21),
+            false,
+            null)
+    ));
+  }
+
+  private Especie especie(String nome, String cientifico, String descricao, String imagem, TipoEspecie tipo) {
+    Especie especie = new Especie();
+    especie.setUnidade(primeiraUnidade());
+    especie.setNome(nome);
+    especie.setNomeCientifico(cientifico);
+    especie.setDescricao(descricao);
+    especie.setImagem(imagem);
+    especie.setTipo(tipo);
+    return especie;
+  }
+
+  /** Especies da unidade, para a tela de ecossistema. */
+  private void CriarEspecies() {
+    if (especieRepository.contarDaUnidade(1L) > 0) {
+      return;
+    }
+
+    especieRepository.saveAll(List.of(
+        especie(
+            "Capivara",
+            "Hydrochoerus hydrochaeris",
+            "Maior roedor do mundo, de habitos semiaquaticos. Vive em grupos "
+                + "perto de rios, lagos e areas alagadas da unidade.",
+            IMAGEM_CAPIVARA,
+            TipoEspecie.FAUNA),
+        especie(
+            "Lobo-guara",
+            "Chrysocyon brachyurus",
+            "Carnivoro endemico da América do Sul, procura alimento mainly "
+                + "em areas abertas de grama e mato.",
+            null,
+            TipoEspecie.FAUNA),
+        especie(
+            "Jaguatirica",
+            "Leopardus pardalis",
+            "Felino de porte pequeno e noturno, registrado na faixa de "
+                + "vegetacao mais densa da mata.",
+            null,
+            TipoEspecie.FAUNA),
+        especie(
+            "Araucaria",
+            "Araucaria angustifolia",
+            "Arvore simbolo da Mata Atlantica, com copas altas que marcam o "
+                + "dossel da floresta da unidade.",
+            IMAGEM_MATA,
+            TipoEspecie.FLORA),
+        especie(
+            "Ipe-amarelo",
+            "Handroanthus albus",
+            "Arvore nativa que floresce no fim do inverno e e uma das "
+                + "especies mais frecuentes na unidade.",
+            null,
+            TipoEspecie.FLORA),
+        especie(
+            "Palmeira-leque",
+            "Syagrus romanzoffiana",
+            "Palmeira comum nas areas de borda da mata, com frutos "
+                + "aproveitados pela fauna nativa.",
+            null,
+            TipoEspecie.FLORA),
+        especie(
+            "Samambaia",
+            "Pteridophyta",
+            "Vegetação que se destaca nas areas umidas e nas margens dos "
+                + "cursos d'agua da unidade.",
+            null,
+            TipoEspecie.FLORA)
+    ));
+  }
+
   @Override
   public void run(String... args) {
     CriarUnidade();
@@ -253,6 +417,9 @@ public class CriadorDeValoresMock implements CommandLineRunner {
     CriarSupervisor();
     CriarReport();
     CriarMissoes();
+    CriarAvisos();
+    CriarEspecies();
+    GarantirImagemDaUnidade();
 
     // Contas criadas antes do catalogo existir ficam sem missao.
     int preenchidas = catalogoMissoes.criarParaUsuariosSemMissao();

@@ -36,7 +36,7 @@ public class AvisoService {
                 limite,
                 Sort.by(Sort.Direction.DESC, "HorarioDoAviso")
         );
-        return avisoRepository.findByUnidadeId(unidadeId,pageable)
+        return avisoRepository.listarDaUnidade(unidadeId,pageable)
                 .getContent().stream()
                 .map(AvisoResponseDTO::new)
                 .toList();

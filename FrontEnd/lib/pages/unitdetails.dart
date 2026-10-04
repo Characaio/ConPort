@@ -23,13 +23,9 @@ class _MaisInfoState extends State<MaisInfo> {
   Unidade? unidade;
   String? erro;
 
-  // TODO: o model Unidade ainda não tem descrição nem fotos.
-  // Quando o backend expor esses campos, troque por unidade!.descricao etc.
-  static const String _descricaoPadrao =
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-      'Nunc commodo turpis leo, ut fringilla lorem posuere a. '
-      'Mauris ut tellus in justo venenatis tristique efficitur sit amet metus.';
-  static const String _imagem = 'assets/images/araraias.jpg';
+  // Descricao e foto vêm da unidade; sem foto cadastrada no banco a tela
+  // cai na imagem que já vem no app.
+  static const String _imagemPadrao = 'assets/images/araraias.jpg';
 
   @override
   void initState() {
@@ -111,9 +107,11 @@ class _MaisInfoState extends State<MaisInfo> {
 
               const SizedBox(height: 16),
 
-              const Text(
-                _descricaoPadrao,
-                style: TextStyle(fontSize: 12, height: 1.3),
+              Text(
+                u.descricao.isEmpty
+                    ? 'A unidade ainda não tem descrição cadastrada.'
+                    : u.descricao,
+                style: const TextStyle(fontSize: 12, height: 1.3),
               ),
 
               const SizedBox(height: 20),
@@ -134,7 +132,7 @@ class _MaisInfoState extends State<MaisInfo> {
                   borderRadius: BorderRadius.circular(18),
                   child: AspectRatio(
                     aspectRatio: 285 / 135,
-                    child: Image.asset(_imagem, fit: BoxFit.cover),
+                    child: _imagemDaUnidade(u.imagem),
                   ),
                 ),
               ),
@@ -246,6 +244,25 @@ class _LinhaDado extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Foto da unidade: a que veio da API, ou a do app quando não há nenhuma.
+const String _imagemPadrao = 'assets/images/araraias.jpg';
+
+Widget _imagemDaUnidade(String? imagem) {
+  final url = imagem?.trim() ?? '';
+
+  if (url.isEmpty) {
+    return Image.asset(_imagemPadrao, fit: BoxFit.cover);
+  }
+
+  return Image.network(
+    url,
+    fit: BoxFit.cover,
+    // Foto que não carrega não pode derrubar a tela inteira.
+    errorBuilder: (_, __, ___) =>
+        Image.asset(_imagemPadrao, fit: BoxFit.cover),
+  );
 }
 
 String _tipoEmTexto(TipoDeUnidade tipo) {

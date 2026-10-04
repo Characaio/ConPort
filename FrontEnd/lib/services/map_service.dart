@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:conport/config/app_config.dart';
 import 'package:conport/models/unidade_mapa.dart';
 import 'package:conport/mocks/unidade_mapa_mock.dart';
+import 'package:conport/services/aviso_service.dart';
 
 class MapService {
   const MapService();
@@ -61,10 +62,17 @@ class MapService {
     final String local =
         _montarLocal(latitude, longitude);
 
+    // Foto da unidade: o banco traz uma URL; sem ela a gaveta fica sem imagem.
+    final imagem = (data['imagem'] ?? data['Imagem'])?.toString().trim();
+
     String? aviso;
 
     try {
-      aviso = await _buscarAviso(id);
+      aviso = await const AvisoService().buscarMaisRecente(id)?.then(
+            (a) => a == null
+                ? null
+                : [a.titulo, a.texto].where((t) => t.isNotEmpty).join(': '),
+          );
     } catch (_) {
       // O mapa continua funcionando mesmo se a rota de avisos
       // estiver indisponível.
@@ -80,63 +88,8 @@ class MapService {
       horario: horario,
       descricao: descricao,
       aviso: aviso,
-      imagens: const [],
+      imagens: imagem == null || imagem.isEmpty ? const [] : [imagem],
     );
-  }
-
-  Future<String?> _buscarAviso(int unidadeId) async {
-    final url = Uri.parse(
-      '${AppConfig.apiUrl}/unidade/$unidadeId/aviso?limite=1',
-    );
-
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode != 200) {
-      return null;
-    }
-
-    final dynamic body = jsonDecode(response.body);
-
-    if (body is! List || body.isEmpty) {
-      return null;
-    }
-
-    final primeiro = body.first;
-
-    if (primeiro is! Map<String, dynamic>) {
-      return null;
-    }
-
-    final descricao =
-        primeiro['Descricao'] ??
-        primeiro['descricao'];
-
-    final titulo =
-        primeiro['Titutlo'] ??
-        primeiro['Titulo'] ??
-        primeiro['titulo'];
-
-    final tituloTexto = titulo?.toString().trim() ?? '';
-    final descricaoTexto = descricao?.toString().trim() ?? '';
-
-    if (tituloTexto.isEmpty && descricaoTexto.isEmpty) {
-      return null;
-    }
-
-    if (tituloTexto.isEmpty) {
-      return descricaoTexto;
-    }
-
-    if (descricaoTexto.isEmpty) {
-      return tituloTexto;
-    }
-
-    return '$tituloTexto: $descricaoTexto';
   }
 
   String _montarHorario(

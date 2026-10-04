@@ -683,6 +683,15 @@ class _MapState extends State<Map> {
                                     child: Image.network(
                                       _unidade!.imagens.first,
                                       fit: BoxFit.cover,
+                                      // Foto que não carrega não pode derrubar a gaveta.
+                                      errorBuilder: (_, __, ___) => Container(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHigh,
+                                        child: const Icon(
+                                          Icons.image_not_supported_outlined,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),

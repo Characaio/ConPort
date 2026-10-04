@@ -1,96 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:conport/models/especie.dart';
+import 'package:conport/services/especie_service.dart';
 import 'package:conport/widgets/topbar.dart';
 import 'package:conport/core/theme/app_theme.dart';
 
+/// Espécies registradas na unidade.
+///
+/// Os dados vêm de `GET /unidade/{unidadeId}/especies?tipo=FAUNA|FLORA`; com a
+/// API desligada o [EspecieMock] devolve a mesma lista.
 class EcossistemaPage extends StatefulWidget {
-  const EcossistemaPage({super.key});
+  final int unidadeId;
+
+  const EcossistemaPage({super.key, this.unidadeId = 1});
 
   @override
   State<EcossistemaPage> createState() => _EcossistemaPageState();
 }
 
 class _EcossistemaPageState extends State<EcossistemaPage> {
-  final List<Especie> fauna = [
-    Especie(
-      nome: 'Capivara',
-      nomeCientifico: 'Hydrochoerus hydrochaeris',
-      descricao:
-          'A capivara é o maior roedor do mundo e possui hábitos '
-          'semiaquáticos. É encontrada principalmente próxima a rios, '
-          'lagos e áreas alagadas.',
-      imagem:
-          'https://upload.wikimedia.org/wikipedia/commons/7/71/Capybaracropped.jpg',
-      tipo: TipoEspecie.fauna,
-    ),
-    Especie(
-      nome: 'Capivara',
-      nomeCientifico: 'Hydrochoerus hydrochaeris',
-      descricao:
-          'A capivara é um mamífero herbívoro que vive em grupos e '
-          'possui forte relação com ambientes próximos à água.',
-      imagem:
-          'https://upload.wikimedia.org/wikipedia/commons/7/71/Capybaracropped.jpg',
-      tipo: TipoEspecie.fauna,
-    ),
-    Especie(
-      nome: 'Capivara',
-      nomeCientifico: 'Hydrochoerus hydrochaeris',
-      descricao:
-          'É uma espécie bastante associada a áreas úmidas e ambientes '
-          'com disponibilidade de vegetação.',
-      imagem:
-          'https://upload.wikimedia.org/wikipedia/commons/7/71/Capybaracropped.jpg',
-      tipo: TipoEspecie.fauna,
-    ),
-    Especie(
-      nome: 'Capivara',
-      nomeCientifico: 'Hydrochoerus hydrochaeris',
-      descricao:
-          'Mamífero social encontrado em diferentes regiões da América '
-          'do Sul.',
-      imagem:
-          'https://upload.wikimedia.org/wikipedia/commons/f/fb/Lone_capybara.jpg',
-      tipo: TipoEspecie.fauna,
-    ),
-  ];
+  final EspecieService _especieService = const EspecieService();
 
-  final List<Especie> flora = [
-    Especie(
-      nome: 'Árvore',
-      nomeCientifico: 'Espécie arbórea',
-      descricao:
-          'Exemplo de espécie vegetal encontrada em ambientes florestais. '
-          'Os dados específicos podem posteriormente ser preenchidos '
-          'pela unidade de conservação.',
-      imagem:
-          'https://upload.wikimedia.org/wikipedia/commons/b/b9/The_tree_in_forest.jpg',
-      tipo: TipoEspecie.flora,
-    ),
-    Especie(
-      nome: 'Árvore',
-      nomeCientifico: 'Espécie arbórea',
-      descricao: 'Vegetação arbórea característica de ambientes florestais.',
-      imagem:
-          'https://upload.wikimedia.org/wikipedia/commons/b/b9/The_tree_in_forest.jpg',
-      tipo: TipoEspecie.flora,
-    ),
-    Especie(
-      nome: 'Árvore',
-      nomeCientifico: 'Espécie arbórea',
-      descricao: 'Exemplo de vegetação que pode ser cadastrada na unidade.',
-      imagem:
-          'https://upload.wikimedia.org/wikipedia/commons/b/b9/The_tree_in_forest.jpg',
-      tipo: TipoEspecie.flora,
-    ),
-    Especie(
-      nome: 'Árvore',
-      nomeCientifico: 'Espécie arbórea',
-      descricao: 'Exemplo de espécie vegetal pertencente ao ecossistema.',
-      imagem:
-          'https://upload.wikimedia.org/wikipedia/commons/b/b9/The_tree_in_forest.jpg',
-      tipo: TipoEspecie.flora,
-    ),
-  ];
+  List<Especie> fauna = [];
+  List<Especie> flora = [];
+
+  bool carregando = true;
+  String? erro;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    setState(() {
+      carregando = true;
+      erro = null;
+    });
+
+    try {
+      final lista = await Future.wait([
+        _especieService.listar(widget.unidadeId, TipoEspecie.fauna),
+        _especieService.listar(widget.unidadeId, TipoEspecie.flora),
+      ]);
+
+      if (!mounted) return;
+      setState(() {
+        fauna = lista[0];
+        flora = lista[1];
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => erro = e.toString());
+    } finally {
+      if (mounted) setState(() => carregando = false);
+    }
+  }
 
   Especie? especieSelecionada;
 
@@ -123,29 +89,7 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
                 ),
 
                 // CONTEÚDO COM SCROLL
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(28, 22, 28, 40),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildCategoria(
-                          titulo: 'Fauna',
-                          icone: Icons.pets,
-                          especies: fauna,
-                        ),
-
-                        const SizedBox(height: 28),
-
-                        _buildCategoria(
-                          titulo: 'Flora',
-                          icone: Icons.park,
-                          especies: flora,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                Expanded(child: _conteudo()),
               ],
             ),
 
@@ -211,6 +155,76 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // CONTEÚDO
+  // ==========================================
+
+  Widget _conteudo() {
+    if (carregando) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (erro != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                erro!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _carregar,
+                child: const Text('Tentar de novo'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (fauna.isEmpty && flora.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Text(
+            'A unidade ainda não cadastrou espécies.',
+            style: TextStyle(fontSize: 12),
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(28, 22, 28, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (fauna.isNotEmpty)
+            _buildCategoria(
+              titulo: 'Fauna',
+              icone: Icons.pets,
+              especies: fauna,
+            ),
+
+          if (fauna.isNotEmpty && flora.isNotEmpty)
+            const SizedBox(height: 28),
+
+          if (flora.isNotEmpty)
+            _buildCategoria(
+              titulo: 'Flora',
+              icone: Icons.park,
+              especies: flora,
+            ),
+        ],
       ),
     );
   }
@@ -288,16 +302,7 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.network(
-                especie.imagem,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: colors.surfaceContainerHigh,
-                    child: const Icon(Icons.image_not_supported, size: 40),
-                  );
-                },
-              ),
+              _imagemDaEspecie(especie, context),
 
               // Gradiente escuro inferior
               Align(
@@ -397,7 +402,7 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
           const SizedBox(height: 3),
 
           Text(
-            especie.nomeCientifico,
+            especie.nomeCientifico ?? '',
             style: TextStyle(
               color: Theme.of(
                 context,
@@ -412,7 +417,7 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
           Expanded(
             child: SingleChildScrollView(
               child: Text(
-                especie.descricao,
+                especie.descricao ?? '',
                 style: TextStyle(
                   color: Theme.of(
                     context,
@@ -431,16 +436,7 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
             child: SizedBox(
               height: 145,
               width: double.infinity,
-              child: Image.network(
-                especie.imagem,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                    child: const Icon(Icons.image_not_supported, size: 40),
-                  );
-                },
-              ),
+              child: _imagemDaEspecie(especie, context),
             ),
           ),
         ],
@@ -500,21 +496,21 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
 // MODELO
 // ==========================================
 
-enum TipoEspecie { fauna, flora }
+/// Foto da espécie: a que veio da API, ou um placeholder quando a espécie
+/// não tem foto cadastrada ou a foto não carrega.
+Widget _imagemDaEspecie(Especie especie, BuildContext context) {
+  final url = especie.imagem?.trim() ?? '';
 
-class Especie {
-  final String nome;
-  final String nomeCientifico;
-  final String descricao;
-  final String imagem;
-  final TipoEspecie tipo;
+  final semFoto = Container(
+    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+    child: const Icon(Icons.image_not_supported, size: 40),
+  );
 
-  const Especie({
-    required this.nome,
-    required this.nomeCientifico,
-    required this.descricao,
-    required this.imagem,
-    required this.tipo,
-  });
+  if (url.isEmpty) return semFoto;
+
+  return Image.network(
+    url,
+    fit: BoxFit.cover,
+    errorBuilder: (_, __, ___) => semFoto,
+  );
 }
-
