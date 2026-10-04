@@ -109,7 +109,7 @@ A expansão está dividida em diferentes frentes.
 
 # 4. Frontend
 
-## 🔵 Revamp do Frontend
+## 🟢 Revamp do Frontend
 
 O frontend deverá passar por uma reformulação significativa.
 
@@ -176,7 +176,7 @@ A intenção é fornecer informações adicionais que permitam representar melho
 
 # 6. Missões
 
-## 🔵 Expansão do sistema de Missões
+## 🟡 Expansão do sistema de Missões
 
 O sistema de Missões deverá receber novas possibilidades de interação.
 
@@ -234,7 +234,7 @@ Não está definido, neste momento, exatamente:
 
 # 8. Badges
 
-## 🔵 Sistema de Badges
+## 🟡 Sistema de Badges
 
 Está planejada a implementação de um sistema de Badges.
 
