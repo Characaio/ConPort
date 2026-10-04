@@ -42,7 +42,6 @@ class Conquistas extends ChangeNotifier {
   /// Visitantes não têm conta: no mock isso não importa (o progresso é
   /// local); com a API, o endpoint precisa de um usuário logado.
   int get _usuarioId => AuthSession.instance.usuario?.id ?? 0;
-
   /// Carrega o progresso salvo (memória no mock, servidor na API).
   Future<void> carregar() async {
     try {
@@ -86,6 +85,17 @@ class Conquistas extends ChangeNotifier {
   void reiniciar() {
     _desbloqueadas.clear();
     notifyListeners();
+  }
+
+  /// Conquistas de um usuário qualquer, fora da sessão.
+  ///
+  /// O perfil de outra pessoa precisa mostrar o progresso *dela*: antes ele
+  /// lia este singleton, que é da sessão, e todo mundo via as mesmas
+  /// conquistas. Não é um singleton justamente porque o dono do perfil
+  /// muda de tela para tela.
+  static Future<Set<TipoConquista>> deUsuario(int usuarioId) async {
+    final tipos = await ConquistaService().buscarDesbloqueadas(usuarioId);
+    return tipos.toSet();
   }
 }
 

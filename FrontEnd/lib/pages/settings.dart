@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:conport/core/notificacoes/notificacao_controller.dart';
 import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/core/settings/app_settings.dart';
+import 'package:conport/models/usuario.dart';
+import 'package:conport/services/usuarioService.dart';
 import 'package:conport/widgets/topbar.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -142,7 +145,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               icon: Icons.person_outline,
                               label: 'Editar perfil',
                               onPressed: () {
-                                PageLoader.go(context, PageLoader.profile);
+                                PageLoader.go(
+                                  context,
+                                  PageLoader.editarPerfil,
+                                );
                               },
                             ),
                             SizedBox(height: 16),
@@ -206,6 +212,9 @@ class _SettingsPageState extends State<SettingsPage> {
                           title: 'Privacidade',
                           subtitle: 'Controle o uso de seus dados',
                           children: [
+                            _VisibilidadeSeguidores(
+                              usuarioService: const UsuarioService(),
+                            ),
                             _SettingsSwitch(
                               title: 'Compartilhar localização',
                               subtitle:
@@ -476,6 +485,164 @@ class _ActionButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Quem pode abrir as listas de seguidores e de quem a pessoa segue.
+///
+/// Vai para o banco, não para o [AppSettings]: as outras chaves daqui são
+/// desta sessão e somem ao fechar o app, mas escolher quem te vê é algo que
+/// a pessoa espera que continue valendo.
+class _VisibilidadeSeguidores extends StatefulWidget {
+  final UsuarioService usuarioService;
+
+  const _VisibilidadeSeguidores({required this.usuarioService});
+
+  @override
+  State<_VisibilidadeSeguidores> createState() =>
+      _VisibilidadeSeguidoresState();
+}
+
+class _VisibilidadeSeguidoresState extends State<_VisibilidadeSeguidores> {
+  VisibilidadeSeguidores _atual = VisibilidadeSeguidores.publico;
+  bool _carregando = true;
+  bool _salvando = false;
+  String? _erro;
+
+  int? get _usuarioId => AuthSession.instance.usuario?.id;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    final id = _usuarioId;
+
+    // Sem conta não há lista para proteger: o botão some em vez de fingir
+    // que salvou alguma coisa.
+    if (id == null) {
+      setState(() => _carregando = false);
+      return;
+    }
+
+    try {
+      final usuario = await widget.usuarioService.pegarDados(id);
+
+      if (!mounted) return;
+
+      setState(() {
+        _atual = usuario.visibilidade;
+        _carregando = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _carregando = false);
+    }
+  }
+
+  Future<void> _trocar(VisibilidadeSeguidores nova) async {
+    final id = _usuarioId;
+
+    if (id == null || nova == _atual || _salvando) return;
+
+    final anterior = _atual;
+
+    // A opção muda na hora; se o servidor recusar, volta.
+    setState(() {
+      _atual = nova;
+      _salvando = true;
+      _erro = null;
+    });
+
+    try {
+      final salvo = await widget.usuarioService.atualizarVisibilidade(
+        id,
+        nova,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _atual = salvo;
+        _salvando = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _atual = anterior;
+        _salvando = false;
+        _erro = 'Não foi possível salvar essa preferência.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    if (_carregando || _usuarioId == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Quem pode ver suas listas',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            if (_salvando)
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Aplica-se a "quem sigo" e "quem me segue".',
+          style: TextStyle(fontSize: 9, color: colors.onSurfaceVariant),
+        ),
+        const SizedBox(height: 10),
+        for (final nivel in VisibilidadeSeguidores.values)
+          RadioListTile<VisibilidadeSeguidores>(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            value: nivel,
+            // ignore: deprecated_member_use
+            groupValue: _atual,
+            // ignore: deprecated_member_use
+            onChanged: _salvando ? null : (v) {
+              if (v != null) _trocar(v);
+            },
+            title: Text(nivel.rotulo, style: const TextStyle(fontSize: 11)),
+            subtitle: Text(
+              nivel.descricao,
+              style: const TextStyle(fontSize: 9),
+            ),
+          ),
+        if (_erro != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              _erro!,
+              style: TextStyle(fontSize: 9, color: colors.error),
+            ),
+          ),
+        const SizedBox(height: 8),
+        const Center(child: Icon(Symbols.lock_outline, size: 14)),
+      ],
     );
   }
 }

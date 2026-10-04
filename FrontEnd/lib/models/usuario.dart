@@ -1,6 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:conport/config/app_config.dart';
 
+/// Quem pode abrir "quem sigo" e "Quem me segue".
+///
+/// Os nomes seguem o enum do backend (`VisibilidadeSeguidores`); o que
+/// aparece na tela é [rotulo].
+enum VisibilidadeSeguidores {
+  publico,
+  soAmigos,
+  privado;
+
+  /// Nome no backend.
+  String get nome => switch (this) {
+    VisibilidadeSeguidores.publico => 'PUBLICO',
+    VisibilidadeSeguidores.soAmigos => 'SO_AMIGOS',
+    VisibilidadeSeguidores.privado => 'PRIVADO',
+  };
+
+  String get rotulo => switch (this) {
+    VisibilidadeSeguidores.publico => 'Público',
+    VisibilidadeSeguidores.soAmigos => 'Só amigos',
+    VisibilidadeSeguidores.privado => 'Privado',
+  };
+
+  String get descricao => switch (this) {
+    VisibilidadeSeguidores.publico => 'Qualquer pessoa vê suas listas.',
+    VisibilidadeSeguidores.soAmigos =>
+      'Só os seus amigos veem. Você sempre vê.',
+    VisibilidadeSeguidores.privado => 'Ninguém além de você vê.',
+  };
+
+  /// Valor desconhecido (app desatualizado) vira o mais permissivo, que é o
+  /// que toda conta tinha antes de existir essa opção.
+  static VisibilidadeSeguidores porNome(dynamic valor) {
+    final nome = valor?.toString().toUpperCase();
+
+    for (final v in VisibilidadeSeguidores.values) {
+      if (v.nome == nome) return v;
+    }
+
+    return VisibilidadeSeguidores.publico;
+  }
+}
+
 class Usuario {
   final int id;
   final String nome;
@@ -15,6 +57,15 @@ class Usuario {
   final int moedas;
   final String? username;
   final String? avatar;
+
+  /// Quem pode abrir as listas de seguidores/seguindo.
+  final VisibilidadeSeguidores visibilidade;
+
+  /// Estado do relacionamento em relação a quem está olhando o perfil. Vem
+  /// falso quando o perfil foi aberto sem `visorId` (ex.: depois do login).
+  final bool amigo;
+  final bool euSigo;
+  final bool segueMe;
   final DateTime? datacadastro;
   final int? seguidores;
   final int? seguindo;
@@ -38,6 +89,10 @@ class Usuario {
     required this.moedas,
     this.username,
     this.avatar,
+    this.visibilidade = VisibilidadeSeguidores.publico,
+    this.amigo = false,
+    this.euSigo = false,
+    this.segueMe = false,
     this.datacadastro,
     this.seguidores,
     this.seguindo,
@@ -82,7 +137,10 @@ class Usuario {
 
       email: json['Email'] ?? json['email'] ?? 'Email',
 
-      senha: json['Senha'] ?? json['senha'] ?? 'Senha',
+      // O UsuarioDTO não devolve a senha (e não deveria). Antes caía num
+      // placeholder que parecia uma senha de verdade na sessão; ausente é
+      // ausente.
+      senha: json['Senha'] ?? json['senha'],
 
       confiavel: json['Confiavel'] ?? json['confiavel'] ?? false,
 
@@ -95,6 +153,16 @@ class Usuario {
       username: json['Username'] ?? json['username'],
 
       avatar: json['Avatar'] ?? json['avatar'],
+
+      visibilidade: VisibilidadeSeguidores.porNome(
+        json['Visibilidade'] ?? json['visibilidade'],
+      ),
+
+      amigo: json['Amigo'] ?? json['amigo'] ?? false,
+
+      euSigo: json['EuSigo'] ?? json['euSigo'] ?? false,
+
+      segueMe: json['SegueMe'] ?? json['segueMe'] ?? false,
 
       datacadastro: parseDateOpcional(
         json['DataCadastro'] ?? json['dataCadastro'],

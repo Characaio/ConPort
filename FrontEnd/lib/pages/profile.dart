@@ -3,9 +3,11 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:conport/core/conquistas/conquistas.dart';
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/models/usuario.dart';
 import 'package:conport/services/usuarioService.dart';
+import 'package:conport/widgets/lista_de_pessoas.dart';
 import 'package:conport/widgets/topbar.dart';
 
 class Profile extends StatefulWidget {
@@ -25,11 +27,34 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   Usuario? usuario;
 
+  /// Progresso do usuário *observado*. Só existe quando [ _observoOutraPessoa]
+  /// é verdadeiro; no resto quem manda é [Conquistas.instance].
+  Set<TipoConquista>? conquistasDeOutro;
+
+  bool _ocupado = false;
+
+  bool get _eMeuPerfil => AuthSession.instance.usuario?.id == widget.usuarioId;
+
+  /// A tela só é de "outra pessoa" quando há alguém logado que não seja ela.
+  ///
+  /// Sem sessão não existe "eu" para confundir: o progresso da sessão é a
+  /// única coisa conhecida, e é o que esta tela sempre mostrou.
+  bool get _observoOutraPessoa {
+    final meuId = AuthSession.instance.usuario?.id;
+
+    return meuId != null && meuId != widget.usuarioId;
+  }
+
+  /// Seguir e pedir amizade só fazem sentido com alguém logado: sem sessão os
+  /// botões sumem em vez de aparecerem e não fazerem nada.
+  bool get _mostraAcoes => _observoOutraPessoa;
+
+  int? get _visorId => AuthSession.instance.usuario?.id;
+
   @override
   void initState() {
     super.initState();
     Conquistas.instance.addListener(_conquistasMudaram);
-    Conquistas.instance.carregar();
     carregarUsuario();
   }
 
@@ -43,26 +68,158 @@ class _ProfileState extends State<Profile> {
     if (mounted) setState(() {});
   }
 
-  Future<void> carregarUsuario() async {
-    final dados = await widget.usuarioService.pegarDados(widget.usuarioId);
+  Future<void> _carregarConquistas() async {
+    final tipos = await Conquistas.deUsuario(widget.usuarioId);
 
     if (!mounted) return;
 
     setState(() {
-      usuario = dados;
+      conquistasDeOutro = tipos;
     });
   }
+
+  Future<void> carregarUsuario() async {
+    try {
+      final dados = await widget.usuarioService.pegarDados(
+        widget.usuarioId,
+        visorId: _visorId,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        usuario = dados;
+      });
+
+      // Conquistas de outra pessoa: o singleton da sessão é o meu, não o
+      // dele. Sem isso todo perfil mostrava as minhas conquistas.
+      if (_observoOutraPessoa) await _carregarConquistas();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        usuario = null;
+      });
+    }
+  }
+
+  // ============================================================
+  // AÇÕES
+  // ============================================================
+
+  Future<void> _alternarSeguimento() async {
+    final u = usuario;
+    if (u == null || _visorId == null || _ocupado) return;
+
+    final estavaSeguindo = u.euSigo;
+
+    // Atualiza na hora: o botão responde ao toque, não à latência.
+    setState(() => _ocupado = true);
+
+    try {
+      if (estavaSeguindo) {
+        await widget.usuarioService.deixarDeSeguir(_visorId!, u.id);
+      } else {
+        await widget.usuarioService.seguir(_visorId!, u.id);
+      }
+
+      if (!mounted) return;
+
+      await carregarUsuario();
+
+      if (!mounted) return;
+
+      _mensagem(
+        estavaSeguindo
+            ? 'Você deixou de seguir ${u.nome}.'
+            : 'Agora você segue ${u.nome}.',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _mensagem(e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _ocupado = false);
+    }
+  }
+
+  Future<void> _pedirAmizade() async {
+    final u = usuario;
+    if (u == null || _visorId == null || _ocupado) return;
+
+    setState(() => _ocupado = true);
+
+    try {
+      await widget.usuarioService.enviarSolicitacao(_visorId!, u.id);
+
+      if (!mounted) return;
+
+      await carregarUsuario();
+
+      if (!mounted) return;
+
+      _mensagem('Solicitação enviada para ${u.nome}.');
+      await registrarConquista(context, TipoConquista.amigoAdicionado);
+    } catch (e) {
+      if (!mounted) return;
+      _mensagem(e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _ocupado = false);
+    }
+  }
+
+  void _mensagem(String texto) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(texto)));
+  }
+
+  Future<void> _abrirLista({required bool seguindo}) async {
+    final u = usuario;
+    if (u == null) return;
+
+    final pessoa = await mostrarListaDePessoas(
+      context,
+      titulo: seguindo ? 'Seguindo' : 'Seguidores',
+      usuarioId: u.id,
+      visorId: _visorId,
+      carregar: seguindo
+          ? widget.usuarioService.listarSeguindo
+          : widget.usuarioService.listarSeguidores,
+    );
+
+    if (pessoa == null || !mounted) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Profile(
+          usuarioId: pessoa.id,
+          usuarioService: widget.usuarioService,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final appColors =
-        Theme.of(context).extension<AppColors>() ?? AppColors.light;
+
     if (usuario == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: SafeArea(child: Center(child: CircularProgressIndicator())),
+      );
     }
 
     final u = usuario!;
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
+
+    final ownProfile = _eMeuPerfil;
+    final desbloqueadas = _observoOutraPessoa
+        ? (conquistasDeOutro ?? const <TipoConquista>{})
+        : Conquistas.instance.desbloqueadas;
 
     return Scaffold(
       body: SafeArea(
@@ -73,8 +230,8 @@ class _ProfileState extends State<Profile> {
               child: Topbar(
                 hasLogo: false,
                 hasReturn: true,
-                showSettings: true,
-                text: 'Perfil',
+                showSettings: ownProfile,
+                text: ownProfile ? 'Perfil' : u.nome,
               ),
             ),
 
@@ -92,7 +249,7 @@ class _ProfileState extends State<Profile> {
 
                         const SizedBox(height: 18),
 
-                        // Nome e seguidores
+                        // Nome e contadores
                         Text(
                           u.nome,
                           style: const TextStyle(
@@ -100,17 +257,29 @@ class _ProfileState extends State<Profile> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                        if (u.username != null && u.username!.isNotEmpty)
+                          Text(
+                            '@${u.username}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
                         const SizedBox(height: 2),
                         Row(
                           children: [
                             _Contador(
                               valor: u.seguindo ?? 0,
                               rotulo: 'Seguindo',
+                              // Clicável nas duas casas: o meu e o de quem
+                              // estou vendo.
+                              aoTocar: () => _abrirLista(seguindo: true),
                             ),
                             const SizedBox(width: 14),
                             _Contador(
                               valor: u.seguidores ?? 0,
                               rotulo: 'Seguidores',
+                              aoTocar: () => _abrirLista(seguindo: false),
                             ),
                           ],
                         ),
@@ -126,17 +295,19 @@ class _ProfileState extends State<Profile> {
                           style: const TextStyle(fontSize: 10),
                         ),
 
-                        const SizedBox(height: 12),
-
-                        // Adicionar amigos
-                        _BotaoPilula(
-                          icon: Symbols.group,
-                          texto: 'Adicionar Amigos',
-                          cor: appColors.accentSalmon,
-                          onPressed: () {
-                            PageLoader.go(context, PageLoader.friends);
-                          },
-                        ),
+                        if (_mostraAcoes) ...[
+                          const SizedBox(height: 16),
+                          _AcoesDoPerfil(
+                            euSigo: u.euSigo,
+                            amigo: u.amigo,
+                            ocupado: _ocupado,
+                            corSeguir: appColors.accentSalmon,
+                            corSeguindo: colors.surfaceContainerHighest,
+                            corAmigo: appColors.accentBrown,
+                            aoSeguir: _alternarSeguimento,
+                            aoPedirAmizade: _pedirAmizade,
+                          ),
+                        ],
 
                         const SizedBox(height: 18),
                         const Center(
@@ -195,12 +366,27 @@ class _ProfileState extends State<Profile> {
                         const SizedBox(height: 22),
 
                         // Conquistas
-                        const Text(
-                          'Conquistas',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        Row(
+                          children: [
+                            const Text(
+                              'Conquistas',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if (_observoOutraPessoa && conquistasDeOutro == null)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 8),
+                                child: SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 10),
 
@@ -211,8 +397,9 @@ class _ProfileState extends State<Profile> {
                             for (final conquista in Conquistas.instance.todas)
                               _Conquista(
                                 conquista: conquista,
-                                desbloqueada: Conquistas.instance
-                                    .estaDesbloqueada(conquista.tipo),
+                                desbloqueada: desbloqueadas.contains(
+                                  conquista.tipo,
+                                ),
                               ),
                           ],
                         ),
@@ -220,7 +407,7 @@ class _ProfileState extends State<Profile> {
                         const SizedBox(height: 8),
 
                         Text(
-                          '${Conquistas.instance.quantidadeDesbloqueadas} de '
+                          '${desbloqueadas.length} de '
                           '${Conquistas.instance.total} desbloqueadas',
                           style: TextStyle(
                             fontSize: 10,
@@ -228,17 +415,29 @@ class _ProfileState extends State<Profile> {
                           ),
                         ),
 
-                        const SizedBox(height: 32),
+                        if (ownProfile) ...[
+                          const SizedBox(height: 32),
 
-                        // Seus reports
-                        _BotaoPilula(
-                          icon: Symbols.flag_2,
-                          texto: 'Seus Reports',
-                          cor: appColors.accentBrown,
-                          onPressed: () {
-                            PageLoader.go(context, PageLoader.myreports);
-                          },
-                        ),
+                          // Seus reports
+                          _BotaoPilula(
+                            icon: Symbols.flag_2,
+                            texto: 'Seus Reports',
+                            cor: appColors.accentBrown,
+                            onPressed: () {
+                              PageLoader.go(context, PageLoader.myreports);
+                            },
+                          ),
+                        ] else if (_mostraAcoes) ...[
+                          const SizedBox(height: 32),
+                          _BotaoPilula(
+                            icon: Symbols.group,
+                            texto: 'Seus Amigos',
+                            cor: appColors.accentSalmon,
+                            onPressed: () {
+                              PageLoader.go(context, PageLoader.friends);
+                            },
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -255,6 +454,103 @@ class _ProfileState extends State<Profile> {
 // ============================================================
 // WIDGETS
 // ============================================================
+
+/// Seguir e adicionar amigo, lado a lado, no perfil de outra pessoa.
+class _AcoesDoPerfil extends StatelessWidget {
+  final bool euSigo;
+  final bool amigo;
+  final bool ocupado;
+  final Color corSeguir;
+  final Color corSeguindo;
+  final Color corAmigo;
+  final VoidCallback aoSeguir;
+  final VoidCallback aoPedirAmizade;
+
+  const _AcoesDoPerfil({
+    required this.euSigo,
+    required this.amigo,
+    required this.ocupado,
+    required this.corSeguir,
+    required this.corSeguindo,
+    required this.corAmigo,
+    required this.aoSeguir,
+    required this.aoPedirAmizade,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _Botao(
+            // Seguir e adicionar amigo são ações diferentes: o follow é
+            // imediato e silencioso, a amizade pede aprovação.
+            rotulo: euSigo ? 'Seguindo' : 'Seguir',
+            icone: euSigo ? Symbols.check : Symbols.person_add,
+            fundo: euSigo ? corSeguindo : corSeguir,
+            onPressed: ocupado ? null : aoSeguir,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _Botao(
+            rotulo: amigo ? 'Amigos' : 'Adicionar amigo',
+            icone: amigo ? Symbols.group : Symbols.person_add_alt,
+            fundo: amigo ? corSeguindo : corAmigo,
+            onPressed: amigo || ocupado ? null : aoPedirAmizade,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Botao extends StatelessWidget {
+  final String rotulo;
+  final IconData icone;
+  final Color fundo;
+  final VoidCallback? onPressed;
+
+  const _Botao({
+    required this.rotulo,
+    required this.icone,
+    required this.fundo,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
+    final desativado = onPressed == null;
+
+    return SizedBox(
+      height: 36,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icone, size: 16),
+        label: Text(
+          rotulo,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 11),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: fundo,
+          foregroundColor: desativado
+              ? colors.onSurfaceVariant
+              : appColors.onAccent,
+          elevation: desativado ? 0 : 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Avatar extends StatelessWidget {
   final String? url;
 
@@ -285,12 +581,13 @@ class _Avatar extends StatelessWidget {
 class _Contador extends StatelessWidget {
   final int valor;
   final String rotulo;
+  final VoidCallback? aoTocar;
 
-  const _Contador({required this.valor, required this.rotulo});
+  const _Contador({required this.valor, required this.rotulo, this.aoTocar});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final conteudo = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -299,6 +596,16 @@ class _Contador extends StatelessWidget {
         ),
         Text(rotulo, style: const TextStyle(fontSize: 7)),
       ],
+    );
+
+    if (aoTocar == null) return conteudo;
+
+    // Fica com aparência de link: o número é o alvo, mas a área toda
+    // responde, porque 11px é pequeno para o dedo.
+    return InkWell(
+      onTap: aoTocar,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(padding: const EdgeInsets.all(4), child: conteudo),
     );
   }
 }

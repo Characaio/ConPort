@@ -13,10 +13,10 @@ import 'package:conport/pages/friends.dart';
 import 'package:conport/pages/missions.dart';
 import 'package:conport/pages/rewards.dart';
 import 'package:conport/pages/settings.dart';
+import 'package:conport/pages/editar_perfil.dart';
 import 'package:conport/pages/welcome.dart';
 import 'package:conport/pages/login.dart';
 import 'package:conport/pages/register.dart';
-import 'package:conport/core/session/auth_session.dart';
 
 import 'package:conport/pages/educacao.dart';
 import 'package:conport/services/unidadeService.dart';
@@ -35,6 +35,7 @@ class PageLoader {
   static const String missions = '/missoes';
   static const String rewards = '/recompensas';
   static const String settingsPage = '/configuracoes';
+  static const String editarPerfil = '/editar-perfil';
   static const String educacao = '/educacao';
 
   // Acesso
@@ -83,6 +84,9 @@ class PageLoader {
       case settingsPage:
         return MaterialPageRoute(builder: (_) => const SettingsPage());
 
+      case editarPerfil:
+        return MaterialPageRoute(builder: (_) => _edicaoDaSessao());
+
       case educacao:
         return MaterialPageRoute(builder: (_) => const EducacaoPage());
 
@@ -110,6 +114,21 @@ class PageLoader {
     }
 
     return Profile(
+      usuarioId: usuario.id,
+      usuarioService: const UsuarioService(),
+    );
+  }
+
+  /// Editar perfil é sempre o da sessão: sem id fixo, a edição cairia na
+  /// conta errada.
+  static Widget _edicaoDaSessao() {
+    final usuario = AuthSession.instance.usuario;
+
+    if (usuario == null) {
+      return const _PrecisaLogin();
+    }
+
+    return EditarPerfilPage(
       usuarioId: usuario.id,
       usuarioService: const UsuarioService(),
     );

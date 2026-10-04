@@ -21,6 +21,19 @@ public interface RelacionamentoRepository extends JpaRepository<UsuarioRelaciona
   Optional<UsuarioRelacionamento> buscar(  @Param("seguidorId") Long seguidorId,
       @Param("seguindoId") Long seguindoId);
 
+  /**
+   * Amizade aprovada em qualquer dos dois sentidos: aceitar cria as duas
+   * linhas, então perguntar "são amigos?" precisa olhar as duas.
+   */
+  @Query("""
+          SELECT COUNT(r) > 0 FROM UsuarioRelacionamento r
+          WHERE r.Status = :status
+          AND ((r.Seguidor.Id = :a AND r.Seguindo.Id = :b)
+               OR (r.Seguidor.Id = :b AND r.Seguindo.Id = :a))
+      """)
+  boolean existeAmizade(
+      @Param("a") Long a, @Param("b") Long b, @Param("status") StatusRelacionamento status);
+
   @Query("""
           SELECT r FROM UsuarioRelacionamento r
           WHERE r.Id = :id AND r.Seguindo.Id = :seguindoId

@@ -10,6 +10,9 @@ import 'package:conport/models/conquista.dart';
 class ConquistaMock {
   ConquistaMock._();
 
+  /// Usuário que representa "eu" nos testes e no modo demonstração.
+  static const int usuarioDaSessao = 2;
+
   static const List<Conquista> todas = [
     Conquista(
       tipo: TipoConquista.reportEnviado,
@@ -43,13 +46,44 @@ class ConquistaMock {
     ),
   ];
 
-  static final Set<TipoConquista> _desbloqueadas = {};
+  /// Progresso por usuário. Sem isso todo mundo veria a mesma coisa, e o
+  /// perfil de outra pessoa mostraria as conquistas de quem está logado.
+  ///
+  /// O usuário da sessão começa vazio de propósito: o progresso dele nasce
+  /// das ações do app, não de um fixture.
+  static final Map<int, Set<TipoConquista>> _porUsuario = {
+    usuarioDaSessao: {},
+    101: {TipoConquista.avistamentoEnviado, TipoConquista.videoAssistido},
+    102: {TipoConquista.reportEnviado},
+    103: {
+      TipoConquista.reportEnviado,
+      TipoConquista.recompensaResgatada,
+      TipoConquista.avistamentoEnviado,
+    },
+  };
 
-  static List<TipoConquista> desbloqueadas() => _desbloqueadas.toList();
+  static List<TipoConquista> desbloqueadas([int usuarioId = usuarioDaSessao]) =>
+      (_porUsuario[usuarioId] ?? {}).toList();
 
   /// `true` quando a conquista estava bloqueada e passou a valer agora.
-  static bool desbloquear(TipoConquista tipo) => _desbloqueadas.add(tipo);
+  static bool desbloquear(
+    TipoConquista tipo, [
+    int usuarioId = usuarioDaSessao,
+  ]) => (_porUsuario[usuarioId] ??= {}).add(tipo);
 
   /// Volta o progresso ao início (usado nos testes).
-  static void reiniciar() => _desbloqueadas.clear();
+  static void reiniciar() {
+    _porUsuario
+      ..clear()
+      ..addAll({
+        usuarioDaSessao: {},
+        101: {TipoConquista.avistamentoEnviado, TipoConquista.videoAssistido},
+        102: {TipoConquista.reportEnviado},
+        103: {
+          TipoConquista.reportEnviado,
+          TipoConquista.recompensaResgatada,
+          TipoConquista.avistamentoEnviado,
+        },
+      });
+  }
 }

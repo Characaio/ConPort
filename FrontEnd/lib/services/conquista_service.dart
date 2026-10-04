@@ -22,7 +22,7 @@ class ConquistaService {
 
   Future<List<TipoConquista>> buscarDesbloqueadas(int usuarioId) async {
     if (!AppConfig.usarApi) {
-      return ConquistaMock.desbloqueadas();
+      return ConquistaMock.desbloqueadas(usuarioId);
     }
 
     final url = Uri.parse('$urlBase/usuarios/$usuarioId/conquistas');
@@ -52,7 +52,7 @@ class ConquistaService {
 
   Future<void> desbloquear(int usuarioId, TipoConquista tipo) async {
     if (!AppConfig.usarApi) {
-      ConquistaMock.desbloquear(tipo);
+      ConquistaMock.desbloquear(tipo, usuarioId);
       return;
     }
 

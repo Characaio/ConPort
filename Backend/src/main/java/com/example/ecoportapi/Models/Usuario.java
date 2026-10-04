@@ -1,5 +1,6 @@
 package com.example.ecoportapi.Models;
 
+import com.example.ecoportapi.Models.Enums.VisibilidadeSeguidores;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -59,6 +60,13 @@ public class Usuario {
 
   @Column(name = "Avatar", nullable = true)
   private String Avatar;
+
+  // O campo é "Visibilidade" e não "VisibilidadeSeguidores" porque esse é o
+  // nome do enum: com os dois iguais o inicializador viraria
+  // auto-referência.
+  @Enumerated(EnumType.STRING)
+  @Column(name = "Visibilidade", nullable = true)
+  private VisibilidadeSeguidores Visibilidade = VisibilidadeSeguidores.PUBLICO;
 
   @PrePersist
   void prePersist() {
@@ -185,5 +193,13 @@ public class Usuario {
 
   public void setAvatar(String avatar) {
     Avatar = avatar;
+  }
+
+  public VisibilidadeSeguidores getVisibilidade() {
+    return Visibilidade;
+  }
+
+  public void setVisibilidade(VisibilidadeSeguidores visibilidade) {
+    Visibilidade = visibilidade;
   }
 }

@@ -3,8 +3,10 @@ package com.example.ecoportapi.Controllers;
 // TRABALHAR DE MANEIRA SERIA NESSA CONTROLLER APÓS A QUARTA-FEIRA
 // sergia* ~ Cae
 
+import com.example.ecoportapi.DTOs.Request.AtualizarPerfilDTO;
 import com.example.ecoportapi.DTOs.Request.LoginDTO;
 import com.example.ecoportapi.DTOs.Request.SignupDTO;
+import com.example.ecoportapi.DTOs.Request.VisibilidadeDTO;
 import com.example.ecoportapi.Services.ReportService;
 import com.example.ecoportapi.Services.UsuarioService;
 import java.io.IOException;
@@ -25,8 +27,12 @@ public class UsuarioController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<?> PegarUsuario(@PathVariable Long id) {
-    return ResponseEntity.ok(usuarioService.pegarUsuario(id));
+  public ResponseEntity<?> PegarUsuario(
+      @PathVariable Long id, @RequestParam(required = false) Long visorId) {
+    // visorId diz de quem é o ponto de vista: é ele que define se os botões
+    // "seguir" e "adicionar amigo" aparecem ativos.
+    // ATENÇÃO: sem autenticação, o visor também vem por query string.
+    return ResponseEntity.ok(usuarioService.pegarUsuario(id, visorId));
   }
 
   /*
@@ -81,8 +87,9 @@ public class UsuarioController {
     return ResponseEntity.ok(usuarioService.buscar(usuarioId, termo));
   }
 
-  @PostMapping("/{id}/seguir/{alvoId}")
-  public ResponseEntity<?> Seguir(@PathVariable Long id, @PathVariable Long alvoId) {
+  @PostMapping("/{id}/amizade/{alvoId}")
+  public ResponseEntity<?> EnviarSolicitacao(
+      @PathVariable Long id, @PathVariable Long alvoId) {
     return usuarioService.enviarSolicitacao(id, alvoId);
   }
 
@@ -96,14 +103,64 @@ public class UsuarioController {
     return usuarioService.recusar(id, relacaoId);
   }
 
-  @DeleteMapping("/{id}/seguir/{alvoId}")
+  @DeleteMapping("/{id}/amizade/{alvoId}")
   public ResponseEntity<?> RemoverAmigo(@PathVariable Long id, @PathVariable Long alvoId) {
     return usuarioService.removerAmizade(id, alvoId);
+  }
+
+  // ============================================================
+  // SEGUIR
+  // ============================================================
+  //
+  // Estas quatro rotas são o "seguir" sem pedido. Ficaram em /seguindo para
+  // não se confundirem com o pedido de amizade, que até pouco ocupava
+  // /seguir/{alvoId}.
+
+  @PostMapping("/{id}/seguindo/{alvoId}")
+  public ResponseEntity<?> Seguir(@PathVariable Long id, @PathVariable Long alvoId) {
+    return usuarioService.seguir(id, alvoId);
+  }
+
+  @DeleteMapping("/{id}/seguindo/{alvoId}")
+  public ResponseEntity<?> DeixarDeSeguir(
+      @PathVariable Long id, @PathVariable Long alvoId) {
+    return usuarioService.deixarDeSeguir(id, alvoId);
+  }
+
+  @GetMapping("/{id}/seguindo")
+  public ResponseEntity<?> ListarSeguindo(
+      @PathVariable Long id, @RequestParam(required = false) Long visorId) {
+    return usuarioService.listarSeguindo(id, visorId);
+  }
+
+  @GetMapping("/{id}/seguidores")
+  public ResponseEntity<?> ListarSeguidores(
+      @PathVariable Long id, @RequestParam(required = false) Long visorId) {
+    return usuarioService.listarSeguidores(id, visorId);
+  }
+
+  @PutMapping("/{id}/privacidade")
+  public ResponseEntity<?> AtualizarPrivacidade(
+      @PathVariable Long id, @RequestBody VisibilidadeDTO dto) {
+    return usuarioService.atualizarVisibilidade(id, dto);
   }
 
   @PostMapping("/{id}/avatar")
   public ResponseEntity<?> AtualizarAvatar(
       @PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
     return usuarioService.atualizarAvatar(id, file);
+  }
+
+  @DeleteMapping("/{id}/avatar")
+  public ResponseEntity<?> RemoverAvatar(@PathVariable Long id) {
+    return usuarioService.removerAvatar(id);
+  }
+
+  // ATENÇÃO: sem autenticação, a edição também é pelo id da URL.
+  // Substituir pelo usuario logado quando existir token.
+  @PutMapping("/{id}")
+  public ResponseEntity<?> AtualizarPerfil(
+      @PathVariable Long id, @RequestBody AtualizarPerfilDTO dto) {
+    return usuarioService.atualizarPerfil(id, dto);
   }
 }

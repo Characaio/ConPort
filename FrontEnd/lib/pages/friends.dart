@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-import 'package:conport/core/conquistas/conquistas.dart';
 import 'package:conport/pages/profile.dart';
 import 'package:conport/services/usuarioService.dart';
 import 'package:conport/widgets/topbar.dart';
@@ -182,47 +181,28 @@ class _AmigosState extends State<Amigos> {
     _mensagem('Solicitação de ${amigo.nome} recusada.');
   }
 
-  Future<void> _adicionar() async {
-    final termo = await showDialog<String>(
+  /// Buscar usuário: abre a folha com os resultados e, ao escolher um, abre
+  /// o perfil — de lá saem os botões de seguir e adicionar amigo.
+  Future<void> _buscar() async {
+    final pessoa = await showDialog<Amigo>(
       context: context,
       barrierColor: Colors.black54,
-      builder: (_) => const _AdicionarAmigoDialog(),
+      builder: (_) => _BuscarUsuarioDialog(
+        usuarioService: widget.usuarioService,
+        usuarioId: widget.usuarioId,
+      ),
     );
 
-    if (termo == null || termo.isEmpty || !mounted) return;
+    if (pessoa == null || !mounted) return;
 
-    List<Amigo> resultados;
-
-    try {
-      resultados = await widget.usuarioService.buscar(
-        termo,
-        usuarioId: widget.usuarioId,
-      );
-    } catch (e) {
-      if (mounted) _mensagem('Não foi possível buscar.');
-      return;
-    }
-
-    if (!mounted) return;
-
-    if (resultados.isEmpty) {
-      _mensagem('Nenhum usuário encontrado para "$termo".');
-      return;
-    }
-
-    try {
-      await widget.usuarioService.enviarSolicitacao(
-        widget.usuarioId,
-        resultados.first.id,
-      );
-    } catch (e) {
-      if (mounted) _mensagem('$e');
-      return;
-    }
-
-    if (!mounted) return;
-    _mensagem('Solicitação enviada para ${resultados.first.nome}.');
-    await registrarConquista(context, TipoConquista.amigoAdicionado);
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Profile(
+          usuarioId: pessoa.id,
+          usuarioService: widget.usuarioService,
+        ),
+      ),
+    );
   }
 
   @override
@@ -322,10 +302,10 @@ class _AmigosState extends State<Amigos> {
                   const SizedBox(height: 12),
 
                   _BotaoPilula(
-                    icon: Symbols.person_add,
-                    texto: 'Adicionar Amigos',
+                    icon: Symbols.person_search,
+                    texto: 'Buscar usuário',
                     cor: appColors.accentSalmon,
-                    onPressed: _adicionar,
+                    onPressed: _buscar,
                   ),
                 ],
               ),
@@ -354,7 +334,7 @@ class _AmigosState extends State<Amigos> {
     return ListView.separated(
       padding: const EdgeInsets.only(bottom: 8),
       itemCount: filtrados.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final amigo = filtrados[index];
 
@@ -390,7 +370,7 @@ class _AmigosState extends State<Amigos> {
     return ListView.separated(
       padding: const EdgeInsets.only(bottom: 8),
       itemCount: solicitacoes.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final amigo = solicitacoes[index];
 
@@ -761,19 +741,38 @@ class _BotaoPilula extends StatelessWidget {
 }
 
 // ============================================================
-// POPUP: ADICIONAR AMIGO
+// POPUP: BUSCAR USUÁRIO
 // ============================================================
 
-class _AdicionarAmigoDialog extends StatefulWidget {
-  const _AdicionarAmigoDialog();
+/// Busca por nome ou username e mostra quem deu match.
+///
+/// Devolve a pessoa escolhida. O pedido de amizade não sai daqui: quem pede
+/// é o botão "Adicionar amigo" no perfil, que fica mais perto de quem é
+/// escolhido — e é lá que mora a diferença entre seguir e ser amigo.
+class _BuscarUsuarioDialog extends StatefulWidget {
+  final UsuarioService usuarioService;
+  final int usuarioId;
+
+  const _BuscarUsuarioDialog({
+    required this.usuarioService,
+    required this.usuarioId,
+  });
 
   @override
-  State<_AdicionarAmigoDialog> createState() => _AdicionarAmigoDialogState();
+  State<_BuscarUsuarioDialog> createState() => _BuscarUsuarioDialogState();
 }
 
-class _AdicionarAmigoDialogState extends State<_AdicionarAmigoDialog> {
+class _BuscarUsuarioDialogState extends State<_BuscarUsuarioDialog> {
   final TextEditingController _controller = TextEditingController();
+
+  List<Amigo> resultados = [];
+  bool buscando = false;
+  bool buscou = false;
   String? _erro;
+
+  /// Número da busca em curso: uma resposta lenta de um termo antigo não
+  /// pode sobrescrever os resultados do termo novo.
+  int _buscaAtual = 0;
 
   @override
   void dispose() {
@@ -781,21 +780,52 @@ class _AdicionarAmigoDialogState extends State<_AdicionarAmigoDialog> {
     super.dispose();
   }
 
-  void _enviar() {
-    final texto = _controller.text.trim();
+  Future<void> _buscar(String termo) async {
+    final id = ++_buscaAtual;
 
-    if (texto.isEmpty) {
-      setState(() => _erro = 'Digite o nome de usuário.');
+    if (termo.trim().length < 2) {
+      setState(() {
+        resultados = [];
+        buscando = false;
+        buscou = false;
+        _erro = null;
+      });
       return;
     }
 
-    Navigator.pop(context, texto);
+    setState(() {
+      buscando = true;
+      buscou = true;
+      _erro = null;
+    });
+
+    try {
+      final lista = await widget.usuarioService.buscar(
+        termo,
+        usuarioId: widget.usuarioId,
+      );
+
+      if (!mounted || id != _buscaAtual) return;
+
+      setState(() {
+        resultados = lista;
+        buscando = false;
+      });
+    } catch (_) {
+      if (!mounted || id != _buscaAtual) return;
+
+      setState(() {
+        buscando = false;
+        _erro = 'Não foi possível buscar.';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final appColors =
         Theme.of(context).extension<AppColors>() ?? AppColors.light;
+
     return Dialog(
       backgroundColor: appColors.cardBackground,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
@@ -809,27 +839,23 @@ class _AdicionarAmigoDialogState extends State<_AdicionarAmigoDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Adicionar Amigos',
+                'Buscar usuário',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 4),
               const Text(
-                'Envie uma solicitação buscando pelo username.',
+                'Pelo nome ou pelo username. Toque para abrir o perfil.',
                 style: TextStyle(fontSize: 11),
               ),
               const SizedBox(height: 14),
               TextField(
                 controller: _controller,
                 autofocus: true,
-                onChanged: (_) {
-                  if (_erro != null) setState(() => _erro = null);
-                },
-                onSubmitted: (_) => _enviar(),
+                onChanged: _buscar,
                 style: const TextStyle(fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: 'Username',
+                  hintText: 'Nome ou username',
                   hintStyle: const TextStyle(fontSize: 13),
-                  errorText: _erro,
                   prefixIcon: const Icon(Symbols.person_search, size: 20),
                   filled: true,
                   fillColor: appColors.inputBackground,
@@ -844,30 +870,155 @@ class _AdicionarAmigoDialogState extends State<_AdicionarAmigoDialog> {
                   ),
                 ),
               ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: _BotaoPilula(
-                      texto: 'Enviar',
-                      cor: const Color(0xFF5E7654),
-                      onPressed: _enviar,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _BotaoPilula(
-                      texto: 'Cancelar',
-                      cor: const Color(0xFF6B5750),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 12),
+              _resultados(),
+              const SizedBox(height: 8),
+              _BotaoPilula(
+                texto: 'Fechar',
+                cor: const Color(0xFF6B5750),
+                onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _resultados() {
+    if (_erro != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Text(_erro!, style: const TextStyle(fontSize: 12)),
+      );
+    }
+
+    if (buscando) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    if (!buscou) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Text(
+          'Digite pelo menos duas letras.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12),
+        ),
+      );
+    }
+
+    if (resultados.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Text(
+          'Nenhum usuário encontrado.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12),
+        ),
+      );
+    }
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 320),
+      child: ListView.separated(
+        shrinkWrap: true,
+        itemCount: resultados.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 8),
+        itemBuilder: (context, index) {
+          final pessoa = resultados[index];
+
+          return _CardResultado(
+            pessoa: pessoa,
+            onTap: () => Navigator.pop(context, pessoa),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Linha da busca: nome, username e nível. Sem botão de ação — a pessoa
+/// pediu uma lista para abrir perfis, não um botão de adicionar.
+class _CardResultado extends StatelessWidget {
+  final Amigo pessoa;
+  final VoidCallback onTap;
+
+  const _CardResultado({required this.pessoa, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final appColors =
+        Theme.of(context).extension<AppColors>() ?? AppColors.light;
+
+    return Material(
+      color: appColors.inputBackground,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            children: [
+              _AvatarResultado(pessoa: pessoa),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pessoa.nome,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '@${pessoa.username ?? 'sem username'} • Nível ${pessoa.nivel}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Symbols.chevron_right, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AvatarResultado extends StatelessWidget {
+  final Amigo pessoa;
+
+  const _AvatarResultado({required this.pessoa});
+
+  @override
+  Widget build(BuildContext context) {
+    final url = pessoa.avatarUrl;
+
+    return CircleAvatar(
+      radius: 18,
+      backgroundImage: url == null ? null : NetworkImage(url),
+      onBackgroundImageError: url == null ? null : (error, stackTrace) {},
+      child: url == null
+          ? const Icon(Symbols.person, size: 22, color: Colors.black)
+          : null,
     );
   }
 }

@@ -151,6 +151,33 @@ public class ImagemService {
         return new ImagemProcessada(nomeArquivo,latitude,longitude);
     }
 
+    /**
+     * Apaga um arquivo do upload-dir.
+     *
+     * <p>Usado quando uma imagem deixa de ser referenciada (avatar trocado ou
+     * removido): sem isso o disco só cresce. Nome vazio ou arquivo já ausente
+     * não são erro — o objetivo é só liberar espaço.
+     */
+    public void RemoverImagem(String nomeArquivo) {
+        if (nomeArquivo == null || nomeArquivo.isBlank()) {
+            return;
+        }
+
+        try {
+            Path caminho = diretorio.resolve(nomeArquivo).normalize();
+
+            // resolve + normalize pode sair do upload-dir com "../"; não apaga
+            // fora da pasta.
+            if (!caminho.startsWith(diretorio)) {
+                return;
+            }
+
+            Files.deleteIfExists(caminho);
+        } catch (IOException e) {
+            System.err.println("Failed to delete image: " + e.getMessage());
+        }
+    }
+
     private String obterExtensao(String nomeArquivo) {
 
         if (nomeArquivo == null || !nomeArquivo.contains(".")) {

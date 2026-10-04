@@ -28,10 +28,23 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
           WHERE u.Email = :email AND u.Senha = :senha
       """)
   boolean existePorEmailESenha(
-      @Param("email") String email, @Param("senha") String senha);
+      @Param("email") String email, @Param("senha") String senha);  // Na edicao de perfil o proprio usuario nao conta como conflito: ele pode
+  // salvar o username/e-mail que ja tem sem tomar 409.
+  @Query("""
+          SELECT COUNT(u) > 0 FROM Usuario u
+          WHERE UPPER(u.Username) = UPPER(:username) AND u.Id <> :usuarioId
+      """)
+  boolean existePorUsernameDeOutro(
+      @Param("username") String username, @Param("usuarioId") Long usuarioId);
 
-  @Query(
-      """
+  @Query("""
+          SELECT COUNT(u) > 0 FROM Usuario u
+          WHERE LOWER(u.Email) = LOWER(:email) AND u.Id <> :usuarioId
+      """)
+  boolean existePorEmailDeOutro(
+      @Param("email") String email, @Param("usuarioId") Long usuarioId);
+
+  @Query("""
           SELECT COUNT(r)
           FROM Report r
           WHERE r.Usuario.Id = :usuarioId
@@ -52,30 +65,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
           SELECT COUNT(u) > 0 FROM Usuario u
           WHERE UPPER(u.Username) = UPPER(:username)
       """)
-  boolean existePorUsername(@Param("username") String username);
+  boolean existePorUsername(@Param("username") String username);  // Seguidores/Seguindo saem de UsuarioSegueRepository: contam follow, e
+  // todo amigo é follow.
 
-  @Query(
-      """
-          SELECT COUNT(r)
-          FROM UsuarioRelacionamento r
-          WHERE r.Seguindo.Id = :usuarioId
-          AND r.Status = :status
-      """)
-  long countSeguidores(
-      @Param("usuarioId") Long usuarioId, @Param("status") StatusRelacionamento status);
-
-  @Query(
-      """
-          SELECT COUNT(r)
-          FROM UsuarioRelacionamento r
-          WHERE r.Seguidor.Id = :usuarioId
-          AND r.Status = :status
-      """)
-  long countSeguindo(
-      @Param("usuarioId") Long usuarioId, @Param("status") StatusRelacionamento status);
-
-  @Query(
-      """
+  @Query("""
           SELECT u FROM Usuario u
           WHERE u.Id <> :usuarioId
           AND (LOWER(u.Username) LIKE LOWER(CONCAT('%', :termo, '%'))
