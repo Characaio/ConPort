@@ -30,7 +30,7 @@ class ReportDetails extends StatelessWidget {
     final descricao = report.descricao;
     final comentarioRevisor = report.motivoDaNegacao;
 
-    final urgencia = _urgencia(report.tipo);
+    final urgencia = _urgencia(report.tipo, report.prioridade);
 
     final scheme = Theme.of(context).colorScheme;
     final appColors =
@@ -280,17 +280,9 @@ class ReportDetails extends StatelessWidget {
               ),
             ),
 
-            FractionallySizedBox(
-              widthFactor: value,
-              child: Container(
-                height: 4,
-                margin: const EdgeInsets.only(top: 3),
-                decoration: BoxDecoration(
-                  color: scheme.tertiary,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
+            // Animada: antes a barra aparecia já cheia, sem dar a ideia de
+            // quanto do caminho foi percorrido.
+            _BarraUrgencia(valor: value, cor: scheme.tertiary),
           ],
         ),
 
@@ -413,9 +405,21 @@ String _formatarData(DateTime data) {
   return '$dia/$mes/${data.year} $hora:$minuto';
 }
 
-/// Urgência provisória pelo tipo: o backend ainda não manda a prioridade no
-/// detalhe, então a tela mostra um valor fixo por tipo.
-double _urgencia(TipoDeIncidente tipo) {
+/// Urgência do report: usa a prioridade que o usuário escolheu no envio
+/// (BAIXA, MEDIA, ALTA, ALARMANTE). Sem ela — report antigo ou mock — cai
+/// num valor por tipo, só para a barra não ficar vazia.
+double _urgencia(TipoDeIncidente tipo, String? prioridade) {
+  switch (prioridade?.toUpperCase()) {
+    case 'BAIXA':
+      return 0.25;
+    case 'MEDIA':
+      return 0.5;
+    case 'ALTA':
+      return 0.75;
+    case 'ALARMANTE':
+      return 1;
+  }
+
   return switch (tipo) {
     TipoDeIncidente.QUEIMADA => 0.85,
     TipoDeIncidente.DESMATAMENTO => 0.7,
@@ -423,4 +427,73 @@ double _urgencia(TipoDeIncidente tipo) {
     TipoDeIncidente.ANIMAL_EXOTICO => 0.5,
     TipoDeIncidente.POLUICAO => 0.4,
   };
+}
+
+/// Barra de urgência que cresce do zero até [valor] quando a tela abre.
+class _BarraUrgencia extends StatefulWidget {
+  final double valor;
+  final Color cor;
+
+  const _BarraUrgencia({required this.valor, required this.cor});
+
+  @override
+  State<_BarraUrgencia> createState() => _BarraUrgenciaState();
+}
+
+class _BarraUrgenciaState extends State<_BarraUrgencia>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animacao;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 650),
+    );
+
+    _animacao = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    )..addListener(() => setState(() {}));
+
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(covariant _BarraUrgencia anterior) {
+    super.didUpdateWidget(anterior);
+
+    // O mesmo report reconstrói com o valorAnimationso; refaz a animação.
+    if (anterior.valor != widget.valor) {
+      _controller
+        ..reset()
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final valor = widget.valor.clamp(0.0, 1.0);
+
+    return FractionallySizedBox(
+      widthFactor: valor * _animacao.value,
+      child: Container(
+        height: 4,
+        margin: const EdgeInsets.only(top: 3),
+        decoration: BoxDecoration(
+          color: widget.cor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
 }

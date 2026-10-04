@@ -30,7 +30,7 @@ public class AvistamentoController {
         return avistamentoService.CriarAvistamento(
                 avistamentoDTO,
                 imagem,
-                id);
+                unidadeId);
     }
 
     @GetMapping()

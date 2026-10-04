@@ -71,6 +71,15 @@ class Conquistas extends ChangeNotifier {
     return conquista(tipo);
   }
 
+  /// Marca como desbloqueada sem falar com o serviço.
+  ///
+  /// Para quando a tela já esperou o desbloqueio ter dado certo: aí o erro de
+  /// rede vem depois e não pode desfazer o que a pessoa já fez na tela.
+  void marcarLocal(TipoConquista tipo) {
+    _desbloqueadas.add(tipo);
+    notifyListeners();
+  }
+
   /// Volta ao zero (usado nos testes).
   void reiniciar() {
     _desbloqueadas.clear();
@@ -87,7 +96,16 @@ Future<void> registrarConquista(
   BuildContext context,
   TipoConquista tipo,
 ) async {
-  final conquista = await Conquistas.instance.desbloquear(tipo);
+  Conquista? conquista;
+
+  try {
+    conquista = await Conquistas.instance.desbloquear(tipo);
+  } catch (e) {
+    // A conquista é um extra: se o servidor estiver fora, a ação principal
+    // (enviar report, ver vídeo…) já aconteceu e não pode virar erro na tela.
+    Conquistas.instance.marcarLocal(tipo);
+    debugPrint('CONQUISTA ERROR: $e');
+  }
 
   if (conquista == null || !context.mounted) return;
 

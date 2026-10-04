@@ -46,7 +46,7 @@ public class AvistamentoService {
     public ResponseEntity<?> CriarAvistamento(
             AvistamentoCreateDTO avistamentoDTO,
             MultipartFile imagem,
-            Long Id) throws IOException {
+            Long unidadeId) throws IOException {
         Avistamento avistamento = new Avistamento();
 
               Usuario usuario = usuarioRepository.findById(

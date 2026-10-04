@@ -103,6 +103,46 @@ void main() {
     );
   });
 
+  testWidgets('a barra de urgência do detalhe cresce até o valor', (
+    tester,
+  ) async {
+    // Regressão: a barra aparecia estática, já cheia no primeiro frame.
+    final report = ReportLista.fromJson({
+      'Id': 9,
+      'UnidadeId': 1,
+      'UnidadeNome': 'Parque Estadual',
+      'UsuarioId': 2,
+      'UsuarioNome': 'Ana Oliveira',
+      'Tipo': 'QUEIMADA',
+      'Status': 'PENDENTE',
+      'Prioridade': 'ALTA',
+      'DataDoOcorrido': '2026-03-25T16:15:20',
+      'Descricao': 'Fogo na encosta',
+      'QuantidadeAnexos': 0,
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.lightTheme, home: ReportDetails(report: report)),
+    );
+
+    // Primeiro frame: ainda não cresceu.
+    double fator() => tester
+        .widgetList<FractionallySizedBox>(find.byType(FractionallySizedBox))
+        .map((w) => w.widthFactor)
+        .firstWhere((f) => f != null)!;
+
+    expect(fator(), 0);
+
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(fator(), greaterThan(0));
+    expect(fator(), lessThan(0.75));
+
+    await tester.pumpAndSettle();
+
+    // ALTA = 3 de 4 = 0.75 da barra.
+    expect(fator(), 0.75);
+  });
+
   test('ReportLista.fromJson lê o que o backend devolve', () {
     final report = ReportLista.fromJson({
       'Id': 7,
@@ -112,6 +152,7 @@ void main() {
       'UsuarioNome': 'Ana Oliveira',
       'Tipo': 'ANIMAL_EXOTICO',
       'Status': 'PENDENTE',
+      'Prioridade': 'MEDIA',
       'DataDoOcorrido': '2026-03-25T16:15:20',
       'Descricao': 'Javali avistado',
       'Latitude': -22.9,
@@ -126,6 +167,7 @@ void main() {
     expect(report.tipo, TipoDeIncidente.ANIMAL_EXOTICO);
     expect(report.status, StatusReport.PENDNTE);
     expect(report.quantidadeAnexos, 3);
+    expect(report.prioridade, 'MEDIA');
     expect(report.supervisorNome, isNull);
     expect(report.localizacao, 'Parque Estadual');
   });

@@ -12,6 +12,7 @@ class ReportLista {
   final String usuarioNome;
   final TipoDeIncidente tipo;
   final StatusReport status;
+  final String? prioridade;
   final DateTime dataDoOcorrido;
   final String descricao;
   final double? latitude;
@@ -29,6 +30,7 @@ class ReportLista {
     required this.usuarioNome,
     required this.tipo,
     required this.status,
+    this.prioridade,
     required this.dataDoOcorrido,
     required this.descricao,
     this.latitude,
@@ -48,6 +50,7 @@ class ReportLista {
       usuarioNome: json['UsuarioNome'] ?? json['usuarioNome'] ?? '',
       tipo: ReportParser.tipo(json['Tipo'] ?? json['tipo']),
       status: ReportParser.status(json['Status'] ?? json['status']),
+      prioridade: (json['Prioridade'] ?? json['prioridade'])?.toString(),
       dataDoOcorrido: ReportParser.data(
         json['DataDoOcorrido'] ?? json['dataDoOcorrido'],
       ),

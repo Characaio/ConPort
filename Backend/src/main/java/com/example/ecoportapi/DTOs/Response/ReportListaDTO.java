@@ -1,5 +1,6 @@
 package com.example.ecoportapi.DTOs.Response;
 
+import com.example.ecoportapi.Models.Enums.ReportPrioridade;
 import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Models.Enums.TipoDeIncidente;
 import com.example.ecoportapi.Models.Report;
@@ -21,6 +22,7 @@ public record ReportListaDTO(
         String UsuarioNome,
         TipoDeIncidente Tipo,
         StatusReport Status,
+        ReportPrioridade Prioridade,
         LocalDateTime DataDoOcorrido,
         String Descricao,
         Double Latitude,
@@ -39,6 +41,8 @@ public record ReportListaDTO(
                 report.getUsuario().getNome(),
                 report.getTipo(),
                 report.getStatus(),
+                // A tela de detalhe desenha a barra de urgencia com isso.
+                report.getPrioridade(),
                 report.getDataDoOcorrido(),
                 report.getDescricao(),
                 report.getLatitude(),
