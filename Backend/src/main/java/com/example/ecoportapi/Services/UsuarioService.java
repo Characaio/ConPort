@@ -10,7 +10,6 @@ import com.example.ecoportapi.Exceptions.UsuarioNaoEncontrado;
 import com.example.ecoportapi.Models.Enums.StatusRelacionamento;
 import com.example.ecoportapi.Models.Usuario;
 import com.example.ecoportapi.Models.UsuarioRelacionamento;
-import com.example.ecoportapi.Repositories.MissaoRepository;
 import com.example.ecoportapi.Repositories.RelacionamentoRepository;
 import com.example.ecoportapi.Repositories.UsuarioRepository;
 import java.io.IOException;
@@ -25,19 +24,19 @@ import org.springframework.web.multipart.MultipartFile;
 public class UsuarioService {
 
   private final UsuarioRepository usuarioRepository;
-  private final MissaoRepository missaoRepository;
   private final RelacionamentoRepository relacionamentoRepository;
   private final ImagemService imagemService;
+  private final CatalogoMissoes catalogoMissoes;
 
   public UsuarioService(
       UsuarioRepository usuarioRepository,
-      MissaoRepository missaoRepository,
       RelacionamentoRepository relacionamentoRepository,
-      ImagemService imagemService) {
+      ImagemService imagemService,
+      CatalogoMissoes catalogoMissoes) {
     this.usuarioRepository = usuarioRepository;
-    this.missaoRepository = missaoRepository;
     this.relacionamentoRepository = relacionamentoRepository;
     this.imagemService = imagemService;
+    this.catalogoMissoes = catalogoMissoes;
   }
 
   public void CalcularReputação() {}
@@ -75,7 +74,10 @@ public class UsuarioService {
 
     usuario.setUsername(username);
     usuario.setAvatar(null);
-    usuarioRepository.save(usuario);
+    Usuario salvo = usuarioRepository.save(usuario);
+
+    // Todo usuario novo comeca com o catalogo de missoes.
+    catalogoMissoes.criarPara(salvo);
 
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }

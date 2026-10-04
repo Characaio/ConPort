@@ -65,40 +65,37 @@ class Mission {
     return Mission(
       id: json['Id'] ?? json['id'] ?? 0,
 
-      title: json['Nome'] ?? json['nome'] ?? 'Missão',
+      title: json['titulo'] ?? json['Titulo'] ?? 'Missão',
 
-      // o DTO do backend nao possui Descricao
-      // quando passar a enviar, ela será utilizada automaticamente
-      // atualmente, é utilizada mock
       description:
-          json['Descricao'] ??
           json['descricao'] ??
+          json['Descricao'] ??
           _fallbackDescription(
-            json['Nome'] ?? json['nome'] ?? '',
-            json['TipoDeMissao'] ?? json['tipoDeMissao'],
+            json['titulo'] ?? json['Titulo'] ?? '',
+            json['tipoDeMissao'] ?? json['TipoDeMissao'],
           ),
 
       type:
-          json['TipoDeMissao']?.toString() ??
           json['tipoDeMissao']?.toString() ??
+          json['TipoDeMissao']?.toString() ??
           '',
 
       status: parseStatus(
-        json['StatusDeMissao']?.toString() ??
-        json['statusDeMissao']?.toString(),
+        json['statusDeMissao']?.toString() ??
+        json['StatusDeMissao']?.toString(),
       ),
 
-      goal: json['Meta'] ?? json['meta'] ?? 1,
-      progress: json['Progresso'] ?? json['progresso'] ?? 0,
+      goal: json['meta'] ?? json['Meta'] ?? 1,
+      progress: json['progresso'] ?? json['Progresso'] ?? 0,
 
-      coinReward: json['MoedaRecompensa'] ?? json['moedaRecompensa'] ?? 0,
+      coinReward: json['moedaRecompensa'] ?? json['MoedaRecompensa'] ?? 0,
 
-      xpReward: json['XpRecompensa'] ?? json['xpRecompensa'] ?? 0,
+      xpReward: json['xpRecompensa'] ?? json['XpRecompensa'] ?? 0,
 
-      startTime: parseDate(json['TempoDeInicio'] ?? json['tempoDeInicio']),
+      startTime: parseDate(json['tempoDeInicio'] ?? json['TempoDeInicio']),
 
       closingTime: parseDate(
-        json['TempoFechamento'] ?? json['tempoFechamento'],
+        json['tempoFechamento'] ?? json['TempoFechamento'],
       ),
     );
   }

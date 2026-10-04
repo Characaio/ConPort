@@ -6,7 +6,6 @@ import 'package:conport/pages/map.dart';
 import 'package:conport/pages/home.dart';
 import 'package:conport/pages/report.dart';
 import 'package:conport/pages/listrepo.dart';
-import 'package:conport/pages/reportinfo.dart';
 import 'package:conport/pages/ecossistema.dart';
 import 'package:conport/pages/unitdetails.dart';
 import 'package:conport/pages/unitannouncements.dart';
@@ -31,7 +30,6 @@ class PageLoader {
   static const String anuncios = '/anuncios';
   static const String criarreport = '/criar-report';
   static const String myreports = '/meus-reports';
-  static const String report = '/report';
   static const String friends = '/amigos';
   static const String profile = '/profile';
   static const String missions = '/missoes';
@@ -60,9 +58,6 @@ class PageLoader {
 
       case myreports:
         return MaterialPageRoute(builder: (_) => const SeusReports());
-
-      case report:
-        return MaterialPageRoute(builder: (_) => const ReportDetails());
 
       case unit:
         return MaterialPageRoute(

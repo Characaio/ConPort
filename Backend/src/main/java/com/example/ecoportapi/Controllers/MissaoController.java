@@ -2,7 +2,6 @@ package com.example.ecoportapi.Controllers;
 
 
 import com.example.ecoportapi.DTOs.Request.ProgressoDTO;
-import com.example.ecoportapi.DTOs.Response.MissaoDTO;
 import com.example.ecoportapi.Services.MissaoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +16,16 @@ public class MissaoController {
         this.missaoService = missaoService;
     }
 
+    @GetMapping
+    public ResponseEntity<?> ListarMissoes(@RequestParam Long usuarioId){
+        // ATENÇÃO: sem autenticação, quem lista se identifica por query string.
+        // Substituir pelo usuario logado quando existir token.
+        return ResponseEntity.ok(missaoService.listarMissoes(usuarioId));
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> PegarMissão(@PathVariable Long Id){
-        return ResponseEntity.ok(missaoService.PegarMissao(Id));
+    public ResponseEntity<?> PegarMissao(@PathVariable Long id){
+        return ResponseEntity.ok(missaoService.PegarMissao(id));
     }
 
     @PostMapping("/{id}/progresso")

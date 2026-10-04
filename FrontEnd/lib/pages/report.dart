@@ -4,12 +4,14 @@ import 'dart:typed_data';
 
 import 'package:conport/core/conquistas/conquistas.dart';
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/session/auth_session.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:conport/pages/avistamento.dart';
 import 'package:conport/services/reportService.dart';
+import 'package:conport/widgets/dicas_do_tipo.dart';
 import 'package:conport/widgets/topbar.dart';
 
 class Report extends StatefulWidget {
@@ -33,6 +35,9 @@ class _ReportState extends State<Report> {
 
   /// Anexos selecionados para o report (imagens).
   final List<XFile> _anexos = [];
+
+  /// Trava o botão enquanto o report está sendo enviado.
+  bool _enviando = false;
 
   // ==========================================
   // ANEXOS
@@ -59,30 +64,57 @@ class _ReportState extends State<Report> {
   }
 
   Future<void> _enviarReport() async {
-    const int usuarioId = 2;
+    // O report precisa sair em nome de quem está logado: mandar um id fixo
+    // fazia ele não aparecer na lista de quem enviou.
+    final usuario = AuthSession.instance.usuario;
+
+    if (usuario == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Entre na sua conta para enviar um report.'),
+        ),
+      );
+      return;
+    }
+
     const int unidadeId = 1;
+
+    setState(() => _enviando = true);
+
+    // A localização vem da escolha feita na tela, se houver.
+    final local = _localSelecionado;
 
     try {
       await _reportService.postarReport(
         unidadeId: unidadeId,
-        usuarioId: usuarioId,
+        usuarioId: usuario.id,
         tipo: tipoSelecionado,
         descricao: _descricaoController.text,
-        prioridade: (urgencia * 5).round(),
+        urgencia: urgencia,
         dataDoOcorrido: DateTime.now(),
+        latitude: local?.latitude,
+        longitude: local?.longitude,
         imagens: _anexos,
       );
+
       if (!mounted) return;
 
       await registrarConquista(context, TipoConquista.reportEnviado);
+
+      if (!mounted) return;
+
+      PageLoader.go(context, PageLoader.myreports);
     } catch (e) {
       if (!mounted) return;
 
+      // Fica na tela para a pessoa corrigir, em vez de sumir com o erro.
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Erro ao enviar Report: $e')));
     } finally {
-      PageLoader.go(context, PageLoader.myreports);
+      if (mounted) {
+        setState(() => _enviando = false);
+      }
     }
   }
 
@@ -395,27 +427,28 @@ class _ReportState extends State<Report> {
 
                 DropdownMenu<String>(
                   width: double.infinity,
-                  initialSelection: 'queimada',
+                  // Os valores são os mesmos enviados ao backend.
+                  initialSelection: tipoSelecionado,
                   dropdownMenuEntries: const [
-                    DropdownMenuEntry(value: 'queimada', label: 'Queimada'),
+                    DropdownMenuEntry(value: 'QUEIMADA', label: 'Queimada'),
                     DropdownMenuEntry(
-                      value: 'animal_ferido',
+                      value: 'ANIMAL_FERIDO',
                       label: 'Animal Ferido',
                     ),
                     DropdownMenuEntry(
-                      value: 'animal_exotico',
+                      value: 'ANIMAL_EXOTICO',
                       label: 'Animal Exótico',
                     ),
-                    DropdownMenuEntry(value: 'poluicao', label: 'Poluição'),
+                    DropdownMenuEntry(value: 'POLUICAO', label: 'Poluição'),
                     DropdownMenuEntry(
-                      value: 'desmatamento',
+                      value: 'DESMATAMENTO',
                       label: 'Desmatamento',
                     ),
                   ],
                   onSelected: (value) {
                     if (value != null) {
                       setState(() {
-                        tipoSelecionado = value.toUpperCase();
+                        tipoSelecionado = value;
                       });
                     }
                   },
@@ -645,38 +678,9 @@ class _ReportState extends State<Report> {
                 const SizedBox(height: 14),
 
                 // ==========================================
-                // INFORMAÇÕES
+                // DICAS E VÍDEOS DO TIPO ESCOLHIDO
                 // ==========================================
-                const Text('Veja o que se fazer referente a queimadas:'),
-
-                const SizedBox(height: 2),
-
-                const Text(
-                  'Lorem ipsum dolor sit amet, consectetur '
-                  'adipiscing elit. Nunc commodo turpis leo, '
-                  'ut fringilla lorem posuere a. Mauris ut '
-                  'tellus in justo venenatis tristique '
-                  'efficitur sit amet metus.',
-                  style: TextStyle(fontSize: 14),
-                ),
-
-                const SizedBox(height: 8),
-
-                Container(
-                  height: 145,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade700,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.videocam_outlined,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                  ),
-                ),
+                DicasDoTipo(tipo: tipoSelecionado),
 
                 const SizedBox(height: 14),
 
@@ -687,7 +691,7 @@ class _ReportState extends State<Report> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _enviarReport,
+                        onPressed: _enviando ? null : _enviarReport,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade400,
                           foregroundColor: Colors.white,
@@ -696,7 +700,7 @@ class _ReportState extends State<Report> {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        child: const Text('Enviar'),
+                        child: Text(_enviando ? 'Enviando...' : 'Enviar'),
                       ),
                     ),
 

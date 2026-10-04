@@ -23,7 +23,27 @@ public interface ReportRepository extends JpaRepository<Report,Long> {
             @Param("usuarioId") Long usuarioId
     );
 
-    List<Report> findAllByUnidade_Id(Long unidadeId);
+    // Com o Hibernate 7 o nome derivado precisa bater com o atributo, por isso
+    // as queries de report sao explicitas.
+    @Query("""
+        SELECT r
+        FROM Report r
+        JOIN FETCH r.Usuario
+        JOIN FETCH r.Unidade
+        WHERE r.Unidade.Id = :unidadeId
+        ORDER BY r.DataDoOcorrido DESC
+    """)
+    List<Report> listarDaUnidade(@Param("unidadeId") Long unidadeId);
+
+    @Query("""
+        SELECT r
+        FROM Report r
+        JOIN FETCH r.Usuario
+        JOIN FETCH r.Unidade
+        WHERE r.Usuario.Id = :usuarioId
+        ORDER BY r.DataDoOcorrido DESC
+    """)
+    List<Report> listarDoUsuario(@Param("usuarioId") Long usuarioId);
 
     @Query("""
         SELECT COUNT(r)

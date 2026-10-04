@@ -21,19 +21,19 @@ public class CriadorDeValoresMock implements CommandLineRunner {
   private final ReportRepository reportRepository;
   private final UsuarioRepository usuarioRepository;
   private final SupervisorRepository supervisorRepository;
-  private final MissaoRepository missaoRepository;
+  private final com.example.ecoportapi.Services.CatalogoMissoes catalogoMissoes;
 
   public CriadorDeValoresMock(
       UnidadeRepository unidadeRepository,
       ReportRepository reportRepository,
       UsuarioRepository usuarioRepository,
       SupervisorRepository supervisorRepository,
-      MissaoRepository missaoRepository) {
+      com.example.ecoportapi.Services.CatalogoMissoes catalogoMissoes) {
     this.unidadeRepository = unidadeRepository;
     this.reportRepository = reportRepository;
     this.usuarioRepository = usuarioRepository;
     this.supervisorRepository = supervisorRepository;
-    this.missaoRepository = missaoRepository;
+    this.catalogoMissoes = catalogoMissoes;
   }
 
   private void CriarUnidade() {
@@ -236,95 +236,14 @@ public class CriadorDeValoresMock implements CommandLineRunner {
     return missao;
   }
 
-  @Transactional
+  /** As missoes vem do mesmo catalogo entregue no cadastro. */
   public void CriarMissoes() {
-
     Usuario usuario =
         usuarioRepository
             .findById(2L)
             .orElseThrow(() -> new UsuarioNaoEncontrado("Usuario não encontrado"));
 
-    LocalDateTime inicio = LocalDateTime.now();
-
-    // Prazo de 7 dias
-    LocalDateTime fechamento = inicio.plusDays(1);
-
-    // 2 missões de recicar
-    Missao reciclar1 =
-        criar(
-            usuario,
-            "Separar para Reciclar",
-            "Separe corretamente materiais recicláveis dos resíduos comuns e encaminhe-os para a"
-                + " coleta adequada.",
-            TipoMissao.RECICLAR,
-            5,
-            50,
-            30,
-            inicio,
-            fechamento);
-    Missao reciclar2 =
-        criar(
-            usuario,
-            "Reciclagem Consciente",
-            "Separe e encaminhe diferentes tipos de materiais recicláveis para a destinação"
-                + " correta.",
-            TipoMissao.RECICLAR,
-            10,
-            80,
-            50,
-            inicio,
-            fechamento);
-
-    // 2 missões de plantar
-    Missao plantar1 =
-        criar(
-            usuario,
-            "Plante uma Nova Vida",
-            "Plante uma muda ou cuide de uma planta, contribuindo para o aumento da vegetação.",
-            TipoMissao.PLANTAR,
-            1,
-            60,
-            40,
-            inicio,
-            fechamento);
-    Missao plantar2 =
-        criar(
-            usuario,
-            "Pequeno Bosque",
-            "Plante e cuide de novas mudas em um espaço apropriado.",
-            TipoMissao.PLANTAR,
-            3,
-            120,
-            80,
-            inicio,
-            fechamento);
-
-    // 2 missões de reutilizar
-    Missao reutilizar1 =
-        criar(
-            usuario,
-            "Dê uma Nova Utilidade",
-            "Reutilize um objeto que seria descartado, encontrando uma nova função para ele.",
-            TipoMissao.REUTILIZAR,
-            2,
-            50,
-            30,
-            inicio,
-            fechamento);
-    Missao reutilizar2 =
-        criar(
-            usuario,
-            "Menos Descarte",
-            "Encontre novas formas de utilizar objetos que normalmente seriam descartados.",
-            TipoMissao.REUTILIZAR,
-            5,
-            100,
-            70,
-            inicio,
-            fechamento);
-
-    missaoRepository.saveAll(
-        List.of(reciclar1, reciclar2, plantar1, plantar2, reutilizar1, reutilizar2));
+    catalogoMissoes.criarPara(usuario);
   }
 
   @Override
@@ -334,5 +253,12 @@ public class CriadorDeValoresMock implements CommandLineRunner {
     CriarSupervisor();
     CriarReport();
     CriarMissoes();
+
+    // Contas criadas antes do catalogo existir ficam sem missao.
+    int preenchidas = catalogoMissoes.criarParaUsuariosSemMissao();
+
+    if (preenchidas > 0) {
+      System.out.println("[mock] missoes criadas para " + preenchidas + " conta(s)");
+    }
   }
 }

@@ -5,7 +5,7 @@ package com.example.ecoportapi.Controllers;
 
 import com.example.ecoportapi.DTOs.Request.LoginDTO;
 import com.example.ecoportapi.DTOs.Request.SignupDTO;
-import com.example.ecoportapi.Services.MissaoService;
+import com.example.ecoportapi.Services.ReportService;
 import com.example.ecoportapi.Services.UsuarioService;
 import java.io.IOException;
 import org.springframework.http.ResponseEntity;
@@ -17,21 +17,16 @@ import org.springframework.web.multipart.MultipartFile;
 public class UsuarioController {
 
   private final UsuarioService usuarioService;
-  private final MissaoService missaoService;
+  private final ReportService reportService;
 
-  public UsuarioController(UsuarioService usuarioService, MissaoService missaoService) {
+  public UsuarioController(UsuarioService usuarioService, ReportService reportService) {
     this.usuarioService = usuarioService;
-    this.missaoService = missaoService;
+    this.reportService = reportService;
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<?> PegarUsuario(@PathVariable Long id) {
     return ResponseEntity.ok(usuarioService.pegarUsuario(id));
-  }
-
-  @PostMapping("/{id}/missoes/gerar")
-  public ResponseEntity<?> GerarMissoes(@PathVariable Long id) {
-    return ResponseEntity.ok(missaoService.GerarMissoes(id));
   }
 
   /*
@@ -59,6 +54,13 @@ public class UsuarioController {
   @PostMapping("/login")
   public ResponseEntity<?> Login(@RequestBody LoginDTO loginDTO) {
     return usuarioService.Login(loginDTO);
+  }
+
+  @GetMapping("/{id}/reports")
+  public ResponseEntity<?> ListarMeusReports(@PathVariable Long id) {
+    // ATENÇÃO: sem autenticação, a lista vem por id na URL.
+    // Substituir pelo usuario logado quando existir token.
+    return ResponseEntity.ok(reportService.PegarReportsDoUsuario(id));
   }
 
   @GetMapping("/{id}/amigos")

@@ -8,6 +8,33 @@ import 'package:conport/models/mission.dart';
 class MissaoService {
   final String UrlBase = AppConfig.apiUrl;
 
+  /// Lista as missões de um usuário. É o que a tela de missões usa.
+  Future<List<Mission>> listarMissoes(int usuarioId) async {
+    if (!AppConfig.usarApi) {
+      return Mission.mock;
+    }
+
+    final url = Uri.parse(
+      '$UrlBase/missoes',
+    ).replace(queryParameters: {'usuarioId': '$usuarioId'});
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+
+      return (json as List)
+          .map((e) => Mission.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    if (response.statusCode == 404) {
+      throw Exception('Usuário não encontrado.');
+    }
+
+    throw Exception('Erro ao buscar missões: ${response.statusCode}');
+  }
+
   Future<Mission> buscarMissao(int missaoId) async {
     if (!AppConfig.usarApi) {
       return Mission.mock.firstWhere(
@@ -27,20 +54,10 @@ class MissaoService {
     }
 
     if (response.statusCode == 404) {
-      throw Exception('Missao não encontrada');
+      throw Exception('Missão não encontrada.');
     }
 
-    throw Exception('Erro ao buscar Missao: ${response.statusCode}');
-  }
-
-  Future<List<Mission>> buscarMissoesDeUsuario(List<int> idMissoes) async {
-    List<Mission> missoes = [];
-
-    for (final id in idMissoes) {
-      missoes.add(await buscarMissao(id));
-    }
-
-    return missoes;
+    throw Exception('Erro ao buscar missão: ${response.statusCode}');
   }
 
   Future<Mission> progredirMissao(int missaoId, int progresso) async {
@@ -53,14 +70,27 @@ class MissaoService {
 
     final url = Uri.parse('$UrlBase/missoes/$missaoId/progresso');
 
-    final response = await http.post(url, body: {'progresso': progresso});
+    // O backend espera JSON, não form data.
+    final response = await http.post(
+      url,
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({'progresso': progresso}),
+    );
 
     if (response.statusCode == 200) {
       return Mission.fromJson(jsonDecode(response.body));
     }
 
     if (response.statusCode == 404) {
-      throw Exception('Missão não encontrada');
+      throw Exception('Missão não encontrada.');
+    }
+
+    if (response.statusCode == 409) {
+      throw Exception(
+        jsonDecode(response.body).toString().contains('concluída') == true
+            ? 'Esta missão já foi concluída.'
+            : 'Esta missão não pode mais ser avançada.',
+      );
     }
 
     throw Exception('Erro ao progredir missão: ${response.statusCode}');

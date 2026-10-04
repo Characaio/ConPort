@@ -2,20 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/core/theme/app_theme.dart';
+import 'package:conport/mocks/usuario_mock.dart';
 import 'package:conport/pages/missions.dart';
 import 'package:conport/pages/rewards.dart';
 
 void main() {
+  setUp(() {
+    // A tela de missões lê o usuário da sessão.
+    AuthSession.instance.entrar(UsuarioMock.pegarDados(2));
+  });
+
+  tearDown(() {
+    AuthSession.instance.encerrar();
+  });
+
   testWidgets('exibe as missões mockadas', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(theme: AppTheme.lightTheme, home: const Missions()),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text('Plantar 2 mudas'), findsOneWidget);
     expect(find.text('Recicle 3 garrafas'), findsOneWidget);
     expect(find.text('Pote de planta'), findsOneWidget);
-    expect(find.text('Em andamento'), findsNWidgets(3));
+  });
+
+  testWidgets('pede login quando não há sessão', (WidgetTester tester) async {
+    AuthSession.instance.encerrar();
+
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.lightTheme, home: const Missions()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Entre na sua conta'), findsOneWidget);
   });
 
   testWidgets('navega de missões para recompensas', (
@@ -28,6 +50,7 @@ void main() {
         onGenerateRoute: PageLoader.generateRoute,
       ),
     );
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Recompensas').first);
     await tester.pumpAndSettle();

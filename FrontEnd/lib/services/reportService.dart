@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:conport/config/app_config.dart';
 import 'package:conport/mocks/report_mock.dart';
 import 'package:conport/models/report.dart';
+import 'package:conport/models/report_lista.dart';
 
 class ReportService {
   final String urlBase = AppConfig.apiUrl;
@@ -31,6 +32,36 @@ class ReportService {
     }
 
     throw Exception('Erro ao buscar reports: ${response.statusCode}');
+  }
+
+  // ============================================================
+  // LISTAR MEUS REPORTS
+  // ============================================================
+
+  /// Reports enviados pelo usuário, em qualquer unidade. É o que a tela
+  /// "Seus Reports" usa: não é a lista da unidade.
+  Future<List<ReportLista>> buscarMeusReports(int usuarioId) async {
+    if (!AppConfig.usarApi) {
+      return ReportMock.buscarMeusReports();
+    }
+
+    final url = Uri.parse('$urlBase/usuarios/$usuarioId/reports');
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final lista = jsonDecode(response.body) as List;
+
+      return lista
+          .map((item) => ReportLista.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+
+    if (response.statusCode == 404) {
+      throw Exception('Usuário não encontrado.');
+    }
+
+    throw Exception('Erro ao buscar seus reports: ${response.statusCode}');
   }
 
   // ============================================================
@@ -62,7 +93,7 @@ class ReportService {
     required int usuarioId,
     required String tipo,
     required String descricao,
-    required int prioridade,
+    required double urgencia,
     required DateTime dataDoOcorrido,
     double? latitude,
     double? longitude,
@@ -88,7 +119,9 @@ class ReportService {
     final reportDTO = {
       'Tipo': tipo,
       'Descricao': descricao,
-      'Prioridade': prioridade,
+      // O backend espera o nome da prioridade, não um número: mandar o
+      // inteiro fazia o Jackson falhar e o report não era criado.
+      'Prioridade': _prioridadeDe(urgencia),
       'DataDoOcorrido': dataDoOcorrido.toIso8601String(),
       'UsuarioId': usuarioId,
     };
@@ -103,7 +136,12 @@ class ReportService {
 
     // Localização
     if (latitude != null && longitude != null) {
-      final localizacaoDTO = {'Latitude': latitude, 'Longitude': longitude};
+      // A origem é obrigatória no LocalizacaoDTO do backend.
+      final localizacaoDTO = {
+        'Latitude': latitude,
+        'Longitude': longitude,
+        'Origem': 'GPS_CELULAR',
+      };
 
       request.files.add(
         http.MultipartFile.fromString(
@@ -137,5 +175,14 @@ class ReportService {
       'Erro ao criar report: '
       '${response.statusCode} - ${response.body}',
     );
+  }
+
+  /// Converte a urgência do slider (0 a 1) no nome da prioridade que o
+  /// backend espera: BAIXA, MEDIA, ALTA ou ALARMANTE.
+  static String _prioridadeDe(double urgencia) {
+    if (urgencia < 0.25) return 'BAIXA';
+    if (urgencia < 0.5) return 'MEDIA';
+    if (urgencia < 0.75) return 'ALTA';
+    return 'ALARMANTE';
   }
 }

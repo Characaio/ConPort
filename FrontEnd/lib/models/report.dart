@@ -1,3 +1,5 @@
+import 'package:conport/models/report_lista.dart';
+
 enum TipoDeIncidente {
     QUEIMADA,
     ANIMAL_FERIDO,
@@ -45,79 +47,62 @@ class Report{
     });
 
     factory Report.fromJson(Map<String,dynamic> json){
-        TipoDeIncidente parseTipoIncidente(String? value){
-            switch(value?.toUpperCase()){
-                case 'QUEIMADA':
-                    return TipoDeIncidente.QUEIMADA;
-                case 'ANIMAL_FERIDO':
-                    return TipoDeIncidente.ANIMAL_FERIDO;
-                case 'ANIMAL_EXOTICO':
-                    return TipoDeIncidente.ANIMAL_EXOTICO;
-                case 'POLUICAO':
-                    return TipoDeIncidente.POLUICAO;
-                case 'DESMATAMENTO':
-                    return TipoDeIncidente.DESMATAMENTO;
+        // Os DTOs do backend nomeiam o tipo e o status como "Tipo"/"Status"
+        // (não "TipoDeIncidente"/"StatusReport"), e a localização vem separada
+        // em Latitude/Longitude, sem um campo "Localizacao". Ler só a grafia
+        // antiga fazia o POST do report — que responde 201 e grava tudo —
+        // estourar exceção ao ler a resposta: o report era criado, mas a tela
+        // mostrava erro em vez de ir para a lista.
+        String? texto(List<String> chaves){
+            for (final chave in chaves){
+                final valor = json[chave];
+                if (valor != null) return valor.toString();
             }
-            throw Exception("Alguma merda rolou rapaz");
+            return null;
         }
-        StatusReport parseStatusReport(String? value){
-            switch(value?.toUpperCase()){
-                case 'PENDNTE':
-                    return StatusReport.PENDNTE;
-                case 'SOB_AVALIACAO':
-                    return StatusReport.SOB_AVALIACAO;
-                case 'NEGADO':
-                    return StatusReport.NEGADO;
-                case 'EM_TRATAMENTO':
-                    return StatusReport.EM_TRATAMENTO;
-                case 'TRATADO':
-                    return StatusReport.TRATADO;
-            }
-            throw Exception("Alguma merda rolou rapaz");
-        }
-        DateTime parseDate(dynamic value) {
-          if (value == null) {
-            throw FormatException('Data não informada');
-          }
 
-          final data = DateTime.tryParse(value.toString());
+        final latitude = texto(['Latitude','latitude']);
+        final longitude = texto(['Longitude','longitude']);
 
-          if (data == null) {
-            throw FormatException('Data inválida: $value');
-          }
+        final anexos = json['ImagensAnexadas'] ?? json['imagensAnexadas'];
+        final dataDaAnalise = texto(['DataDaAnalise','dataDaAnalise']);
 
-          return data;
-        }
         return Report(
+            id: (json['Id'] ?? json['id'] ?? 0) as int,
 
-            id: json['Id'] ?? json['id'] ?? 0,
+            tipoDeIncidente: ReportParser.tipo(
+                texto(['Tipo','tipo','TipoDeIncidente','tipoDeIncidente'])),
 
-            tipoDeIncidente: parseTipoIncidente(json['TipoDeIncidente'] ?? json['tipoDeIncidente']),
+            statusReport: ReportParser.status(
+                texto(['Status','status','StatusReport','statusReport'])),
 
-            statusReport: parseStatusReport(json['StatusReport'] ?? json['statusReport']),
+            dataDoOcorrido: ReportParser.data(
+                json['DataDoOcorrido'] ?? json['dataDoOcorrido']),
 
-            dataDoOcorrido: parseDate(json['DataDoOcorrido'] ?? json['dataDoOcorrido']),
-            
-            descricao: json['Descricao'] ?? json['descricao'] ?? "vazio games",
+            descricao: texto(['Descricao','descricao']) ?? '',
 
-            localizacao: json['Localizacao'] ?? json['localizacao'] ?? "fames",
+            localizacao: texto(['Localizacao','localizacao']) ??
+                (latitude != null && longitude != null
+                    ? '$latitude, $longitude'
+                    : 'Local não informado'),
 
-            imagensAnexadas: json['ImagensAnexadas'] ?? json['imagensAnexadas'] ?? "null",
+            imagensAnexadas: anexos is List
+                ? anexos.map((e) => e.toString()).toList()
+                : null,
 
-            usuarioId: json["UsuarioId"] ?? json["usuarioId"] ?? 0,
+            usuarioId: (json['UsuarioId'] ?? json['usuarioId'] ?? 0) as int,
 
-            unidadeId: json["UnidadeId"] ?? json["unidadeId"] ?? 0,
+            unidadeId: (json['UnidadeId'] ?? json['unidadeId'] ?? 0) as int,
 
-            usuarioNome: json["UsuarioNome"] ?? json["usuarioNome"] ?? "null",
+            usuarioNome: texto(['UsuarioNome','usuarioNome']) ?? '',
 
-            unidadeNome: json["UnidadeNome"] ?? json["unidadeNome"] ?? "null",
+            unidadeNome: texto(['UnidadeNome','unidadeNome']) ?? '',
 
-            supervisorNome: json["SupervisorNome"] ?? json["supervisorNome"] ?? "null",
+            supervisorNome: texto(['SupervisorNome','supervisorNome']),
 
-            dataDaAnalise:
-                  json["DataDaAnalise"] != null || json["dataDaAnalise"] != null
-                   ? parseDate(json["DataDaAnalise"] ?? json["dataDaAnalise"])
-                    : null,
-                     );
+            dataDaAnalise: dataDaAnalise != null
+                ? ReportParser.data(dataDaAnalise)
+                : null,
+        );
     }
 }

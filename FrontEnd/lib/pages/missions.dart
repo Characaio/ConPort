@@ -2,17 +2,86 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/models/mission.dart';
+import 'package:conport/services/missaoService.dart';
 import 'package:conport/widgets/topbar.dart';
 
-class Missions extends StatelessWidget {
+class Missions extends StatefulWidget {
   const Missions({super.key});
+
+  @override
+  State<Missions> createState() => _MissionsState();
+}
+
+class _MissionsState extends State<Missions> {
+  final MissaoService _missaoService = MissaoService();
+
+  List<Mission> missions = [];
+  bool carregando = true;
+  String? erro;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    final usuario = AuthSession.instance.usuario;
+
+    if (usuario == null) {
+      setState(() {
+        erro = 'Entre na sua conta para ver suas missões.';
+        carregando = false;
+      });
+      return;
+    }
+
+    try {
+      final lista = await _missaoService.listarMissoes(usuario.id);
+      if (!mounted) return;
+      setState(() {
+        missions = lista;
+        carregando = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        erro = 'Não foi possível carregar suas missões.';
+        carregando = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final missions = Mission.mock;
+
+    if (carregando) {
+      return const Scaffold(
+        body: SafeArea(child: Center(child: CircularProgressIndicator())),
+      );
+    }
+
+    if (erro != null) {
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                erro!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final activeMissions = missions
         .where((mission) => mission.status == MissionStatus.inProgress)
         .toList();

@@ -1,4 +1,5 @@
 import 'package:conport/models/report.dart';
+import 'package:conport/models/report_lista.dart';
 
 class ReportMock {
   /// Report criado no modo mockado: nasce "pendente", igual ao que o
@@ -75,4 +76,64 @@ class ReportMock {
       ),
     ];
   }
+  /// Reports da tela "Seus Reports", no formato que o backend devolve.
+  static List<ReportLista> buscarMeusReports() {
+    return [
+      ReportLista(
+        id: 1,
+        unidadeId: 1,
+        unidadeNome: 'Parque Estadual de Exemplo',
+        usuarioId: 2,
+        usuarioNome: 'Usuário Demo',
+        tipo: TipoDeIncidente.ANIMAL_FERIDO,
+        status: StatusReport.PENDNTE,
+        dataDoOcorrido: DateTime(2025, 9, 18, 10, 30),
+        descricao: 'Animal ferido próximo à trilha principal.',
+        quantidadeAnexos: 0,
+      ),
+      ReportLista(
+        id: 2,
+        unidadeId: 1,
+        unidadeNome: 'Parque Estadual de Exemplo',
+        usuarioId: 2,
+        usuarioNome: 'Usuário Demo',
+        tipo: TipoDeIncidente.QUEIMADA,
+        status: StatusReport.SOB_AVALIACAO,
+        dataDoOcorrido: DateTime(2025, 9, 14, 15, 5),
+        descricao: 'Fogo na área de piquenique.',
+        quantidadeAnexos: 2,
+        supervisorNome: 'Supervisor Exemplo',
+      ),
+      ReportLista(
+        id: 3,
+        unidadeId: 1,
+        unidadeNome: 'Parque Estadual de Exemplo',
+        usuarioId: 2,
+        usuarioNome: 'Usuário Demo',
+        tipo: TipoDeIncidente.DESMATAMENTO,
+        status: StatusReport.TRATADO,
+        dataDoOcorrido: DateTime(2025, 9, 2, 8, 0),
+        descricao: 'Corte de árvores na entrada do parque.',
+        quantidadeAnexos: 1,
+        supervisorNome: 'Supervisor Exemplo',
+        dataDaAnalise: DateTime(2025, 9, 5),
+      ),
+      ReportLista(
+        id: 4,
+        unidadeId: 1,
+        unidadeNome: 'Parque Estadual de Exemplo',
+        usuarioId: 2,
+        usuarioNome: 'Usuário Demo',
+        tipo: TipoDeIncidente.POLUICAO,
+        status: StatusReport.NEGADO,
+        dataDoOcorrido: DateTime(2025, 8, 30, 12, 20),
+        descricao: 'Descarte irregular às margens do riacho.',
+        quantidadeAnexos: 0,
+        supervisorNome: 'Supervisor Exemplo',
+        dataDaAnalise: DateTime(2025, 9, 1),
+        motivoDaNegacao: 'Fora da área monitorada.',
+      ),
+    ];
+  }
+
 }

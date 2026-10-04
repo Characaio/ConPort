@@ -93,13 +93,13 @@ public class AvistamentoService {
 
     //METODO AINDA NÃO UTILIZADO, UTILIZAR AO CRIAR A LOGICA DE USUARIO VER SUAS COISAS
     public List<AvistamentoDTO> PegarAvistamentosDoUsaurio(Long usuarioId){
-        return avistamentoRepository.findAllByUsuario_Id(usuarioId)
+        return avistamentoRepository.listarDoUsuario(usuarioId)
                 .stream().map(AvistamentoDTO::new)
                 .toList();
     }
 
     public List<AvistamentoDTO> PegarAvistamentosDaUnidade(Long unidadeId){
-        return avistamentoRepository.findAllByUnidade_Id(unidadeId)
+        return avistamentoRepository.listarDaUnidade(unidadeId)
                 .stream().map(AvistamentoDTO::new)
                 .toList();
     }

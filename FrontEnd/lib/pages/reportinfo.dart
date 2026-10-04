@@ -1,29 +1,36 @@
 import 'package:flutter/material.dart';
+
 import 'package:conport/core/theme/app_theme.dart';
+import 'package:conport/models/report.dart';
+import 'package:conport/models/report_lista.dart';
 import 'package:conport/widgets/topbar.dart';
 
+/// Detalhe de um report enviado pelo usuário.
+///
+/// Os dados vêm do [report] que a lista entrega; não busca de novo, para a
+/// tela abrir na hora e funcionar com o que já está em memória.
 class ReportDetails extends StatelessWidget {
-  const ReportDetails({super.key});
+  final ReportLista report;
+
+  const ReportDetails({super.key, required this.report});
 
   @override
   Widget build(BuildContext context) {
-    // MOCK TEMPORÁRIO
-    const String tipo = 'Animal ferido';
-    const String local = 'Jardim Europa';
-    const String dataHora = '67/67/6767 67:67';
-    const String status = 'Resolvido';
-    const String revisor = 'Joãozinho Biologias da Silva';
-    const String dataRevisao = '69/69/6969 69:69';
+    final tipo = _tipoLabel(report.tipo);
+    final local = report.localizacao;
+    final dataHora = _formatarData(report.dataDoOcorrido);
+    final status = _statusLabel(report.status);
 
-    const String descricao =
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-        'Nunc commodo turpis leo, ut fringilla lorem posuere a. '
-        'Mauris ut tellus in justo venenatis tristique efficitur sit amet metus.';
+    // Ainda não analisado: não há revisor nem data de análise.
+    final revisor = report.supervisorNome;
+    final dataRevisao = report.dataDaAnalise == null
+        ? null
+        : _formatarData(report.dataDaAnalise!);
 
-    const double urgencia = 0.5;
+    final descricao = report.descricao;
+    final comentarioRevisor = report.motivoDaNegacao;
 
-    // Pode ser null quando não existir comentário.
-    const String? comentarioRevisor = null;
+    final urgencia = _urgencia(report.tipo);
 
     final scheme = Theme.of(context).colorScheme;
     final appColors =
@@ -39,7 +46,7 @@ class ReportDetails extends StatelessWidget {
               child: Topbar(
                 hasLogo: false,
                 hasReturn: true,
-                text: 'Criar Report',
+                text: 'Report',
               ),
             ),
 
@@ -57,7 +64,12 @@ class ReportDetails extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildHeader(context, tipo: tipo, local: local),
+                      _buildHeader(
+                        context,
+                        tipo: tipo,
+                        local: local,
+                        icone: _tipoIcon(report.tipo),
+                      ),
 
                       const SizedBox(height: 8),
 
@@ -69,23 +81,27 @@ class ReportDetails extends StatelessWidget {
 
                       const SizedBox(height: 7),
 
-                      _buildStatusLine(context, status),
+                      _buildStatusLine(context, status, report.status),
 
                       const SizedBox(height: 8),
 
                       _buildInfoLine(
                         context,
                         icon: Icons.person,
-                        text: revisor,
+                        text: revisor == null
+                            ? 'Aguardando análise de um supervisor'
+                            : 'Analisado por $revisor',
                       ),
 
-                      const SizedBox(height: 8),
+                      if (dataRevisao != null) ...[
+                        const SizedBox(height: 8),
 
-                      _buildInfoLine(
-                        context,
-                        icon: Icons.calendar_month,
-                        text: 'Revisado e aprovado em $dataRevisao',
-                      ),
+                        _buildInfoLine(
+                          context,
+                          icon: Icons.calendar_month,
+                          text: 'Analisado em $dataRevisao',
+                        ),
+                      ],
 
                       if (comentarioRevisor != null) ...[
                         const SizedBox(height: 14),
@@ -139,6 +155,7 @@ class ReportDetails extends StatelessWidget {
     BuildContext context, {
     required String tipo,
     required String local,
+    required IconData icone,
   }) {
     final scheme = Theme.of(context).colorScheme;
     final appColors =
@@ -153,7 +170,7 @@ class ReportDetails extends StatelessWidget {
             color: appColors.accentGreen,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(Icons.pets, color: scheme.onPrimary, size: 24),
+          child: Icon(icone, color: scheme.onPrimary, size: 24),
         ),
 
         const SizedBox(width: 5),
@@ -205,17 +222,36 @@ class ReportDetails extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusLine(BuildContext context, String status) {
+  Widget _buildStatusLine(
+    BuildContext context,
+    String status,
+    StatusReport reportStatus,
+  ) {
     final colors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
+
+    final cor = switch (reportStatus) {
+      StatusReport.PENDNTE || StatusReport.SOB_AVALIACAO => colors.statusPending,
+      StatusReport.EM_TRATAMENTO => colors.statusInProgress,
+      StatusReport.TRATADO => colors.statusTreated,
+      StatusReport.NEGADO => colors.statusDenied,
+    };
+
+    final icone = switch (reportStatus) {
+      StatusReport.PENDNTE || StatusReport.SOB_AVALIACAO => Icons.more_horiz,
+      StatusReport.EM_TRATAMENTO => Icons.autorenew,
+      StatusReport.TRATADO => Icons.check_circle,
+      StatusReport.NEGADO => Icons.cancel,
+    };
+
     return Row(
       children: [
-        Icon(Icons.check_circle, size: 14, color: colors.statusTreated),
+        Icon(icone, size: 14, color: cor),
 
         const SizedBox(width: 5),
 
         Text(
           status,
-          style: TextStyle(fontSize: 11, color: colors.statusTreated),
+          style: TextStyle(fontSize: 11, color: cor),
         ),
       ],
     );
@@ -333,4 +369,58 @@ class ReportDetails extends StatelessWidget {
       ],
     );
   }
+}
+
+// ============================================================
+// FORMATADORES
+// ============================================================
+
+String _tipoLabel(TipoDeIncidente tipo) {
+  return switch (tipo) {
+    TipoDeIncidente.QUEIMADA => 'Queimada',
+    TipoDeIncidente.ANIMAL_FERIDO => 'Animal ferido',
+    TipoDeIncidente.ANIMAL_EXOTICO => 'Animal exótico',
+    TipoDeIncidente.POLUICAO => 'Poluição',
+    TipoDeIncidente.DESMATAMENTO => 'Desmatamento',
+  };
+}
+
+IconData _tipoIcon(TipoDeIncidente tipo) {
+  return switch (tipo) {
+    TipoDeIncidente.QUEIMADA => Icons.local_fire_department,
+    TipoDeIncidente.ANIMAL_FERIDO => Icons.pets,
+    TipoDeIncidente.ANIMAL_EXOTICO => Icons.cruelty_free,
+    TipoDeIncidente.POLUICAO => Icons.water_drop,
+    TipoDeIncidente.DESMATAMENTO => Icons.forest,
+  };
+}
+
+String _statusLabel(StatusReport status) {
+  return switch (status) {
+    StatusReport.PENDNTE => 'Pendente',
+    StatusReport.SOB_AVALIACAO => 'Sob avaliação',
+    StatusReport.EM_TRATAMENTO => 'Em tratamento',
+    StatusReport.TRATADO => 'Tratado',
+    StatusReport.NEGADO => 'Negado',
+  };
+}
+
+String _formatarData(DateTime data) {
+  final dia = data.day.toString().padLeft(2, '0');
+  final mes = data.month.toString().padLeft(2, '0');
+  final hora = data.hour.toString().padLeft(2, '0');
+  final minuto = data.minute.toString().padLeft(2, '0');
+  return '$dia/$mes/${data.year} $hora:$minuto';
+}
+
+/// Urgência provisória pelo tipo: o backend ainda não manda a prioridade no
+/// detalhe, então a tela mostra um valor fixo por tipo.
+double _urgencia(TipoDeIncidente tipo) {
+  return switch (tipo) {
+    TipoDeIncidente.QUEIMADA => 0.85,
+    TipoDeIncidente.DESMATAMENTO => 0.7,
+    TipoDeIncidente.ANIMAL_FERIDO => 0.6,
+    TipoDeIncidente.ANIMAL_EXOTICO => 0.5,
+    TipoDeIncidente.POLUICAO => 0.4,
+  };
 }
