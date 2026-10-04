@@ -11,26 +11,40 @@ import 'package:conport/widgets/topbar.dart';
 
 class AvistamentoPage extends StatefulWidget {
   final XFile imagem;
+  final int unidadeId;
+  final int usuarioId;
   final AvistamentoService service;
 
   const AvistamentoPage({
     super.key,
     required this.imagem,
+    required this.unidadeId,
+    required this.usuarioId,
     this.service = const AvistamentoService(),
   });
 
   /// Ponto de entrada: chame isto no clique do botão "Enviar Avistamento".
   /// Pede a imagem (câmera/galeria no celular, seletor de arquivos no PC)
   /// e, se o usuário escolher uma, abre a tela de confirmação.
-  static Future<void> iniciar(BuildContext context) async {
-    final imagem = await escolherImagem(context);
+        static Future<void> iniciar(
+          BuildContext context, {
+          required int unidadeId,
+          required int usuarioId,
+        }) async {
+          final imagem = await escolherImagem(context);
 
-    if (imagem == null || !context.mounted) return;
+          if (imagem == null || !context.mounted) return;
 
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => AvistamentoPage(imagem: imagem)));
-  }
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => AvistamentoPage(
+                imagem: imagem,
+                unidadeId: unidadeId,
+                usuarioId: usuarioId,
+              ),
+            ),
+          );
+        }
 
   @override
   State<AvistamentoPage> createState() => _AvistamentoPageState();
@@ -60,7 +74,11 @@ class _AvistamentoPageState extends State<AvistamentoPage> {
     final navigator = Navigator.of(context);
 
     try {
-      await widget.service.enviar(widget.imagem);
+      await widget.service.enviar(
+        imagem:widget.imagem,
+        unidadeId: widget.unidadeId,
+        usuarioId: widget.usuarioId,
+        );
 
       messenger.showSnackBar(
         const SnackBar(content: Text('Avistamento enviado!')),

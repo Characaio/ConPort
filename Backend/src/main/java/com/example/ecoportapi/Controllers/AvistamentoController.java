@@ -25,7 +25,7 @@ public class AvistamentoController {
     public ResponseEntity<?> CriarAvistamento(
             @RequestPart(value="avistamentoDTO") AvistamentoCreateDTO avistamentoDTO,
             @RequestPart(value="imagem") MultipartFile imagem,
-            @PathVariable Long id
+            @PathVariable Long unidadeId
     ) throws IOException {
         return avistamentoService.CriarAvistamento(
                 avistamentoDTO,

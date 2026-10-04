@@ -6,5 +6,6 @@ public record AvistamentoCreateDTO(
     Double Longitude,
     Double Latitude,
     LocalizacaoOrigem Origem,
-    Long UnidadeId
+    Long UnidadeId,
+    Long UsuarioId
 ) {}

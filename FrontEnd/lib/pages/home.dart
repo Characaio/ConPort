@@ -1,13 +1,16 @@
-import 'package:conport/widgets/home/footer.dart';
-import 'package:conport/widgets/mapembed.dart';
-import 'package:conport/widgets/topbar.dart';
-import 'package:conport/widgets/home/homecard.dart';
+import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:conport/core/session/auth_session.dart';
-import 'package:conport/pages/avistamento.dart';
-import 'package:material_symbols_icons/symbols.dart';
-import 'package:flutter/material.dart';
 import 'package:conport/core/theme/app_theme.dart';
+
+import 'package:conport/pages/avistamento.dart';
+
+import 'package:conport/widgets/home/footer.dart';
+import 'package:conport/widgets/home/homecard.dart';
+import 'package:conport/widgets/mapembed.dart';
+import 'package:conport/widgets/topbar.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -15,38 +18,50 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+
     final appColors =
         Theme.of(context).extension<AppColors>() ?? AppColors.light;
+
     // Visitantes não têm nome de conta.
     final nome = AuthSession.instance.usuario?.nome ?? 'Visitante';
+
     return Scaffold(
-      // O inset inferior pertence ao rodapé: o Scaffold já dimensiona o
-      // body acima do bottomNavigationBar, e o Footer aplica o seu
-      // próprio SafeArea para não invadir o home indicator.
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsetsGeometry.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               spacing: 4.0,
               children: [
-                Topbar(hasLogo: true, hasReturn: false, text: ''),
+                Topbar(
+                  hasLogo: true,
+                  hasReturn: false,
+                  text: '',
+                ),
+
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: 1,
                   children: [
-                    Text("Olá,", style: TextStyle(fontSize: 20)),
+                    const Text(
+                      'Olá,',
+                      style: TextStyle(fontSize: 20),
+                    ),
                     Text(
-                      "$nome!",
-                      style: TextStyle(
+                      '$nome!',
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
+
+                // ========================================================
+                // MAPA
+                // ========================================================
 
                 Container(
                   decoration: BoxDecoration(
@@ -57,7 +72,7 @@ class Home extends StatelessWidget {
                         color: colors.onSurface.withValues(alpha: 0.5),
                         spreadRadius: 1,
                         blurRadius: 10,
-                        offset: Offset(0, 5),
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
@@ -76,10 +91,11 @@ class Home extends StatelessWidget {
                             fit: StackFit.expand,
                             children: [
                               MapEmbed(),
+
                               DecoratedBox(
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
-                                    begin: Alignment(0, 0.4),
+                                    begin: const Alignment(0, 0.4),
                                     end: Alignment.bottomCenter,
                                     colors: [
                                       Colors.transparent,
@@ -88,14 +104,15 @@ class Home extends StatelessWidget {
                                   ),
                                 ),
                               ),
+
                               Padding(
-                                padding: EdgeInsets.all(16.0),
+                                padding: const EdgeInsets.all(16.0),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     Text(
-                                      "Mapa",
+                                      'Mapa',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500,
@@ -118,7 +135,12 @@ class Home extends StatelessWidget {
                   ),
                 ),
 
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
+
+                // ========================================================
+                // CARDS PRINCIPAIS
+                // ========================================================
+
                 LayoutBuilder(
                   builder: (context, constraints) {
                     return SizedBox(
@@ -131,7 +153,7 @@ class Home extends StatelessWidget {
                             flex: 5,
                             child: HomeCard(
                               icon: Symbols.flag,
-                              text: "Criar Report",
+                              text: 'Criar Report',
                               color: appColors.accentBrown,
                               pagina: PageLoader.criarreport,
                             ),
@@ -144,22 +166,48 @@ class Home extends StatelessWidget {
                             child: Column(
                               spacing: 6,
                               children: [
+                                // ==================================================
+                                // ENVIAR AVISTAMENTO
+                                // ==================================================
+
                                 Expanded(
                                   child: HomeCard(
                                     icon: Symbols.remove_red_eye,
-                                    text: "Enviar Avistamento",
+                                    text: 'Enviar Avistamento',
                                     color: appColors.accentGreen,
-                                    onTap: () =>
-                                        AvistamentoPage.iniciar(context),
+                                    onTap: () {
+                                      final usuario =
+                                          AuthSession.instance.usuario;
+
+                                      if (usuario == null) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Você precisa estar logado para enviar um avistamento.',
+                                            ),
+                                          ),
+                                        );
+                                        return;
+                                      }
+
+                                      AvistamentoPage.iniciar(
+                                        context,
+                                        unidadeId: 1,
+                                        usuarioId: usuario.id,
+                                      );
+                                    },
                                   ),
                                 ),
 
-                                const SizedBox(height: 8),
+                                // ==================================================
+                                // AMIGOS
+                                // ==================================================
 
                                 Expanded(
                                   child: HomeCard(
                                     icon: Symbols.people,
-                                    text: "Seus Amigos",
+                                    text: 'Seus Amigos',
                                     color: appColors.accentSalmon,
                                     pagina: PageLoader.friends,
                                   ),
@@ -172,13 +220,28 @@ class Home extends StatelessWidget {
                     );
                   },
                 ),
-                SizedBox(height: 4),
-                Center(child: SizedBox(width: 150, child: Divider())),
+
+                const SizedBox(height: 4),
+
+                const Center(
+                  child: SizedBox(
+                    width: 150,
+                    child: Divider(),
+                  ),
+                ),
+
                 const SizedBox(height: 16),
 
-                Text(
-                  "Continue sua Trilha",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                // ========================================================
+                // TRILHA
+                // ========================================================
+
+                const Text(
+                  'Continue sua Trilha',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
 
                 const SizedBox(height: 8),
@@ -189,11 +252,11 @@ class Home extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.black,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         spreadRadius: 1,
                         blurRadius: 10,
-                        offset: const Offset(0, 5),
+                        offset: Offset(0, 5),
                       ),
                     ],
                   ),
@@ -219,7 +282,7 @@ class Home extends StatelessWidget {
                           left: 16,
                           bottom: 12,
                           child: Text(
-                            "Continue assistindo",
+                            'Continue assistindo',
                             style: TextStyle(
                               color: colors.onSurface,
                               fontSize: 14,
@@ -235,7 +298,11 @@ class Home extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: const SafeArea(top: false, child: Footer()),
+
+      bottomNavigationBar: const SafeArea(
+        top: false,
+        child: Footer(),
+      ),
     );
   }
 }

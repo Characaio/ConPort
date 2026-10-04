@@ -17,6 +17,7 @@ import 'package:conport/pages/settings.dart';
 import 'package:conport/pages/welcome.dart';
 import 'package:conport/pages/login.dart';
 import 'package:conport/pages/register.dart';
+import 'package:conport/core/session/auth_session.dart';
 
 import 'package:conport/pages/educacao.dart';
 import 'package:conport/services/unidadeService.dart';

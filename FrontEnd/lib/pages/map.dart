@@ -674,17 +674,18 @@ class _MapState extends State<Map> {
                               // =================================================
                               // IMAGEM
                               // =================================================
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(14),
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  height: 250,
-                                  child: Image.network(
-                                    _unidade?.imagens.first ?? '',
-                                    fit: BoxFit.cover,
+                             if (_unidade != null && _unidade!.imagens.isNotEmpty)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    height: 250,
+                                    child: Image.network(
+                                      _unidade!.imagens.first,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
-                              ),
 
                               const SizedBox(height: 20),
                             ],

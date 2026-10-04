@@ -49,13 +49,15 @@ public class AvistamentoService {
             Long Id) throws IOException {
         Avistamento avistamento = new Avistamento();
 
-        Usuario usuario = usuarioRepository.findById(Id)
-            .orElseThrow(
-                    () -> new UsuarioNaoEncontrado("Usuario não encontrada")
+              Usuario usuario = usuarioRepository.findById(
+                avistamentoDTO.UsuarioId()
+            ).orElseThrow(
+                () -> new UsuarioNaoEncontrado("Usuario não encontrado")
             );
-        UnidadeDeConservacao unidade = unidadeRepository.findById(Id)
-            .orElseThrow(
-                    () -> new UnidadeNaoEncontrada("Unidade não encontrada")
+              UnidadeDeConservacao unidade = unidadeRepository.findById(
+                unidadeId
+            ).orElseThrow(
+                () -> new UnidadeNaoEncontrada("Unidade não encontrada")
             );
 
         ImagemProcessada imagemAnexada = imagemService.SalvarImagem(imagem);

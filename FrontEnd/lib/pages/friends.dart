@@ -127,8 +127,7 @@ class _AmigosState extends State<Amigos> {
     );
 
     if (confirmou != true || !mounted) return;
-    if (confirmou != true || !mounted) return;
-
+    
     try {
       await widget.usuarioService.remover(widget.usuarioId, amigo.id);
     } catch (e) {
@@ -366,8 +365,10 @@ class _AmigosState extends State<Amigos> {
             switch (acao) {
               case _AcaoAmigo.perfil:
                 _verPerfil(amigo);
+                break;
               case _AcaoAmigo.remover:
                 _remover(amigo);
+                break;
             }
           },
         );
