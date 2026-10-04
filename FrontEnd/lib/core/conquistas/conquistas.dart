@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'package:conport/core/notificacoes/notificacao_controller.dart';
 import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/mocks/conquista_mock.dart';
 import 'package:conport/models/conquista.dart';
 import 'package:conport/services/conquista_service.dart';
+import 'package:conport/services/notificacaoService.dart';
 
 // Reexporta o model para as telas só precisarem importar este arquivo.
 export 'package:conport/models/conquista.dart';
@@ -88,7 +90,7 @@ class Conquistas extends ChangeNotifier {
 }
 
 /// Registra a ação no sistema de conquistas e, se algo novo foi
-/// desbloqueado, mostra o aviso na tela.
+/// desbloqueado, mostra o aviso na tela e cria a notificação do sino.
 ///
 /// Chame depois da ação dar certo:
 /// await registrarConquista(context, TipoConquista.reportEnviado);
@@ -108,6 +110,10 @@ Future<void> registrarConquista(
   }
 
   if (conquista == null || !context.mounted) return;
+
+  // Só o app sabe o título da conquista ("Alerta!"), então é daqui que sai a
+  // notificação; as de cadastro e amizade nascem no backend.
+  _notificarConquista(conquista);
 
   final appColors = Theme.of(context).extension<AppColors>() ?? AppColors.light;
 
@@ -133,4 +139,29 @@ Future<void> registrarConquista(
       ),
     ),
   );
+}
+
+/// Cria a notificação do sino para a conquista liberada e recarrega a lista,
+/// para o número do sino já aparecer atualizado sem precisar abrir o popup.
+///
+/// Só o app sabe o texto da conquista ("Alerta!"), então é daqui que sai esta
+/// notificação; as de cadastro e amizade nascem no backend.
+Future<void> _notificarConquista(Conquista conquista) async {
+  final usuarioId = AuthSession.instance.usuario?.id ?? 0;
+
+  if (usuarioId == 0) return;
+
+  try {
+    await NotificacaoService().criar(
+      usuarioId,
+      titulo: 'Conquista desbloqueada!',
+      texto: '${conquista.titulo}: ${conquista.descricao}',
+    );
+
+    await NotificacaoController.instance.carregar();
+  } catch (e) {
+    // Sem notificação a conquista continua valendo; só o sino não avisa, e
+    // isso não pode virar erro na tela de quem acabou de enviar um report.
+    debugPrint('NOTIFICACAO CONQUISTA ERROR: $e');
+  }
 }

@@ -138,13 +138,20 @@ class NotificacaoService {
   // ============================================================
 
   /// Cria uma notificação para o usuário.
+  ///
+  /// Usada pelo app só para a conquista: os avisos de cadastro, solicitação e
+  /// amizade nascem no backend, que é quem tem os dois lados do evento.
   Future<Notificacao> criar(
     int usuarioId, {
     required String titulo,
     required String texto,
   }) async {
+    if (usuarioId == 0) {
+      throw Exception('Notificação só existe para usuário logado.');
+    }
+
     if (!AppConfig.usarApi) {
-      throw Exception('Criar notificação só existe com a API ligada.');
+      return NotificacaoMock.criar(usuarioId, titulo, texto);
     }
 
     final url = Uri.parse('$urlBase/usuarios/$usuarioId/notificacoes');

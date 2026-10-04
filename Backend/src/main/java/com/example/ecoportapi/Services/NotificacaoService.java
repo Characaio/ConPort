@@ -85,6 +85,36 @@ public class NotificacaoService {
     }
 
     /**
+     * Cria uma notificação para um usuario, sem passar pelo DTO.
+     *
+     * <p>Usado pelo proprio backend quando o evento ja aconteceu aqui dentro
+     * (cadastro, solicitação de amizade, amizade aceita). O texto vem escrito
+     * pelo servidor porque é ele quem tem os dois lados do evento — o app, no
+     * caso da amizade, nem está com a outra pessoa aberta.
+     */
+    public NotificacaoResponseDTO avisar(Usuario usuario, String titulo, String texto) {
+        if (usuario == null) {
+            return null;
+        }
+
+        if (texto == null || texto.isBlank()) {
+            return null;
+        }
+
+        String textoLimpo = texto.trim();
+
+        if (textoLimpo.length() > TAMANHO_MAXIMO_TEXTO) {
+            textoLimpo = textoLimpo.substring(0, TAMANHO_MAXIMO_TEXTO);
+        }
+
+        return new NotificacaoResponseDTO(
+                notificacaoRepository.save(
+                        new Notificacao(usuario, titulo.trim(), textoLimpo)
+                )
+        );
+    }
+
+    /**
      * Cria uma notificação para o usuário da URL.
      */
     public NotificacaoResponseDTO criar(Long usuarioId, NotificacaoCreateDTO dto) {

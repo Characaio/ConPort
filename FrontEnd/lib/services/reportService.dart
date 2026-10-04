@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:conport/config/app_config.dart';
 import 'package:conport/mocks/report_mock.dart';
+import 'package:conport/services/multipart_media_type.dart';
 import 'package:conport/models/report.dart';
 import 'package:conport/models/report_lista.dart';
 
@@ -159,6 +160,9 @@ class ReportService {
           'imagens',
           await imagem.readAsBytes(),
           filename: imagem.name,
+          // Sem contentType a parte do arquivo sai sem Content-Type e o
+          // backend recusa a imagem com "Formato não permitido".
+          contentType: mediaTypeDaImagem(imagem.name),
         ),
       );
     }

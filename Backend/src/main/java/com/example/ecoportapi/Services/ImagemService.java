@@ -3,6 +3,7 @@ package com.example.ecoportapi.Services;
 import com.drew.lang.GeoLocation;
 import com.drew.metadata.exif.GpsDirectory;
 import com.example.ecoportapi.DTOs.Request.ImagemProcessada;
+import com.example.ecoportapi.Exceptions.RequisicaoInvalida;
 import com.example.ecoportapi.Models.Enums.ImagemDadosParametros;
 import org.springframework.core.io.Resource;
 import jakarta.transaction.Transactional;
@@ -75,19 +76,48 @@ public class ImagemService {
     @Transactional
     public ImagemProcessada SalvarImagem(MultipartFile imagem) throws IOException {
         if (imagem.isEmpty()) {
-            throw new IllegalArgumentException("A imagem está vazia.");
+            throw new RequisicaoInvalida("A imagem está vazia.");
         }
+
+        String nomeOriginal = imagem.getOriginalFilename();
+        String extensao = obterExtensao(nomeOriginal);
+
+        // O Content-Type da parte nem sempre vem: o multipart do app envia
+        // so o Content-Disposition quando o cliente nao informa o tipo. Sem
+        // isso cair, cai no tipo derivado do nome do arquivo em vez de
+        // recusar uma foto válida.
         String tipo = imagem.getContentType();
-        if (!TiposPermitidos.contains(tipo)) {
-            throw new IllegalArgumentException(
-                    "Formato de imagem não permitido"
+
+        if (tipo == null || tipo.isBlank() || !TiposPermitidos.contains(tipo)) {
+            final String extensaoAtual = extensao;
+
+            String tipoPelaExtensao = TiposPermitidos.stream()
+                    .filter(t -> t.endsWith("/" + extensaoAtual))
+                    .findFirst()
+                    .orElse(null);
+
+            if (tipoPelaExtensao != null) {
+                tipo = tipoPelaExtensao;
+            }
+        }
+
+        final String tipoFinal = tipo;
+
+        if (!TiposPermitidos.contains(tipoFinal)) {
+            throw new RequisicaoInvalida(
+                    "Formato de imagem não permitido: "
+                            + (tipoFinal == null ? "não informado" : tipoFinal)
             );
         }
 
         Files.createDirectories(diretorio);
 
-        String nomeOriginal = imagem.getOriginalFilename();
-        String extensao = obterExtensao(nomeOriginal);
+        // Nome sem extensão (o seletor às vezes entrega isso) ainda precisa
+        // gerar um arquivo com extensão, senão sobra "uuid." no disco.
+        if (extensao.isEmpty()) {
+            extensao = tipoFinal.endsWith("png") ? "png" : "jpg";
+        }
+
         String nomeArquivo = UUID.randomUUID() + "." + extensao;
 
         Path destino = diretorio.resolve(nomeArquivo);
@@ -127,8 +157,11 @@ public class ImagemService {
             return "";
         }
 
-        return nomeArquivo
+        String extensao = nomeArquivo
                 .substring(nomeArquivo.lastIndexOf(".")+1)
                 .toLowerCase();
+
+        // JPEG costuma chegar como .jpg ou .jpeg; o tipo aceito é o mesmo.
+        return extensao.equals("jpeg") ? "jpg" : extensao;
     }
 }

@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     @ExceptionHandler(AvistamentoNaoEncontrado.class)
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     @ExceptionHandler(InformacoesNaoEncontrada.class)
@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     @ExceptionHandler(MissaoJaConcluida.class)
@@ -52,7 +52,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     @ExceptionHandler(MissaoNaoEncontrada.class)
@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     @ExceptionHandler(ReportNaoEncontrado.class)
@@ -68,7 +68,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     @ExceptionHandler(NotificacaoNaoEncontrada.class)
@@ -76,7 +76,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     @ExceptionHandler(RequisicaoInvalida.class)
@@ -84,7 +84,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body("Eu tenho q trabalhar melhor nisso aqui, ta merda gamer" + exception.getMessage() + "\n" + exception.getStackTrace());
+                .body("Eu tenho q trabalhar melhor nisso aqui, ta merda gamer" + exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     @ExceptionHandler(SupervisorNaoEncontrado.class)
@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     @ExceptionHandler(UnidadeNaoEncontrada.class)
@@ -100,7 +100,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     @ExceptionHandler(UsuarioNaoEncontrado.class)
@@ -108,7 +108,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     /**
@@ -132,7 +132,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
     @ExceptionHandler(IOException.class)
@@ -140,7 +140,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
     }
 
 }

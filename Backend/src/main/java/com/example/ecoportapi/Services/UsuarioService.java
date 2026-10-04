@@ -27,16 +27,19 @@ public class UsuarioService {
   private final RelacionamentoRepository relacionamentoRepository;
   private final ImagemService imagemService;
   private final CatalogoMissoes catalogoMissoes;
+  private final NotificacaoService notificacaoService;
 
   public UsuarioService(
       UsuarioRepository usuarioRepository,
       RelacionamentoRepository relacionamentoRepository,
       ImagemService imagemService,
-      CatalogoMissoes catalogoMissoes) {
+      CatalogoMissoes catalogoMissoes,
+      NotificacaoService notificacaoService) {
     this.usuarioRepository = usuarioRepository;
     this.relacionamentoRepository = relacionamentoRepository;
     this.imagemService = imagemService;
     this.catalogoMissoes = catalogoMissoes;
+    this.notificacaoService = notificacaoService;
   }
 
   public void CalcularReputação() {}
@@ -78,6 +81,16 @@ public class UsuarioService {
 
     // Todo usuario novo comeca com o catalogo de missoes.
     catalogoMissoes.criarPara(salvo);
+
+    // Boas-vindas: o app mostra no sino assim que entra, e ela precisa
+    // existir mesmo que a pessoa feche o app no meio do cadastro.
+    notificacaoService.avisar(
+        salvo,
+        "Bem-vindo ao ConPort!",
+        "Sua conta foi criada. Agora você pode enviar reports, acompanhar "
+            + "missões e encontrar outras pessoas ajudando a cuidar do "
+            + "meio ambiente."
+    );
 
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
@@ -166,6 +179,15 @@ public class UsuarioService {
     nova.setSeguindo(alvo);
     relacionamentoRepository.save(nova);
 
+    // Aviso de quem recebeu, e não de quem pediu: a solicitação fica na caixa
+    // de quem tem algo para responder.
+    notificacaoService.avisar(
+        alvo,
+        "Nova solicitação de amizade",
+        eu.getNome() + " quer ser seu amigo no ConPort. Abra o app para aceitar "
+            + "ou recusar."
+    );
+
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
@@ -191,6 +213,25 @@ public class UsuarioService {
       espelho.setStatus(StatusRelacionamento.ACEITO);
       relacionamentoRepository.save(espelho);
     }
+
+    // Os dois lados viram amigos, então os dois merecem o aviso — inclusive
+    // quem pediu e está com o app fechado.
+    Usuario quemPediu = relacao.getSeguidor();
+    Usuario quemAceitou = relacao.getSeguindo();
+
+    notificacaoService.avisar(
+        quemAceitou,
+        "Vocês agora são amigos!",
+        "Você e " + quemPediu.getNome() + " são amigos no ConPort. "
+            + "Agora vocês podem ver os reports um do outro."
+    );
+
+    notificacaoService.avisar(
+        quemPediu,
+        "Sua solicitação foi aceita!",
+        quemAceitou.getNome() + " aceitou sua solicitação de amizade. "
+            + "Vocês agora são amigos no ConPort."
+    );
 
     return ResponseEntity.ok().build();
   }

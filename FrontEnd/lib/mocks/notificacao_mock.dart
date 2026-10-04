@@ -67,6 +67,30 @@ class NotificacaoMock {
         .toList();
   }
 
+  /// Cria uma notificação em memória.
+  ///
+  /// Com a API ligada quem cria é o backend (cadastro, amizade) ou o próprio
+  /// app (conquista); aqui a lista é local e precisava do mesmo caminho para
+  /// o sino do modo de demonstração não ficar sempre vazio.
+  static Notificacao criar(int usuarioId, String titulo, String texto) {
+    final lista = _garantir(usuarioId);
+    final id = lista.isEmpty
+        ? 1
+        : lista.map((n) => n.id).reduce((a, b) => a > b ? a : b) + 1;
+
+    final nova = Notificacao(
+      id: id,
+      usuarioId: usuarioId,
+      titulo: titulo,
+      texto: texto,
+      data: DateTime.now(),
+    );
+
+    _notificacoes = [nova, ...lista];
+
+    return nova;
+  }
+
   /// Volta ao estado inicial (usado nos testes).
   static void reiniciar() => _notificacoes = null;
 }

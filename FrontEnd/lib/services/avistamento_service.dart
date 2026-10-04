@@ -1,5 +1,10 @@
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
+
+import 'multipart_media_type.dart';
 
 import '../config/app_config.dart';
 
@@ -25,31 +30,41 @@ class AvistamentoService {
       ),
     );
 
-    final campos = <String, String>{
-      'UnidadeId': unidadeId.toString(),
+    final dto = <String, dynamic>{
+      'UnidadeId': unidadeId,
+      // O usuarioId vai dentro do DTO: é de lá que o backend lê, e mandar
+      // num campo separado ele simplesmente ignorava.
+      'UsuarioId': usuarioId,
       'Origem': _determinarOrigem(
         latitude: latitude,
         longitude: longitude,
       ),
     };
 
-    if (latitude != null) {
-      campos['Latitude'] = latitude.toString();
-    }
+    if (latitude != null) dto['Latitude'] = latitude;
 
-    if (longitude != null) {
-      campos['Longitude'] = longitude.toString();
-    }
+    if (longitude != null) dto['Longitude'] = longitude;
 
-    request.fields['avistamentoDTO'] = _montarJsonDto(campos);
-
-    request.fields['usuarioId'] = usuarioId.toString();
-
+    // Precisa ser uma parte com Content-Type: application/json. Mandando como
+    // campo simples, o @RequestPart do controller devolvia 415 e nada era
+    // gravado. É o mesmo que o postarReport faz.
     request.files.add(
-      await http.MultipartFile.fromPath(
+      http.MultipartFile.fromString(
+        'avistamentoDTO',
+        jsonEncode(dto),
+        contentType: MediaType('application', 'json'),
+      ),
+    );
+
+    // Bytes em vez de caminho: na web o XFile não tem path, e o fromPath
+    // quebrava justamente lá. O contentType precisa ir junto: sem ele a
+    // parte do arquivo não tem Content-Type e o backend recusa a imagem.
+    request.files.add(
+      http.MultipartFile.fromBytes(
         'imagem',
-        imagem.path,
+        await imagem.readAsBytes(),
         filename: imagem.name,
+        contentType: mediaTypeDaImagem(imagem.name),
       ),
     );
 
@@ -71,31 +86,5 @@ class AvistamentoService {
     }
 
     return 'NAO_INFORMADA';
-  }
-
-  String _montarJsonDto(Map<String, String> campos) {
-    final partes = <String>[];
-
-    campos.forEach((chave, valor) {
-      partes.add('"$chave":${_valorJson(valor)}');
-    });
-
-    return '{${partes.join(',')}}';
-  }
-
-  String _valorJson(String valor) {
-    if (valor == 'GPS_CELULAR' ||
-        valor == 'IMAGEM_EXIF' ||
-        valor == 'MAPA_MANUAL' ||
-        valor == 'NAO_INFORMADA') {
-      return '"$valor"';
-    }
-
-    if (double.tryParse(valor) != null ||
-        int.tryParse(valor) != null) {
-      return valor;
-    }
-
-    return '"${valor.replaceAll('"', '\\"')}"';
   }
 }
