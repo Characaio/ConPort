@@ -45,6 +45,11 @@ public class UnidadeDeConservacao {
     @Column(name = "Descricao",nullable = false)
     private String Descricao;
 
+    // URL da foto principal da unidade. Anulavel: quando vier vazia a tela
+    // cai na imagem que ja vem no app.
+    @Column(name = "Imagem", nullable = true)
+    private String Imagem;
+
 
     //Dados internos da unidade
     //Informações base para derivar novos indicadores de status
@@ -122,6 +127,9 @@ public class UnidadeDeConservacao {
 
     public String getDescricao(){ return Descricao; }
     public void setDescricao(String descricao){ Descricao = descricao; }
+
+    public String getImagem(){ return Imagem; }
+    public void setImagem(String imagem){ Imagem = imagem; }
 
     public Double getAreaTotal() { return AreaTotal; }
     public void setAreaTotal(Double areaTotal) { AreaTotal = areaTotal; }

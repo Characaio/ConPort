@@ -2,93 +2,80 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:conport/core/theme/app_theme.dart';
+import 'package:conport/models/aviso.dart';
+import 'package:conport/services/aviso_service.dart';
+import 'package:conport/services/unidadeService.dart';
 import 'package:conport/widgets/topbar.dart';
 
-// ============================================================
-// MODELO + MOCK (temporário, até existir na API)
-// Quando o backend tiver o endpoint, mova a classe Anuncio para
-// lib/models/anuncio.dart e os dados para um AnuncioService.
-// ============================================================
-
-class Anuncio {
-  final int id;
-  final String titulo;
-  final String texto;
-  final DateTime data;
-  final bool fixado;
-  final String? imagem;
-
-  const Anuncio({
-    required this.id,
-    required this.titulo,
-    required this.texto,
-    required this.data,
-    this.fixado = false,
-    this.imagem,
-  });
-}
-
-class _AnunciosMock {
-  static const String nomeUnidade = 'Unidade de Conservação';
-
-  static const String _lorem =
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-      'Nunc commodo turpis leo, ut fringilla lorem posuere a. '
-      'Mauris ut tellus in justo venenatis tristique efficitur sit amet metus.';
-
-  static List<Anuncio> listar() {
-    final agora = DateTime.now();
-
-    return [
-      Anuncio(
-        id: 1,
-        titulo: 'Anúncio fixado',
-        texto: _lorem,
-        data: agora.subtract(const Duration(days: 30)),
-        fixado: true,
-        imagem: 'assets/images/araraias.jpg',
-      ),
-      for (int i = 2; i <= 6; i++)
-        Anuncio(
-          id: i,
-          titulo: 'Anúncio',
-          texto: _lorem,
-          data: agora.subtract(const Duration(days: 6)),
-          // Só o primeiro da lista comum tem imagem, para testar os dois casos.
-          imagem: i == 2 ? 'assets/images/araraias.jpg' : null,
-        ),
-    ];
-  }
-}
-
-// ============================================================
-// PÁGINA
-// ============================================================
-
+/// Anúncios da unidade de conservação.
+///
+/// Os dados vêm de `GET /unidade/{unidadeId}/aviso?limite=50`; com a API
+/// desligada o [AvisoMock] devolve a mesma lista.
 class Anuncios extends StatefulWidget {
-  const Anuncios({super.key});
+  final int unidadeId;
+
+  const Anuncios({super.key, this.unidadeId = 1});
 
   @override
   State<Anuncios> createState() => _AnunciosState();
 }
 
 class _AnunciosState extends State<Anuncios> {
-  late final List<Anuncio> anuncios;
+  final AvisoService _avisoService = const AvisoService();
+  final UnidadeService _unidadeService = const UnidadeService();
+
+  List<Aviso> anuncios = [];
+  String nomeUnidade = 'Unidade de Conservação';
+  bool carregando = true;
+  String? erro;
 
   @override
   void initState() {
     super.initState();
 
-    anuncios = _AnunciosMock.listar();
-
-    // Fixados sempre no topo; dentro de cada grupo, mais recentes primeiro.
-    anuncios.sort((a, b) {
-      if (a.fixado != b.fixado) return a.fixado ? -1 : 1;
-      return b.data.compareTo(a.data);
-    });
+    _carregar();
   }
 
-  void _abrirAnuncio(Anuncio anuncio) {
+  Future<void> _carregar() async {
+    setState(() {
+      carregando = true;
+      erro = null;
+    });
+
+    try {
+      final lista = await _avisoService.listarAvisos(widget.unidadeId);
+
+      // Fixados sempre no topo; dentro de cada grupo, mais recentes primeiro.
+      lista.sort((a, b) {
+        if (a.fixado != b.fixado) return a.fixado ? -1 : 1;
+        return b.data.compareTo(a.data);
+      });
+
+      if (!mounted) return;
+      setState(() => anuncios = lista);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => erro = e.toString());
+    } finally {
+      if (mounted) setState(() => carregando = false);
+    }
+
+    _carregarNomeDaUnidade();
+  }
+
+  Future<void> _carregarNomeDaUnidade() async {
+    try {
+      final unidade = await _unidadeService.buscarStatusGeral(widget.unidadeId);
+
+      if (!mounted) return;
+      setState(() => nomeUnidade = unidade.nome);
+    } catch (e) {
+      // O nome é um detalhe: a lista de anúncios continua válida sem ele.
+      debugPrint('Erro ao buscar nome da unidade: $e');
+    }
+  }
+
+  void _abrirAnuncio(Aviso anuncio) {
     showDialog(
       context: context,
       barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.54),
@@ -117,7 +104,7 @@ class _AnunciosState extends State<Anuncios> {
                 children: [
                   Flexible(
                     child: Text(
-                      _AnunciosMock.nomeUnidade,
+                      nomeUnidade,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 18,
@@ -132,25 +119,63 @@ class _AnunciosState extends State<Anuncios> {
 
               const SizedBox(height: 16),
 
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  itemCount: anuncios.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final anuncio = anuncios[index];
-
-                    return _CardAnuncio(
-                      anuncio: anuncio,
-                      onTap: () => _abrirAnuncio(anuncio),
-                    );
-                  },
-                ),
-              ),
+              Expanded(child: _conteudo()),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _conteudo() {
+    if (carregando) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (erro != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                erro!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _carregar,
+                child: const Text('Tentar de novo'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (anuncios.isEmpty) {
+      return const Center(
+        child: Text(
+          'A unidade ainda não publicou anúncios.',
+          style: TextStyle(fontSize: 12),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.only(bottom: 16),
+      itemCount: anuncios.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        final anuncio = anuncios[index];
+
+        return _CardAnuncio(
+          anuncio: anuncio,
+          onTap: () => _abrirAnuncio(anuncio),
+        );
+      },
     );
   }
 }
@@ -160,7 +185,7 @@ class _AnunciosState extends State<Anuncios> {
 // ============================================================
 
 class _CardAnuncio extends StatelessWidget {
-  final Anuncio anuncio;
+  final Aviso anuncio;
   final VoidCallback onTap;
 
   const _CardAnuncio({required this.anuncio, required this.onTap});
@@ -197,11 +222,15 @@ class _CardAnuncio extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text(
-                      anuncio.titulo,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Text(
+                        anuncio.titulo,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -209,8 +238,10 @@ class _CardAnuncio extends StatelessWidget {
                       _tempoDecorrido(anuncio.data),
                       style: const TextStyle(fontSize: 9),
                     ),
-                    const Spacer(),
-                    if (anuncio.fixado) const Icon(Symbols.push_pin, size: 14),
+                    if (anuncio.fixado) ...[
+                      const SizedBox(width: 6),
+                      const Icon(Symbols.push_pin, size: 14),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -234,13 +265,15 @@ class _CardAnuncio extends StatelessWidget {
 // ============================================================
 
 class _AnuncioExpandido extends StatelessWidget {
-  final Anuncio anuncio;
+  final Aviso anuncio;
 
   const _AnuncioExpandido({required this.anuncio});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final temImagem = (anuncio.imagem?.trim() ?? '').isNotEmpty;
+
     return Dialog(
       backgroundColor: scheme.surfaceContainerHighest,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
@@ -257,11 +290,13 @@ class _AnuncioExpandido extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text(
-                    anuncio.titulo,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                  Flexible(
+                    child: Text(
+                      anuncio.titulo,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -280,7 +315,7 @@ class _AnuncioExpandido extends StatelessWidget {
                 anuncio.texto,
                 style: const TextStyle(fontSize: 11, height: 1.3),
               ),
-              if (anuncio.imagem != null) ...[
+              if (temImagem) ...[
                 const SizedBox(height: 20),
                 Container(
                   decoration: BoxDecoration(
@@ -297,7 +332,17 @@ class _AnuncioExpandido extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     child: AspectRatio(
                       aspectRatio: 205 / 130,
-                      child: Image.asset(anuncio.imagem!, fit: BoxFit.cover),
+                      child: Image.network(
+                        anuncio.imagem!,
+                        fit: BoxFit.cover,
+                        // Foto que não carrega não pode fechar o diálogo.
+                        errorBuilder: (_, __, ___) => const SizedBox(
+                          height: 130,
+                          child: Center(
+                            child: Icon(Icons.image_not_supported_outlined),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),

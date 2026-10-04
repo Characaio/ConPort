@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.io.IOException;
 
@@ -108,6 +109,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(exception.getMessage() + "\n" + exception.getStackTrace());
+    }
+
+    /**
+     * Parametro de rota ou query que nao converts (tipo de especie invalido,
+     * por exemplo).
+     *
+     * <p>Sem este handler cai no IllegalArgumentException abaixo e responde 500:
+     * entrada errada da pessoa que chamou e erro do servidor sao coisas
+     * diferentes.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<String> ParametroInvalido(MethodArgumentTypeMismatchException exception){
+        erroLoggerService.registrarErro(exception);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Valor invalido para " + exception.getName() + ": " + exception.getValue());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

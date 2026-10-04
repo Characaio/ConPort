@@ -22,6 +22,10 @@ class Unidade {
 
   final TipoDeUnidade tipoDaUnidade;
 
+  // Vem no bloco "informacoes" do status geral.
+  final String descricao;
+  final String? imagem;
+
   final double areaTotal;
   final double areaRegularizada;
   final double areaPreservada;
@@ -61,6 +65,9 @@ class Unidade {
 
     required this.tipoDaUnidade,
 
+    this.descricao = '',
+    this.imagem,
+
     required this.areaTotal,
     required this.areaRegularizada,
     required this.areaPreservada,
@@ -91,6 +98,31 @@ class Unidade {
   });
 
   factory Unidade.fromJson(Map<String, dynamic> json) {
+    // O status geral (GET /unidade/{id}) vem aninhado, em
+    // informacoes/indicadores/dadosAmbientais; a rota antiga de
+    // informacoes vem chapada. A tela usa os dois formatos, entao os
+    // blocos sao abertos aqui antes de ler.
+    final Map<String, dynamic> informacoes = _objeto(
+      json['informacoes'] ?? json['Informacoes'],
+    );
+    final Map<String, dynamic> indicadores = _objeto(
+      json['indicadores'] ?? json['Indicadores'],
+    );
+    final Map<String, dynamic> ambientais = _objeto(
+      json['dadosAmbientais'] ?? json['DadosAmbientais'],
+    );
+
+    // Ordem de leitura: o bloco aninhado quando existe, o topo como reserva.
+    dynamic campo(List<String> chaves) {
+      for (final mapa in [informacoes, ambientais, indicadores, json]) {
+        for (final chave in chaves) {
+          final valor = mapa[chave];
+          if (valor != null) return valor;
+        }
+      }
+      return null;
+    }
+
     TipoDeUnidade parseTipo(String? value) {
       switch (value?.toUpperCase()) {
         case 'PARQUE_NACIONAL':
@@ -199,116 +231,132 @@ class Unidade {
 
 
     return Unidade(
-      id: parseInt(json['Id'] ?? json['id']),
+      id: parseInt(campo(['Id', 'id'])),
 
-      nome: json['Nome'] ?? json['nome'] ?? 'Unidade',
+      nome: campo(['Nome', 'nome'])?.toString() ?? 'Unidade',
 
-      localizacao: json['Localizacao'] ?? json['localizacao'] ?? 'NULL',
+      localizacao:
+          campo(['Localizacao', 'localizacao'])?.toString() ?? 'Não informado',
 
-      bioma: json['Bioma'] ?? json['bioma'] ?? 'Bioma',
+      bioma: campo(['Bioma', 'bioma'])?.toString() ?? 'Bioma',
 
-      telefone: json['Telefone'] ?? json['telefone'] ?? 'Telefone',
+      telefone: campo(['Telefone', 'telefone'])?.toString() ?? 'Telefone',
 
-      horaDeAbertura: parseDate(
-        json['HoraDeAbertura'] ?? json['horaDeAbertura'],
-      ),
+      descricao: campo(['Descricao', 'descricao'])?.toString() ?? '',
+
+      imagem: campo(['Imagem', 'imagem'])?.toString(),
+
+      horaDeAbertura: parseDate(campo(['HoraDeAbertura', 'horaDeAbertura'])),
 
       horaDeFechamento: parseDate(
-        json['HoraDeFechamento'] ?? json['horaDeFechamento'],
+        campo(['HoraDeFechamento', 'horaDeFechamento']),
       ),
 
-      tipoDaUnidade: parseTipo(json['TipoDeUnidade'] ?? json['tipoDeUnidade']),
+      tipoDaUnidade: parseTipo(
+        campo(['TipoDeUnidade', 'tipoDeUnidade'])?.toString(),
+      ),
 
-      areaTotal: parseDouble(json['AreaTotal'] ?? json['areaTotal']),
+      areaTotal: parseDouble(campo(['AreaTotal', 'areaTotal'])),
 
       areaRegularizada: parseDouble(
-        json['AreaRegularizada'] ?? json['areaRegularizada'],
+        campo(['AreaRegularizada', 'areaRegularizada']),
       ),
 
       areaPreservada: parseDouble(
-        json['AreaPreservada'] ?? json['areaPreservada'],
+        campo(['AreaPreservada', 'areaPreservada']),
       ),
 
       areaMonitorada: parseDouble(
-        json['AreaMonitorada'] ?? json['areaMonitorada'],
+        campo(['AreaMonitorada', 'areaMonitorada']),
       ),
 
       areaBasePorCorredor: parseDouble(
-        json['AreaBasePorCorredor'] ?? json['areaBasePorCorredor'],
+        campo(['AreaBasePorCorredor', 'areaBasePorCorredor']),
       ),
 
       pontosMonitorados: parseInt(
-        json['PontosMonitorados'] ?? json['pontosMonitorados'],
+        campo(['PontosMonitorados', 'pontosMonitorados']),
       ),
 
       pontosPrevistos: parseInt(
-        json['PontosPrevistos'] ?? json['pontosPrevistos'],
+        campo(['PontosPrevistos', 'pontosPrevistos']),
       ),
 
+      // O DTO de dados ambientais abrevia os nomes das especies e dos
+      // corredores, entao as duas grafias sao lidas.
       quantidadeEspecies: parseInt(
-        json['QuantidadeEspecies'] ?? json['quantidadeEspecies'],
+        campo(['QuantidadeEspecies', 'quantidadeEspecies', 'quantEspecies']),
       ),
 
       quantidadeEspeciesEsperadas: parseInt(
-        json['QuantidadeEspeciesEsperadas'] ??
-            json['quantidadeEspeciesEsperadas'],
+        campo([
+          'QuantidadeEspeciesEsperadas',
+          'quantidadeEspeciesEsperadas',
+          'quantEspeciesEsperadas',
+        ]),
       ),
 
       qualidaAgua: parseDouble(
-        json['QualidadeDaAgua'] ?? json['qualidadeDaAgua'],
+        campo(['QualidadeDaAgua', 'qualidadeDaAgua', 'QualidadeAgua', 'qualidadeAgua']),
       ),
 
       qualidadeSolo: parseDouble(
-        json['QualidadeSolo'] ?? json['qualidadeSolo'],
+        campo(['QualidadeSolo', 'qualidadeSolo']),
       ),
 
       gestaoResiduos: parseDouble(
-        json['GestaoResiduos'] ?? json['gestaoResiduos'],
+        campo(['GestaoResiduos', 'gestaoResiduos']),
       ),
 
-      quantReports: parseNullableInt(
-        json['QuantReports'] ?? json['quantReports'],
-      ),
+      quantReports: parseNullableInt(campo(['QuantReports', 'quantReports'])),
 
       integridadeTerritorial: parseNullableDouble(
-        json['IntegridadeTerritorial'] ?? json['integridadeTerritorial'],
+        campo(['IntegridadeTerritorial', 'integridadeTerritorial']),
       ),
 
       corredoresNecessarios: parseNullableInt(
-        json['CorredoresNecessarios'] ?? json['corredoresNecessarios'],
+        campo(['CorredoresNecessarios', 'corredoresNecessarios']),
       ),
 
       conectividadeEcologica: parseNullableDouble(
-        json['ConectividadeEcologica'] ?? json['conectividadeEcologica'],
+        campo(['ConectividadeEcologica', 'conectividadeEcologica']),
       ),
 
       qualidadeAmbiental: parseNullableDouble(
-        json['QualidadeAmbiental'] ?? json['qualidadeAmbiental'],
+        campo(['QualidadeAmbiental', 'qualidadeAmbiental']),
       ),
 
       preservacaoLocal: parseNullableDouble(
-        json['PreservacaoLocal'] ?? json['preservacaoLocal'],
+        campo(['PreservacaoLocal', 'preservacaoLocal']),
       ),
 
       fiscalizaocao: parseNullableDouble(
-        json['Fiscalizacao'] ?? json['fiscalizacao'],
+        campo(['Fiscalizacao', 'fiscalizacao']),
       ),
 
       biodiversidade: parseNullableDouble(
-        json['Biodiversidade'] ?? json['biodiversidade'],
+        campo(['Biodiversidade', 'biodiversidade']),
       ),
-      fiscalizacaoEmString: doubleParaString(parseNullableDouble(
-        json['Fiscalizacao'] ?? json['fiscalizacao'],
-      )),
-      biodiversidadeEmString: doubleParaString(parseNullableDouble(
-        json['Biodiversidade'] ?? json['biodiversidade'],
-      )),
+
+      fiscalizacaoEmString: doubleParaString(
+        parseNullableDouble(campo(['Fiscalizacao', 'fiscalizacao'])),
+      ),
+
+      biodiversidadeEmString: doubleParaString(
+        parseNullableDouble(campo(['Biodiversidade', 'biodiversidade'])),
+      ),
+
       corredoresExistentes: parseNullableInt(
-        json["CorredoresNecessarios"] ?? json["corredoresNecessarios"]
-      )
+        campo(['QuantCorredores', 'quantCorredores', 'CorredoresExistentes']),
+      ),
     );
-
-
-
   }
+}
+
+/// Abre um bloco aninhado do status geral; devolve mapa vazio se não vier.
+Map<String, dynamic> _objeto(dynamic valor) {
+  if (valor is Map<String, dynamic>) return valor;
+  if (valor is Map) return valor.map((k, v) => MapEntry('$k', v));
+
+  return <String, dynamic>{};
 }

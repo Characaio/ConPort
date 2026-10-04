@@ -15,7 +15,7 @@ class UnidadeService {
       return UnidadeMock.buscarStatusPrincipal(id);
     }
 
-    final url = Uri.parse('${AppConfig.apiUrl}/unidade/$id/statusGeral');
+    final url = Uri.parse('${AppConfig.apiUrl}/unidade/$id');
 
     final response = await http.get(url);
 
@@ -32,12 +32,15 @@ class UnidadeService {
     throw Exception('Erro ao buscar unidade: ${response.statusCode}');
   }
 
+  /// Status geral da unidade: informacoes + indicadores + dados ambientais.
   Future<Unidade> buscarStatusGeral(int id) async {
     if (!AppConfig.usarApi) {
       return UnidadeMock.buscarStatusPrincipal(id);
     }
 
-    final url = Uri.parse('${AppConfig.apiUrl}/unidade/$id/statusGeral');
+    // A rota do status geral e GET /unidade/{id} (a informacoes fica em
+    // /unidade/{id}/informacoes); o nome statusGeral nao existe no backend.
+    final url = Uri.parse('${AppConfig.apiUrl}/unidade/$id');
 
     final response = await http.get(url);
 

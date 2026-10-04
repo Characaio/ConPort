@@ -9,6 +9,10 @@ class UnidadeMock {
       bioma: 'Mata Atlântica',
       telefone: '(19) 99999-9999',
 
+      descricao:
+          'Parque criado para proteger a Mata Atlântica da região, com '
+          'trilhas demarcadas e áreas de descanso para os visitantes.',
+
       horaDeAbertura: '08:00',
       horaDeFechamento: '17:00',
 
