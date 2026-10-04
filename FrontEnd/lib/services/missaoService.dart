@@ -1,24 +1,26 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
-
 import 'package:conport/config/app_config.dart';
+import 'package:conport/core/session/api_client.dart';
 import 'package:conport/models/mission.dart';
 
+/// Missões da sessão.
+///
+/// Com a API o progresso é do usuário do token: a listagem saiu do
+/// `?usuarioId=` — que deixava qualquer um ver e mexer no progresso de qualquer
+/// conta — e as rotas passaram a exigir sessão.
 class MissaoService {
   final String UrlBase = AppConfig.apiUrl;
 
-  /// Lista as missões de um usuário. É o que a tela de missões usa.
-  Future<List<Mission>> listarMissoes(int usuarioId) async {
+/// Lista as missões de quem está logado. É o que a tela de missões usa.
+Future<List<Mission>> listarMissoes() async {
     if (!AppConfig.usarApi) {
       return Mission.mock;
     }
 
-    final url = Uri.parse(
-      '$UrlBase/missoes',
-    ).replace(queryParameters: {'usuarioId': '$usuarioId'});
+    final url = Uri.parse('$UrlBase/missoes');
 
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
@@ -26,10 +28,6 @@ class MissaoService {
       return (json as List)
           .map((e) => Mission.fromJson(e as Map<String, dynamic>))
           .toList();
-    }
-
-    if (response.statusCode == 404) {
-      throw Exception('Usuário não encontrado.');
     }
 
     throw Exception('Erro ao buscar missões: ${response.statusCode}');
@@ -45,7 +43,7 @@ class MissaoService {
 
     final url = Uri.parse('$UrlBase/missoes/$missaoId');
 
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
@@ -71,11 +69,7 @@ class MissaoService {
     final url = Uri.parse('$UrlBase/missoes/$missaoId/progresso');
 
     // O backend espera JSON, não form data.
-    final response = await http.post(
-      url,
-      headers: const {'Content-Type': 'application/json'},
-      body: jsonEncode({'progresso': progresso}),
-    );
+    final response = await ApiClient.postJson(url, {'progresso': progresso});
 
     if (response.statusCode == 200) {
       return Mission.fromJson(jsonDecode(response.body));

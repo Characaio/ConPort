@@ -191,10 +191,11 @@ class Home extends StatelessWidget {
                                         return;
                                       }
 
+                                      // Sem id de usuário: quem registra é a
+                                      // pessoa do token, no servidor.
                                       AvistamentoPage.iniciar(
                                         context,
                                         unidadeId: 1,
-                                        usuarioId: usuario.id,
                                       );
                                     },
                                   ),

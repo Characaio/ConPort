@@ -64,8 +64,9 @@ class _ReportState extends State<Report> {
   }
 
   Future<void> _enviarReport() async {
-    // O report precisa sair em nome de quem está logado: mandar um id fixo
-    // fazia ele não aparecer na lista de quem enviou.
+    // O report só existe no nome de quem está logado: o autor sai do token, no
+    // servidor. A verificação aqui é só para não deixar a pessoa preencher o
+    // formulário inteiro para tomar 401 no fim.
     final usuario = AuthSession.instance.usuario;
 
     if (usuario == null) {
@@ -87,7 +88,6 @@ class _ReportState extends State<Report> {
     try {
       await _reportService.postarReport(
         unidadeId: unidadeId,
-        usuarioId: usuario.id,
         tipo: tipoSelecionado,
         descricao: _descricaoController.text,
         urgencia: urgencia,

@@ -53,6 +53,16 @@
             <version>42.7.12</version>
         </dependency>
 
+        <!--
+          Só o BCryptPasswordEncoder, sem o spring-security inteiro: nao
+          queremos filtro de seguranca automatico, so a funcao de hash da
+          senha. O resto do controle de acesso fica em SessaoInterceptor.
+        -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

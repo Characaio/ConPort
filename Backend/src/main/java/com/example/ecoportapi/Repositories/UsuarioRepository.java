@@ -15,20 +15,22 @@ import org.springframework.stereotype.Repository;
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
   // Com o Hibernate 7 (Spring Boot 4) o JPQL derivado exige o nome exato do
-  // atributo, por isso a query e explicita em vez de findByEmailAndSenha.
+  // atributo, por isso a query e explicita em vez de findByEmail.
+  //
+  // A senha NAO entra na busca: o hash BCrypt tem sal, entao dois hashes da
+  // mesma senha sao diferentes e JPQL nao consegue comparar. Quem compara a
+  // senha e o SenhaService, em Java.
   @Query("""
           SELECT u FROM Usuario u
-          WHERE u.Email = :email AND u.Senha = :senha
+          WHERE LOWER(u.Email) = LOWER(:email)
       """)
-  Optional<Usuario> buscarPorEmailESenha(
-      @Param("email") String email, @Param("senha") String senha);
+  Optional<Usuario> buscarPorEmail(@Param("email") String email);
 
   @Query("""
           SELECT COUNT(u) > 0 FROM Usuario u
-          WHERE u.Email = :email AND u.Senha = :senha
+          WHERE LOWER(u.Email) = LOWER(:email)
       """)
-  boolean existePorEmailESenha(
-      @Param("email") String email, @Param("senha") String senha);  // Na edicao de perfil o proprio usuario nao conta como conflito: ele pode
+  boolean existePorEmail(@Param("email") String email);  // Na edicao de perfil o proprio usuario nao conta como conflito: ele pode
   // salvar o username/e-mail que ja tem sem tomar 409.
   @Query("""
           SELECT COUNT(u) > 0 FROM Usuario u

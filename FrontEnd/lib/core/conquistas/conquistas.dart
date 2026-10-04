@@ -45,7 +45,12 @@ class Conquistas extends ChangeNotifier {
   /// Carrega o progresso salvo (memória no mock, servidor na API).
   Future<void> carregar() async {
     try {
-      final tipos = await _service.buscarDesbloqueadas(_usuarioId);
+      // `daSessao`: o progresso da sua conta passa por `/usuarios/eu`, e é o
+      // token que diz ao servidor de quem é — não o id que veio na tela.
+      final tipos = await _service.buscarDesbloqueadas(
+        _usuarioId,
+        daSessao: true,
+      );
 
       _desbloqueadas
         ..clear()
@@ -85,18 +90,17 @@ class Conquistas extends ChangeNotifier {
   void reiniciar() {
     _desbloqueadas.clear();
     notifyListeners();
-  }
+  }/// Conquistas de um usuário qualquer, fora da sessão.
+///
+/// O perfil de outra pessoa precisa mostrar o progresso *dela*: antes ele
+/// lia este singleton, que é da sessão, e todo mundo via as mesmas
+/// conquistas. Não é um singleton justamente porque o dono do perfil
+/// muda de tela para tela.
+static Future<Set<TipoConquista>> deUsuario(int usuarioId) async {
+  final tipos = await ConquistaService().buscarDesbloqueadas(usuarioId);
 
-  /// Conquistas de um usuário qualquer, fora da sessão.
-  ///
-  /// O perfil de outra pessoa precisa mostrar o progresso *dela*: antes ele
-  /// lia este singleton, que é da sessão, e todo mundo via as mesmas
-  /// conquistas. Não é um singleton justamente porque o dono do perfil
-  /// muda de tela para tela.
-  static Future<Set<TipoConquista>> deUsuario(int usuarioId) async {
-    final tipos = await ConquistaService().buscarDesbloqueadas(usuarioId);
-    return tipos.toSet();
-  }
+  return tipos.toSet();
+}
 }
 
 /// Registra a ação no sistema de conquistas e, se algo novo foi
@@ -163,7 +167,6 @@ Future<void> _notificarConquista(Conquista conquista) async {
 
   try {
     await NotificacaoService().criar(
-      usuarioId,
       titulo: 'Conquista desbloqueada!',
       texto: '${conquista.titulo}: ${conquista.descricao}',
     );

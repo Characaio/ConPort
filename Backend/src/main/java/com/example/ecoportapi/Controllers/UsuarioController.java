@@ -3,12 +3,16 @@ package com.example.ecoportapi.Controllers;
 // TRABALHAR DE MANEIRA SERIA NESSA CONTROLLER APÓS A QUARTA-FEIRA
 // sergia* ~ Cae
 
+import com.example.ecoportapi.Annotations.ExigeSessao;
 import com.example.ecoportapi.DTOs.Request.AtualizarPerfilDTO;
 import com.example.ecoportapi.DTOs.Request.LoginDTO;
 import com.example.ecoportapi.DTOs.Request.SignupDTO;
 import com.example.ecoportapi.DTOs.Request.VisibilidadeDTO;
 import com.example.ecoportapi.Services.ReportService;
+import com.example.ecoportapi.Services.SessaoInterceptor;
 import com.example.ecoportapi.Services.UsuarioService;
+import com.example.ecoportapi.Models.Usuario;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,32 +30,45 @@ public class UsuarioController {
     this.reportService = reportService;
   }
 
+  // ============================================================
+  // PÚBLICAS
+  //
+  // Não exigem token: quem não tem conta precisa conseguir ver perfil de
+  // quem tem, e o app tem modo visitante.
+  // ============================================================
+
+  /** Perfil de alguém. O "quem está vendo" vem do token, se houver. */
   @GetMapping("/{id}")
-  public ResponseEntity<?> PegarUsuario(
-      @PathVariable Long id, @RequestParam(required = false) Long visorId) {
-    // visorId diz de quem é o ponto de vista: é ele que define se os botões
-    // "seguir" e "adicionar amigo" aparecem ativos.
-    // ATENÇÃO: sem autenticação, o visor também vem por query string.
-    return ResponseEntity.ok(usuarioService.pegarUsuario(id, visorId));
+  public ResponseEntity<?> PegarUsuario(@PathVariable Long id, HttpServletRequest request) {
+    Usuario visitante = SessaoInterceptor.usuarioDaRequisicao(request);
+
+    return ResponseEntity.ok(usuarioService.pegarUsuario(id, visitante == null ? null : visitante.getId()));
   }
 
-  /*
-  @PostMapping
-  public ResponseEntity<?> Signup(
-          @RequestBody SignupDTO signupDTO
-          ){
-      return usuarioService.Signup(signupDTO);
-  }
-  @PostMapping
-  public ResponseEntity<?> Login(
-          @RequestBody LoginDTO loginDTO
-  ){
-      return usuarioService.Login(loginDTO);
-  }
-  */
+  /** Busca pública: é o que a tela "Buscar usuário" usa antes de logar. */
+  @GetMapping("/buscar")
+  public ResponseEntity<?> Buscar(
+      @RequestParam String termo, HttpServletRequest request) {
+    Usuario visitante = SessaoInterceptor.usuarioDaRequisicao(request);
 
-  // As rotas de autenticação ficam em /usuarios/login e /usuarios/signup,
-  // que são as URLs que o frontend já chama.
+    return ResponseEntity.ok(usuarioService.buscar(visitante == null ? null : visitante.getId(), termo));
+  }
+
+  /** Listas de seguidores/seguindo: quem decide se abre é a visibilidade. */
+  @GetMapping("/{id}/seguindo")
+  public ResponseEntity<?> ListarSeguindo(@PathVariable Long id, HttpServletRequest request) {
+    Usuario visitante = SessaoInterceptor.usuarioDaRequisicao(request);
+
+    return usuarioService.listarSeguindo(id, visitante == null ? null : visitante.getId());
+  }
+
+  @GetMapping("/{id}/seguidores")
+  public ResponseEntity<?> ListarSeguidores(@PathVariable Long id, HttpServletRequest request) {
+    Usuario visitante = SessaoInterceptor.usuarioDaRequisicao(request);
+
+    return usuarioService.listarSeguidores(id, visitante == null ? null : visitante.getId());
+  }
+
   @PostMapping("/signup")
   public ResponseEntity<?> Signup(@RequestBody SignupDTO signupDTO) {
     return usuarioService.Signup(signupDTO);
@@ -62,105 +79,121 @@ public class UsuarioController {
     return usuarioService.Login(loginDTO);
   }
 
-  @GetMapping("/{id}/reports")
-  public ResponseEntity<?> ListarMeusReports(@PathVariable Long id) {
-    // ATENÇÃO: sem autenticação, a lista vem por id na URL.
-    // Substituir pelo usuario logado quando existir token.
-    return ResponseEntity.ok(reportService.PegarReportsDoUsuario(id));
-  }
-
-  @GetMapping("/{id}/amigos")
-  public ResponseEntity<?> ListarAmigos(@PathVariable Long id) {
-    return ResponseEntity.ok(usuarioService.listarAmigos(id));
-  }
-
-  @GetMapping("/{id}/solicitacoes")
-  public ResponseEntity<?> ListarSolicitacoes(@PathVariable Long id) {
-    return ResponseEntity.ok(usuarioService.listarSolicitacoes(id));
-  }
-
-  @GetMapping("/buscar")
-  public ResponseEntity<?> Buscar(
-      @RequestParam String termo, @RequestParam(required = false) Long usuarioId) {
-    // ATENÇÃO: sem autenticação, quem busca se identifica por query string.
-    // Substituir pelo usuario logado quando existir token.
-    return ResponseEntity.ok(usuarioService.buscar(usuarioId, termo));
-  }
-
-  @PostMapping("/{id}/amizade/{alvoId}")
-  public ResponseEntity<?> EnviarSolicitacao(
-      @PathVariable Long id, @PathVariable Long alvoId) {
-    return usuarioService.enviarSolicitacao(id, alvoId);
-  }
-
-  @PostMapping("/{id}/aceitar/{relacaoId}")
-  public ResponseEntity<?> Aceitar(@PathVariable Long id, @PathVariable Long relacaoId) {
-    return usuarioService.aceitar(id, relacaoId);
-  }
-
-  @PostMapping("/{id}/recusar/{relacaoId}")
-  public ResponseEntity<?> Recusar(@PathVariable Long id, @PathVariable Long relacaoId) {
-    return usuarioService.recusar(id, relacaoId);
-  }
-
-  @DeleteMapping("/{id}/amizade/{alvoId}")
-  public ResponseEntity<?> RemoverAmigo(@PathVariable Long id, @PathVariable Long alvoId) {
-    return usuarioService.removerAmizade(id, alvoId);
-  }
-
   // ============================================================
-  // SEGUIR
-  // ============================================================
+  // DA SESSÃO
   //
-  // Estas quatro rotas são o "seguir" sem pedido. Ficaram em /seguindo para
-  // não se confundirem com o pedido de amizade, que até pouco ocupava
-  // /seguir/{alvoId}.
+  // Aqui o usuário NÃO vem da URL: vem do token. Por isso o caminho é
+  // "/eu" e não "/{id}" — não existe mais como pedir a conta de outra
+  // pessoa com o id trocado.
+  // ============================================================
 
-  @PostMapping("/{id}/seguindo/{alvoId}")
-  public ResponseEntity<?> Seguir(@PathVariable Long id, @PathVariable Long alvoId) {
-    return usuarioService.seguir(id, alvoId);
+  @GetMapping("/eu")
+  @ExigeSessao
+  public ResponseEntity<?> MinhaConta(HttpServletRequest request) {
+    return ResponseEntity.ok(usuarioService.minhaConta(euId(request)));
   }
 
-  @DeleteMapping("/{id}/seguindo/{alvoId}")
-  public ResponseEntity<?> DeixarDeSeguir(
-      @PathVariable Long id, @PathVariable Long alvoId) {
-    return usuarioService.deixarDeSeguir(id, alvoId);
+  @PostMapping("/logout")
+  @ExigeSessao
+  public ResponseEntity<?> Logout(HttpServletRequest request) {
+    return usuarioService.Logout(SessaoInterceptor.tokenDaRequisicao(request));
   }
 
-  @GetMapping("/{id}/seguindo")
-  public ResponseEntity<?> ListarSeguindo(
-      @PathVariable Long id, @RequestParam(required = false) Long visorId) {
-    return usuarioService.listarSeguindo(id, visorId);
+  /** "Sair de todos os lugares": revoga as outras sessões da conta. */
+  @PostMapping("/logout-em-todos-os-lugares")
+  @ExigeSessao
+  public ResponseEntity<?> LogoutEmTodosOsLugares(HttpServletRequest request) {
+    return usuarioService.LogoutDeTodosOsLugares(euId(request));
   }
 
-  @GetMapping("/{id}/seguidores")
-  public ResponseEntity<?> ListarSeguidores(
-      @PathVariable Long id, @RequestParam(required = false) Long visorId) {
-    return usuarioService.listarSeguidores(id, visorId);
+  @PutMapping("/eu")
+  @ExigeSessao
+  public ResponseEntity<?> AtualizarMeuPerfil(
+      @RequestBody AtualizarPerfilDTO dto, HttpServletRequest request) {
+    return usuarioService.atualizarPerfil(euId(request), dto);
   }
 
-  @PutMapping("/{id}/privacidade")
-  public ResponseEntity<?> AtualizarPrivacidade(
-      @PathVariable Long id, @RequestBody VisibilidadeDTO dto) {
-    return usuarioService.atualizarVisibilidade(id, dto);
-  }
-
-  @PostMapping("/{id}/avatar")
+  @PostMapping("/eu/avatar")
+  @ExigeSessao
   public ResponseEntity<?> AtualizarAvatar(
-      @PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
-    return usuarioService.atualizarAvatar(id, file);
+      @RequestParam("file") MultipartFile file, HttpServletRequest request) throws IOException {
+    return usuarioService.atualizarAvatar(euId(request), file);
   }
 
-  @DeleteMapping("/{id}/avatar")
-  public ResponseEntity<?> RemoverAvatar(@PathVariable Long id) {
-    return usuarioService.removerAvatar(id);
+  @DeleteMapping("/eu/avatar")
+  @ExigeSessao
+  public ResponseEntity<?> RemoverAvatar(HttpServletRequest request) {
+    return usuarioService.removerAvatar(euId(request));
   }
 
-  // ATENÇÃO: sem autenticação, a edição também é pelo id da URL.
-  // Substituir pelo usuario logado quando existir token.
-  @PutMapping("/{id}")
-  public ResponseEntity<?> AtualizarPerfil(
-      @PathVariable Long id, @RequestBody AtualizarPerfilDTO dto) {
-    return usuarioService.atualizarPerfil(id, dto);
+  @PutMapping("/eu/privacidade")
+  @ExigeSessao
+  public ResponseEntity<?> AtualizarPrivacidade(
+      @RequestBody VisibilidadeDTO dto, HttpServletRequest request) {
+    return usuarioService.atualizarVisibilidade(euId(request), dto);
+  }
+
+  @GetMapping("/eu/reports")
+  @ExigeSessao
+  public ResponseEntity<?> ListarMeusReports(HttpServletRequest request) {
+    return ResponseEntity.ok(reportService.PegarReportsDoUsuario(euId(request)));
+  }
+
+  @GetMapping("/eu/amigos")
+  @ExigeSessao
+  public ResponseEntity<?> ListarAmigos(HttpServletRequest request) {
+    return ResponseEntity.ok(usuarioService.listarAmigos(euId(request)));
+  }
+
+  @GetMapping("/eu/solicitacoes")
+  @ExigeSessao
+  public ResponseEntity<?> ListarSolicitacoes(HttpServletRequest request) {
+    return ResponseEntity.ok(usuarioService.listarSolicitacoes(euId(request)));
+  }
+
+  @PostMapping("/eu/amizade/{alvoId}")
+  @ExigeSessao
+  public ResponseEntity<?> EnviarSolicitacao(
+      @PathVariable Long alvoId, HttpServletRequest request) {
+    return usuarioService.enviarSolicitacao(euId(request), alvoId);
+  }
+
+  @DeleteMapping("/eu/amizade/{alvoId}")
+  @ExigeSessao
+  public ResponseEntity<?> RemoverAmigo(
+      @PathVariable Long alvoId, HttpServletRequest request) {
+    return usuarioService.removerAmizade(euId(request), alvoId);
+  }
+
+  @PostMapping("/eu/aceitar/{relacaoId}")
+  @ExigeSessao
+  public ResponseEntity<?> Aceitar(
+      @PathVariable Long relacaoId, HttpServletRequest request) {
+    return usuarioService.aceitar(euId(request), relacaoId);
+  }
+
+  @PostMapping("/eu/recusar/{relacaoId}")
+  @ExigeSessao
+  public ResponseEntity<?> Recusar(
+      @PathVariable Long relacaoId, HttpServletRequest request) {
+    return usuarioService.recusar(euId(request), relacaoId);
+  }
+
+  @PostMapping("/eu/seguir/{alvoId}")
+  @ExigeSessao
+  public ResponseEntity<?> Seguir(@PathVariable Long alvoId, HttpServletRequest request) {
+    return usuarioService.seguir(euId(request), alvoId);
+  }
+
+  @DeleteMapping("/eu/seguir/{alvoId}")
+  @ExigeSessao
+  public ResponseEntity<?> DeixarDeSeguir(
+      @PathVariable Long alvoId, HttpServletRequest request) {
+    return usuarioService.deixarDeSeguir(euId(request), alvoId);
+  }
+
+  /** O usuário da sessão: nunca `null` aqui, o interceptor já barrou o resto. */
+  private Long euId(HttpServletRequest request) {
+    return SessaoInterceptor.usuarioObrigatorio(request).getId();
   }
 }

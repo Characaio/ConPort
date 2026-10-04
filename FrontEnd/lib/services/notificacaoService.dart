@@ -1,23 +1,25 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
-
 import 'package:conport/config/app_config.dart';
+import 'package:conport/core/session/api_client.dart';
+import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/mocks/notificacao_mock.dart';
 import 'package:conport/models/notificacao.dart';
 
-/// Notificações do usuário.
+/// Notificações do usuário da sessão.
 ///
 /// Com `AppConfig.usarApi == false` tudo fica em memória
-/// ([NotificacaoMock]). Com a API ligada, os endpoints são:
+/// ([NotificacaoMock]). Com a API ligada o usuário **não** vai na URL — ele vem
+/// do token —, o que impede ler, apagar ou marcar como lida a notificação de
+/// outra conta:
 ///
-/// * `GET    /usuarios/{id}/notificacoes`                   → todas
-/// * `GET    /usuarios/{id}/notificacoes/nao-lidas`          → só as não lidas
-/// * `GET    /usuarios/{id}/notificacoes/nao-lidas/contagem` → `{"naoLidas": 2}`
-/// * `POST   /usuarios/{id}/notificacoes`                   → cria (201)
-/// * `PATCH  /usuarios/{id}/notificacoes/{id}/ler`          → a notificação
-/// * `PATCH  /usuarios/{id}/notificacoes/ler-todas`         → `{"marcadas": n}`
-/// * `DELETE /usuarios/{id}/notificacoes/{id}`              → 204
+/// * `GET    /usuarios/eu/notificacoes`                   → todas
+/// * `GET    /usuarios/eu/notificacoes/nao-lidas`          → só as não lidas
+/// * `GET    /usuarios/eu/notificacoes/nao-lidas/contagem` → `{"naoLidas": 2}`
+/// * `POST   /usuarios/eu/notificacoes`                   → cria (201)
+/// * `PATCH  /usuarios/eu/notificacoes/{id}/ler`          → a notificação
+/// * `PATCH  /usuarios/eu/notificacoes/ler-todas`         → `{"marcadas": n}`
+/// * `DELETE /usuarios/eu/notificacoes/{id}`              → 204
 class NotificacaoService {
   final String urlBase = AppConfig.apiUrl;
 
@@ -31,9 +33,9 @@ class NotificacaoService {
       return NotificacaoMock.listar(usuarioId);
     }
 
-    final url = Uri.parse('$urlBase/usuarios/$usuarioId/notificacoes');
+    final url = Uri.parse('$urlBase/usuarios/eu/notificacoes');
 
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
 
     if (response.statusCode == 200) {
       return _lerLista(response.body);
@@ -48,11 +50,9 @@ class NotificacaoService {
       return NotificacaoMock.listarNaoLidas(usuarioId);
     }
 
-    final url = Uri.parse(
-      '$urlBase/usuarios/$usuarioId/notificacoes/nao-lidas',
-    );
+    final url = Uri.parse('$urlBase/usuarios/eu/notificacoes/nao-lidas');
 
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
 
     if (response.statusCode == 200) {
       return _lerLista(response.body);
@@ -67,11 +67,9 @@ class NotificacaoService {
       return NotificacaoMock.contarNaoLidas(usuarioId);
     }
 
-    final url = Uri.parse(
-      '$urlBase/usuarios/$usuarioId/notificacoes/nao-lidas/contagem',
-    );
+    final url = Uri.parse('$urlBase/usuarios/eu/notificacoes/nao-lidas/contagem');
 
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -96,10 +94,10 @@ class NotificacaoService {
     }
 
     final url = Uri.parse(
-      '$urlBase/usuarios/$usuarioId/notificacoes/$notificacaoId/ler',
+      '$urlBase/usuarios/eu/notificacoes/$notificacaoId/ler',
     );
 
-    final response = await http.patch(url);
+    final response = await ApiClient.patch(url);
 
     if (response.statusCode == 200) {
       return Notificacao.fromJson(
@@ -118,11 +116,9 @@ class NotificacaoService {
       return 0;
     }
 
-    final url = Uri.parse(
-      '$urlBase/usuarios/$usuarioId/notificacoes/ler-todas',
-    );
+    final url = Uri.parse('$urlBase/usuarios/eu/notificacoes/ler-todas');
 
-    final response = await http.patch(url);
+    final response = await ApiClient.patch(url);
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -137,29 +133,23 @@ class NotificacaoService {
   // CRIAR E EXCLUIR
   // ============================================================
 
-  /// Cria uma notificação para o usuário.
+  /// Cria uma notificação para quem está logado.
   ///
   /// Usada pelo app só para a conquista: os avisos de cadastro, solicitação e
   /// amizade nascem no backend, que é quem tem os dois lados do evento.
-  Future<Notificacao> criar(
-    int usuarioId, {
+  Future<Notificacao> criar({
     required String titulo,
     required String texto,
   }) async {
-    if (usuarioId == 0) {
-      throw Exception('Notificação só existe para usuário logado.');
-    }
-
     if (!AppConfig.usarApi) {
-      return NotificacaoMock.criar(usuarioId, titulo, texto);
+      return NotificacaoMock.criar(_idDaSessao, titulo, texto);
     }
 
-    final url = Uri.parse('$urlBase/usuarios/$usuarioId/notificacoes');
+    final url = Uri.parse('$urlBase/usuarios/eu/notificacoes');
 
-    final response = await http.post(
+    final response = await ApiClient.postJson(
       url,
-      headers: const {'Content-Type': 'application/json'},
-      body: jsonEncode({'titulo': titulo, 'texto': texto}),
+      {'titulo': titulo, 'texto': texto},
     );
 
     if (response.statusCode == 201) {
@@ -179,10 +169,10 @@ class NotificacaoService {
     }
 
     final url = Uri.parse(
-      '$urlBase/usuarios/$usuarioId/notificacoes/$notificacaoId',
+      '$urlBase/usuarios/eu/notificacoes/$notificacaoId',
     );
 
-    final response = await http.delete(url);
+    final response = await ApiClient.delete(url);
 
     if (response.statusCode == 200 || response.statusCode == 204) return;
 
@@ -192,6 +182,9 @@ class NotificacaoService {
   // ============================================================
   // AJUDA
   // ============================================================
+
+  /// Chave do progresso do mock; com a API quem é a conta vem do token.
+  int get _idDaSessao => AuthSession.instance.usuario?.id ?? 0;
 
   List<Notificacao> _lerLista(String body) {
     final json = jsonDecode(body) as List<dynamic>;

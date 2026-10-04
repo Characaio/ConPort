@@ -111,8 +111,9 @@ public class ReportService {
             ReportCreateDTO reportDTO,
             LocalizacaoDTO localizacaoDTO,
             List<MultipartFile> imagens,
-            Long unidadeId) throws IOException {
-        Report report = CriarReport(reportDTO,localizacaoDTO,imagens, unidadeId);
+            Long unidadeId,
+            Long usuarioId) throws IOException {
+        Report report = CriarReport(reportDTO, localizacaoDTO, imagens, unidadeId, usuarioId);
 
         if (VerificarReportDuplicado(report)){
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Report ja existe");
@@ -145,13 +146,15 @@ public class ReportService {
             ReportCreateDTO reportDTO,
             LocalizacaoDTO localizaoDTO,
             List<MultipartFile> imagens,
-            Long unidadeId) throws IOException {
+            Long unidadeId,
+            Long usuarioId) throws IOException {
         Report report = new Report();
         List<ImagemProcessada> imagensProcessadas = imagemService.SalvarImagens(imagens);
         UnidadeDeConservacao unidade = unidadeRepository.findById(unidadeId)
                 .orElseThrow(() -> new UnidadeNaoEncontrada("Unidade não encontrada"));
 
-        Usuario usuario = usuarioRepository.findById(reportDTO.UsuarioId())
+        // O autor vem do token (veja ReportController), nunca do corpo.
+        Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new UsuarioNaoEncontrado("Usuario não encontrado"));
 
         report.setUnidade(unidade);

@@ -13,8 +13,9 @@ import 'package:conport/widgets/topbar.dart';
 
 /// Edição do perfil: foto, dados e senha.
 ///
-/// Só entra no que o `PUT /usuarios/{id}` aceita. Campos que a pessoa não
-/// mexeu não vão no corpo, então o backend mantém o valor antigo.
+/// Só entra no que o `PUT /usuarios/eu` aceita. Campos que a pessoa não
+/// mexeu não vão no corpo, então o backend mantém o valor antigo. O id da
+/// conta não vai na rota: quem é o dono vem do token.
 class EditarPerfilPage extends StatefulWidget {
   const EditarPerfilPage({
     super.key,
@@ -193,7 +194,6 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
 
     try {
       await widget.usuarioService.atualizarAvatar(
-        widget.usuarioId,
         bytes: bytes,
         nome: foto.name,
       );
@@ -255,7 +255,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     });
 
     try {
-      await widget.usuarioService.removerAvatar(widget.usuarioId);
+      await widget.usuarioService.removerAvatar();
 
       final atualizado = await widget.usuarioService.pegarDados(
         widget.usuarioId,
@@ -307,8 +307,8 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
         ? 'A senha precisa de pelo menos 6 caracteres.'
         : null;
 
-    // O backend exige a senha atual: sem ela a troca valeria para qualquer
-    // conta, já que a rota é só pelo id.
+    // O backend exige a senha atual: sem ela, quem tivesse o token trocaria a
+    // senha da conta alheia.
     final erroSenhaAtual = senha.isNotEmpty && senhaAtual.isEmpty
         ? 'Informe a senha atual para trocar a senha.'
         : null;
@@ -341,7 +341,6 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
 
     try {
       final atualizado = await widget.usuarioService.atualizarPerfil(
-        widget.usuarioId,
         nome: _nomeController.text.trim(),
         username: _usernameController.text.trim().toLowerCase(),
         email: _emailController.text.trim(),

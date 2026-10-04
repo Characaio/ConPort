@@ -159,6 +159,12 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             SizedBox(height: 16),
                             _ActionButton(
+                              icon: Icons.phonelink_erase,
+                              label: 'Sair de todos os lugares',
+                              onPressed: _sairDeTodosOsLugares,
+                            ),
+                            SizedBox(height: 16),
+                            _ActionButton(
                               icon: Icons.delete_outline,
                               label: 'Excluir conta',
                               destructive: true,
@@ -259,8 +265,10 @@ class _SettingsPageState extends State<SettingsPage> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _sairDaConta() {
-    AuthSession.instance.encerrar();
+  Future<void> _sairDaConta() async {
+    // Revoga o token no servidor e limpa o cofre do aparelho. Mesmo sem rede a
+    // saída acontece: a pessoa pediu para sair, não para rezar pelo 500.
+    await AuthSession.instance.sairDaConta();
 
     // A lista de notificações fica em memória: sem limpar aqui, a conta que
     // entrar depois veria as notificações da conta que saiu.
@@ -269,6 +277,39 @@ class _SettingsPageState extends State<SettingsPage> {
     // Mostra a mensagem antes de navegar: o mensageiro fica acima do
     // Navigator e o aviso sobrevive à troca de rota.
     _showMessage('Você saiu da sua conta.');
+
+    PageLoader.replace(context, PageLoader.welcome);
+  }
+
+  Future<void> _sairDeTodosOsLugares() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sair de todos os lugares?'),
+        content: const Text(
+          'A conta sai deste aparelho e de qualquer outro onde ela estiver '
+          'aberta. Será preciso entrar de novo em todos.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sair de todos'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true || !mounted) return;
+
+    await AuthSession.instance.sairDeTodosOsLugares();
+
+    NotificacaoController.instance.limpar();
+
+    _showMessage('Sessões encerradas em todos os aparelhos.');
 
     PageLoader.replace(context, PageLoader.welcome);
   }
@@ -558,10 +599,7 @@ class _VisibilidadeSeguidoresState extends State<_VisibilidadeSeguidores> {
     });
 
     try {
-      final salvo = await widget.usuarioService.atualizarVisibilidade(
-        id,
-        nova,
-      );
+      final salvo = await widget.usuarioService.atualizarVisibilidade(nova);
 
       if (!mounted) return;
 

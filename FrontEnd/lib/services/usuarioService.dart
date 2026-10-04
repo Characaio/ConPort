@@ -1,30 +1,45 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:conport/models/usuario.dart';
 import 'package:http/http.dart' as http;
+import 'package:conport/models/usuario.dart';
 
 import '../config/app_config.dart';
+import '../core/session/api_client.dart';
+import '../core/session/auth_session.dart';
 import '../mocks/usuario_mock.dart';
 import 'package:conport/mocks/amigo_mock.dart';
 import 'package:conport/models/amigo.dart';
 import 'multipart_media_type.dart';
 
+/// Perfil,_amizade, seguir e privacidade.
+///
+/// Depois da sessão por token, a separação é a mesma do backend: o que é de
+/// quem está olhando (`pegarDados`, `buscar`, listas) continua público e manda o
+/// token só para o servidor saber de quem é o ponto de vista; o que é seu
+/// (amigos, solicitações, perfil, avatar, privacidade) vai para `/usuarios/eu`
+/// e o usuário nem aparece na rota — trocar o id na URL não troca mais de
+/// conta.
 class UsuarioService {
   const UsuarioService();
+
+  /// Quem está logado agora; `0` quando não há ninguém.
+  ///
+  /// Só o modo mock precisa do id para endereçar o mock: lá o progresso é
+  /// local e precisa saber de quem é. Com a API, quem é a conta vem do token.
+  int get _idDaSessao => AuthSession.instance.usuario?.id ?? 0;
 
   Future<Usuario> pegarDados(int id, {int? visorId}) async {
     if (!AppConfig.usarApi) {
       return UsuarioMock.pegarDados(id);
     }
 
-    // visorId diz de quem é o ponto de vista; sem ele o backend devolve o
-    // perfil neutro (tudo falso) e os botões da tela não sabem o que fazer.
-    final url = Uri.parse('${AppConfig.apiUrl}/usuarios/$id').replace(
-      queryParameters: {if (visorId != null) 'visorId': '$visorId'},
-    );
+    // Quem está vendo vem do token. O [visorId] fica só para o modo mock, em
+    // que não existe servidor para olhar o token: sem ele, o mock não sabe
+    // dizer se você já segue essa pessoa.
+    final url = Uri.parse('${AppConfig.apiUrl}/usuarios/$id');
 
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
@@ -39,11 +54,30 @@ class UsuarioService {
     throw Exception('Erro ao buscar Usuario: ${response.statusCode}');
   }
 
-  Future<List<Amigo>> listarAmigos(int id) async {
+  /// O perfil de quem está logado, vindo do token.
+  Future<Usuario> minhaConta() async {
+    if (!AppConfig.usarApi) {
+      return UsuarioMock.pegarDados(_idDaSessao);
+    }
+
+    final response = await ApiClient.get(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu'),
+    );
+
+    if (response.statusCode == 200) {
+      return Usuario.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+
+    throw Exception('Não foi possível carregar a sua conta.');
+  }
+
+  Future<List<Amigo>> listarAmigos() async {
     if (!AppConfig.usarApi) return AmigoMock.amigos();
 
-    final response = await http.get(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id/amigos'),
+    final response = await ApiClient.get(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/amigos'),
     );
 
     if (response.statusCode == 200) {
@@ -56,11 +90,11 @@ class UsuarioService {
     throw Exception('Erro ao buscar amigos: ${response.statusCode}');
   }
 
-  Future<List<Amigo>> listarSolicitacoes(int id) async {
+  Future<List<Amigo>> listarSolicitacoes() async {
     if (!AppConfig.usarApi) return AmigoMock.solicitacoes();
 
-    final response = await http.get(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id/solicitacoes'),
+    final response = await ApiClient.get(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/solicitacoes'),
     );
 
     if (response.statusCode == 200) {
@@ -73,20 +107,18 @@ class UsuarioService {
     throw Exception('Erro ao buscar solicitações: ${response.statusCode}');
   }
 
-  Future<List<Amigo>> buscar(String termo, {int? usuarioId}) async {
+  Future<List<Amigo>> buscar(String termo) async {
     if (!AppConfig.usarApi) {
-      return AmigoMock.buscar(termo, ignorar: usuarioId);
+      return AmigoMock.buscar(termo, ignorar: _idDaSessao);
     }
 
-    // O id vai junto para o backend não devolver a própria conta.
-    final uri = Uri.parse('${AppConfig.apiUrl}/usuarios/buscar').replace(
-      queryParameters: {
-        'termo': termo,
-        if (usuarioId != null) 'usuarioId': '$usuarioId',
-      },
-    );
+    // Público: quem não tem conta precisa achar alguém para seguir. O token
+    // é que faz o backend não devolver a própria conta no resultado.
+    final uri = Uri.parse(
+      '${AppConfig.apiUrl}/usuarios/buscar',
+    ).replace(queryParameters: {'termo': termo});
 
-    final response = await http.get(uri);
+    final response = await ApiClient.get(uri);
 
     if (response.statusCode == 200) {
       final lista = jsonDecode(response.body) as List;
@@ -98,13 +130,13 @@ class UsuarioService {
     throw Exception('Erro ao buscar usuários: ${response.statusCode}');
   }
 
-  Future<void> enviarSolicitacao(int id, int alvoId) async {
+  Future<void> enviarSolicitacao(int alvoId) async {
     if (!AppConfig.usarApi) return;
 
     // A rota é /amizade e não /seguir: "seguir" agora é follow, que é outra
     // ação e não pede nada.
-    final response = await http.post(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id/amizade/$alvoId'),
+    final response = await ApiClient.post(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/amizade/$alvoId'),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) return;
@@ -115,11 +147,11 @@ class UsuarioService {
     throw Exception('Erro ao enviar solicitação: ${response.statusCode}');
   }
 
-  Future<void> aceitar(int id, int relacaoId) async {
+  Future<void> aceitar(int relacaoId) async {
     if (!AppConfig.usarApi) return;
 
-    final response = await http.post(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id/aceitar/$relacaoId'),
+    final response = await ApiClient.post(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/aceitar/$relacaoId'),
     );
 
     if (response.statusCode == 200) return;
@@ -127,11 +159,11 @@ class UsuarioService {
     throw Exception('Erro ao aceitar: ${response.statusCode}');
   }
 
-  Future<void> recusar(int id, int relacaoId) async {
+  Future<void> recusar(int relacaoId) async {
     if (!AppConfig.usarApi) return;
 
-    final response = await http.post(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id/recusar/$relacaoId'),
+    final response = await ApiClient.post(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/recusar/$relacaoId'),
     );
 
     if (response.statusCode == 200) return;
@@ -143,8 +175,7 @@ class UsuarioService {
   ///
   /// Só os campos não nulos vão no corpo: o backend trata o PUT como parcial,
   /// então deixar [senha] fora é o que faz "não mexer na senha".
-  Future<Usuario> atualizarPerfil(
-    int id, {
+  Future<Usuario> atualizarPerfil({
     String? nome,
     String? username,
     String? email,
@@ -155,7 +186,7 @@ class UsuarioService {
     String? senhaAtual,
   }) async {
     if (!AppConfig.usarApi) {
-      final atual = UsuarioMock.pegarDados(id);
+      final atual = UsuarioMock.pegarDados(_idDaSessao);
 
       return Usuario(
         id: atual.id,
@@ -172,6 +203,7 @@ class UsuarioService {
         moedas: atual.moedas,
         avatar: atual.avatar,
         datacadastro: atual.datacadastro,
+        visibilidade: atual.visibilidade,
         seguidores: atual.seguidores,
         seguindo: atual.seguindo,
         reportsEnviados: atual.reportsEnviados,
@@ -195,10 +227,9 @@ class UsuarioService {
     if (senha != null) corpo['senha'] = senha;
     if (senhaAtual != null) corpo['senhaAtual'] = senhaAtual;
 
-    final response = await http.put(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(corpo),
+    final response = await ApiClient.putJson(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu'),
+      corpo,
     );
 
     if (response.statusCode == 200) {
@@ -213,8 +244,7 @@ class UsuarioService {
   /// Os bytes vão em vez do caminho porque no Android novo e na web o arquivo
   /// escolhido pelo seletor não tem `path`. O `contentType` precisa ir junto:
   /// sem ele a parte do arquivo não tem Content-Type e o backend recusa.
-  Future<String> atualizarAvatar(
-    int id, {
+  Future<String> atualizarAvatar({
     required Uint8List bytes,
     required String nome,
   }) async {
@@ -222,7 +252,7 @@ class UsuarioService {
 
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id/avatar'),
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/avatar'),
     );
 
     request.files.add(
@@ -234,7 +264,7 @@ class UsuarioService {
       ),
     );
 
-    final resposta = await http.Response.fromStream(await request.send());
+    final resposta = await ApiClient.multipart(request);
 
     if (resposta.statusCode == 200 || resposta.statusCode == 201) {
       final json = jsonDecode(resposta.body);
@@ -245,11 +275,11 @@ class UsuarioService {
     throw _erroDoBackend(resposta, 'Não foi possível enviar a foto.');
   }
 
-  Future<void> removerAvatar(int id) async {
+  Future<void> removerAvatar() async {
     if (!AppConfig.usarApi) return;
 
-    final response = await http.delete(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id/avatar'),
+    final response = await ApiClient.delete(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/avatar'),
     );
 
     if (response.statusCode == 204 || response.statusCode == 200) return;
@@ -257,14 +287,14 @@ class UsuarioService {
     throw _erroDoBackend(response, 'Não foi possível remover a foto.');
   }
 
-  Future<void> remover(int id, int alvoId) async {
+  Future<void> removerAmigo(int alvoId) async {
     if (!AppConfig.usarApi) {
-      AmigoMock.removerAmigo(id, alvoId);
+      AmigoMock.removerAmigo(_idDaSessao, alvoId);
       return;
     }
 
-    final response = await http.delete(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id/amizade/$alvoId'),
+    final response = await ApiClient.delete(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/amizade/$alvoId'),
     );
 
     if (response.statusCode == 204) return;
@@ -277,14 +307,14 @@ class UsuarioService {
   // ============================================================
 
   /// Seguir é imediato e não pede nada para o outro lado.
-  Future<void> seguir(int id, int alvoId) async {
+  Future<void> seguir(int alvoId) async {
     if (!AppConfig.usarApi) {
-      AmigoMock.seguir(id, alvoId);
+      AmigoMock.seguir(_idDaSessao, alvoId);
       return;
     }
 
-    final response = await http.post(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id/seguindo/$alvoId'),
+    final response = await ApiClient.post(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/seguir/$alvoId'),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) return;
@@ -292,14 +322,14 @@ class UsuarioService {
     throw _erroDoBackend(response, 'Não foi possível seguir.');
   }
 
-  Future<void> deixarDeSeguir(int id, int alvoId) async {
+  Future<void> deixarDeSeguir(int alvoId) async {
     if (!AppConfig.usarApi) {
-      AmigoMock.deixarDeSeguir(id, alvoId);
+      AmigoMock.deixarDeSeguir(_idDaSessao, alvoId);
       return;
     }
 
-    final response = await http.delete(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id/seguindo/$alvoId'),
+    final response = await ApiClient.delete(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/seguir/$alvoId'),
     );
 
     if (response.statusCode == 204) return;
@@ -318,10 +348,9 @@ class UsuarioService {
       return AmigoMock.seguindo(usuarioId);
     }
 
-    final response = await http.get(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$usuarioId/seguindo').replace(
-        queryParameters: {if (visorId != null) 'visorId': '$visorId'},
-      ),
+    // No servidor quem está vendo vem do token; o [visorId] só serve ao mock.
+    final response = await ApiClient.get(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/$usuarioId/seguindo'),
     );
 
     if (response.statusCode == 200) return _amigosDe(response.body);
@@ -337,10 +366,8 @@ class UsuarioService {
       return AmigoMock.seguidores(usuarioId);
     }
 
-    final response = await http.get(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$usuarioId/seguidores').replace(
-        queryParameters: {if (visorId != null) 'visorId': '$visorId'},
-      ),
+    final response = await ApiClient.get(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/$usuarioId/seguidores'),
     );
 
     if (response.statusCode == 200) return _amigosDe(response.body);
@@ -350,21 +377,19 @@ class UsuarioService {
     throw _erroDoBackend(response, 'Não foi possível carregar a lista.');
   }
 
-  /// Quem pode ver as listas de [id]. Salva no banco: a escolha sobrevive
-  /// ao fechar o app.
+  /// Quem pode ver as listas de quem está logado. Salva no banco: a escolha
+  /// sobrevive ao fechar o app.
   Future<VisibilidadeSeguidores> atualizarVisibilidade(
-    int id,
     VisibilidadeSeguidores visibilidade,
   ) async {
     if (!AppConfig.usarApi) {
-      UsuarioMock.definirVisibilidade(id, visibilidade);
+      UsuarioMock.definirVisibilidade(_idDaSessao, visibilidade);
       return visibilidade;
     }
 
-    final response = await http.put(
-      Uri.parse('${AppConfig.apiUrl}/usuarios/$id/privacidade'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'visibilidade': visibilidade.nome}),
+    final response = await ApiClient.putJson(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/privacidade'),
+      {'visibilidade': visibilidade.nome},
     );
 
     if (response.statusCode == 200) {
@@ -377,7 +402,8 @@ class UsuarioService {
     throw _erroDoBackend(response, 'Não foi possível salvar a preferência.');
   }
 
-  List<Amigo> _amigosDe(String body) {    final lista = jsonDecode(body) as List;
+  List<Amigo> _amigosDe(String body) {
+    final lista = jsonDecode(body) as List;
 
     return lista.map((e) => Amigo.fromJson(e as Map<String, dynamic>)).toList();
   }

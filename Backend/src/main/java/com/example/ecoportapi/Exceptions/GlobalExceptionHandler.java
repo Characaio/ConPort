@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.io.IOException;
+import java.util.Map;
 
 
 @RestControllerAdvice
@@ -101,6 +102,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
+    }
+
+    /**
+     * Credencial errada no login ou senha atual errada na troca.
+     *
+     * <p>A resposta é JSON e sem stack trace: quem errou a senha nao precisa
+     * receber um despejo de classes do servidor.
+     */
+    @ExceptionHandler(CredenciaisInvalidas.class)
+    public ResponseEntity<Map<String, String>> CredenciaisInvalidas(CredenciaisInvalidas exception) {
+        erroLoggerService.registrarErro(exception);
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("mensagem", exception.getMessage()));
     }
 
     @ExceptionHandler(UsuarioNaoEncontrado.class)

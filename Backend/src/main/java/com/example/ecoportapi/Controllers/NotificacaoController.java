@@ -1,25 +1,23 @@
 package com.example.ecoportapi.Controllers;
 
+import com.example.ecoportapi.Annotations.ExigeSessao;
 import com.example.ecoportapi.DTOs.Request.NotificacaoCreateDTO;
 import com.example.ecoportapi.Services.NotificacaoService;
+import com.example.ecoportapi.Services.SessaoInterceptor;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Notificações do usuário.
+ * Notificações do usuário da sessão.
  *
- * O app chama:
- * - `GET    /usuarios/{id}/notificacoes`                  → todas
- * - `GET    /usuarios/{id}/notificacoes/nao-lidas`         → só as não lidas
- * - `GET    /usuarios/{id}/notificacoes/nao-lidas/contagem`→ só o número do sino
- * - `POST   /usuarios/{id}/notificacoes`                  → cria (201)
- * - `PATCH  /usuarios/{id}/notificacoes/{notificacaoId}/ler`
- * - `PATCH  /usuarios/{id}/notificacoes/ler-todas`
- * - `DELETE /usuarios/{id}/notificacoes/{notificacaoId}`
+ * <p>O caminho é {@code /usuarios/eu/notificacoes} e o usuário vem do token.
+ * Antes o id ia na URL: dava para ler, apagar e marcar como lida a notificação
+ * de qualquer conta.
  */
 @RestController
-@RequestMapping("/usuarios/{usuarioId}/notificacoes")
+@RequestMapping("/usuarios/eu/notificacoes")
 public class NotificacaoController {
 
     private final NotificacaoService notificacaoService;
@@ -28,13 +26,10 @@ public class NotificacaoController {
         this.notificacaoService = notificacaoService;
     }
 
-    // ATENÇÃO: sem autenticação, quem lista se identifica por id na URL.
-    // Mesma limitação de ConquistaController; quando existir token, o
-    // usuarioId da URL deve ser trocado pelo usuário logado.
-
     @GetMapping
-    public ResponseEntity<?> ListarNotificacoes(@PathVariable Long usuarioId) {
-        return ResponseEntity.ok(notificacaoService.listar(usuarioId));
+    @ExigeSessao
+    public ResponseEntity<?> ListarNotificacoes(HttpServletRequest request) {
+        return ResponseEntity.ok(notificacaoService.listar(euId(request)));
     }
 
     /**
@@ -42,46 +37,56 @@ public class NotificacaoController {
      * o Spring prefere o trecho exato ao curinga.
      */
     @GetMapping("/nao-lidas")
-    public ResponseEntity<?> ListarNaoLidas(@PathVariable Long usuarioId) {
-        return ResponseEntity.ok(notificacaoService.listarNaoLidas(usuarioId));
+    @ExigeSessao
+    public ResponseEntity<?> ListarNaoLidas(HttpServletRequest request) {
+        return ResponseEntity.ok(notificacaoService.listarNaoLidas(euId(request)));
     }
 
     @GetMapping("/nao-lidas/contagem")
-    public ResponseEntity<?> ContarNaoLidas(@PathVariable Long usuarioId) {
-        return ResponseEntity.ok(notificacaoService.contarNaoLidas(usuarioId));
+    @ExigeSessao
+    public ResponseEntity<?> ContarNaoLidas(HttpServletRequest request) {
+        return ResponseEntity.ok(notificacaoService.contarNaoLidas(euId(request)));
     }
 
     @PostMapping
+    @ExigeSessao
     public ResponseEntity<?> CriarNotificacao(
-            @PathVariable Long usuarioId,
-            @RequestBody NotificacaoCreateDTO notificacaoDTO
+            @RequestBody NotificacaoCreateDTO notificacaoDTO,
+            HttpServletRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(notificacaoService.criar(usuarioId, notificacaoDTO));
+                .body(notificacaoService.criar(euId(request), notificacaoDTO));
     }
 
     @PatchMapping("/{notificacaoId}/ler")
+    @ExigeSessao
     public ResponseEntity<?> MarcarComoLida(
-            @PathVariable Long usuarioId,
-            @PathVariable Long notificacaoId
+            @PathVariable Long notificacaoId,
+            HttpServletRequest request
     ) {
         return ResponseEntity.ok(
-                notificacaoService.marcarComoLida(usuarioId, notificacaoId)
+                notificacaoService.marcarComoLida(euId(request), notificacaoId)
         );
     }
 
     @PatchMapping("/ler-todas")
-    public ResponseEntity<?> MarcarTodasComoLidas(@PathVariable Long usuarioId) {
-        return ResponseEntity.ok(notificacaoService.marcarTodasComoLidas(usuarioId));
+    @ExigeSessao
+    public ResponseEntity<?> MarcarTodasComoLidas(HttpServletRequest request) {
+        return ResponseEntity.ok(notificacaoService.marcarTodasComoLidas(euId(request)));
     }
 
     @DeleteMapping("/{notificacaoId}")
+    @ExigeSessao
     public ResponseEntity<?> ExcluirNotificacao(
-            @PathVariable Long usuarioId,
-            @PathVariable Long notificacaoId
+            @PathVariable Long notificacaoId,
+            HttpServletRequest request
     ) {
-        notificacaoService.excluir(usuarioId, notificacaoId);
+        notificacaoService.excluir(euId(request), notificacaoId);
 
         return ResponseEntity.noContent().build();
+    }
+
+    private Long euId(HttpServletRequest request) {
+        return SessaoInterceptor.usuarioObrigatorio(request).getId();
     }
 }

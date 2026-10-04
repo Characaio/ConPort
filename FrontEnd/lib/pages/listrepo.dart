@@ -82,7 +82,7 @@ class _SeusReportsState extends State<SeusReports> {
     }
 
     try {
-      final lista = await _reportService.buscarMeusReports(usuario.id);
+      final lista = await _reportService.buscarMeusReports();
 
       if (!mounted) return;
 

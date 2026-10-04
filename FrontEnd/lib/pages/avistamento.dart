@@ -12,24 +12,24 @@ import 'package:conport/widgets/topbar.dart';
 class AvistamentoPage extends StatefulWidget {
   final XFile imagem;
   final int unidadeId;
-  final int usuarioId;
   final AvistamentoService service;
 
   const AvistamentoPage({
     super.key,
     required this.imagem,
     required this.unidadeId,
-    required this.usuarioId,
     this.service = const AvistamentoService(),
   });
 
   /// Ponto de entrada: chame isto no clique do botão "Enviar Avistamento".
   /// Pede a imagem (câmera/galeria no celular, seletor de arquivos no PC)
   /// e, se o usuário escolher uma, abre a tela de confirmação.
+  ///
+  /// Não pede quem é o autor: com a sessão por token, o avistamento sai em nome
+  /// de quem está logado, e sem sessão o servidor recusa.
         static Future<void> iniciar(
           BuildContext context, {
           required int unidadeId,
-          required int usuarioId,
         }) async {
           final imagem = await escolherImagem(context);
 
@@ -40,7 +40,6 @@ class AvistamentoPage extends StatefulWidget {
               builder: (_) => AvistamentoPage(
                 imagem: imagem,
                 unidadeId: unidadeId,
-                usuarioId: usuarioId,
               ),
             ),
           );
@@ -75,9 +74,8 @@ class _AvistamentoPageState extends State<AvistamentoPage> {
 
     try {
       await widget.service.enviar(
-        imagem:widget.imagem,
+        imagem: widget.imagem,
         unidadeId: widget.unidadeId,
-        usuarioId: widget.usuarioId,
         );
 
       messenger.showSnackBar(

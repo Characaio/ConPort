@@ -117,9 +117,9 @@ class _ProfileState extends State<Profile> {
 
     try {
       if (estavaSeguindo) {
-        await widget.usuarioService.deixarDeSeguir(_visorId!, u.id);
+        await widget.usuarioService.deixarDeSeguir(u.id);
       } else {
-        await widget.usuarioService.seguir(_visorId!, u.id);
+        await widget.usuarioService.seguir(u.id);
       }
 
       if (!mounted) return;
@@ -148,7 +148,7 @@ class _ProfileState extends State<Profile> {
     setState(() => _ocupado = true);
 
     try {
-      await widget.usuarioService.enviarSolicitacao(_visorId!, u.id);
+      await widget.usuarioService.enviarSolicitacao(u.id);
 
       if (!mounted) return;
 

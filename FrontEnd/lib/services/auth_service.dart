@@ -1,8 +1,7 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
-
 import 'package:conport/config/app_config.dart';
+import 'package:conport/core/session/api_client.dart';
 import 'package:conport/mocks/auth_mock.dart';
 import 'package:conport/models/usuario.dart';
 
@@ -16,7 +15,11 @@ class AuthException implements Exception {
   String toString() => mensagem;
 }
 
-/// O que login e cadastro devolvem: o usuário e, com a API, o token.
+/// O que login e cadastro devolvem: o usuário e o token da sessão.
+///
+/// Com a API, o backend responde `SessaoDTO { Token, Usuario }`: quem entra
+/// já sai com o token na mão e não precisa trocar de novo por causa do
+/// `/login`. No modo mock não existe token — o progresso dos mocks é local.
 class ResultadoAutenticacao {
   final Usuario usuario;
   final String? token;
@@ -24,16 +27,20 @@ class ResultadoAutenticacao {
   const ResultadoAutenticacao({required this.usuario, this.token});
 }
 
-/// Login e cadastro.
+/// Login, cadastro e o fim da sessão.
 ///
-/// Com `AppConfig.usarApi == false` usa o [AuthMock]; quando a API for
-/// ligada, os métodos abaixo já apontam para os endpoints do backend:
+/// Com `AppConfig.usarApi == false` usa o [AuthMock]; com a API ligada, os
+/// endpoints são:
 ///
-/// * `POST /usuarios/login`   → corpo `LoginDTO { email, senha }`,
-///   devolve `UsuarioDTO` (200) ou 401/404.
-/// * `POST /usuarios/signup`  → corpo `SignupDTO { nome, dataNasc, email,
-///   senha, estado, cidade }`, devolve 201 sem corpo; por isso o cadastro
-///   entra em seguida pelo próprio login.
+/// * `POST /usuarios/login`  → corpo `LoginDTO { email, senha }` → 200
+///   `SessaoDTO { Token, Usuario }`, ou 401 (e-mail errado e senha errada
+///   devolvem a mesma coisa, para não revelar quais e-mails existem).
+/// * `POST /usuarios/signup` → corpo `SignupDTO { nome, username, dataNasc,
+///   email, senha, estado, cidade }` → 201 `SessaoDTO`, 409 e-mail repetido,
+///   400 senha curta.
+/// * `GET    /usuarios/eu`   → o perfil de quem tem o token, ou 401.
+/// * `POST   /usuarios/logout`, `POST /usuarios/logout-em-todos-os-lugares`
+///   → revogam o token (204).
 class AuthService {
   final String urlBase = AppConfig.apiUrl;
 
@@ -57,10 +64,9 @@ class AuthService {
 
     final url = Uri.parse('$urlBase/usuarios/login');
 
-    final response = await http.post(
+    final response = await ApiClient.postJson(
       url,
-      headers: const {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email.trim(), 'senha': senha}),
+      {'email': email.trim(), 'senha': senha},
     );
 
     if (response.statusCode == 200) {
@@ -107,10 +113,9 @@ class AuthService {
 
     final url = Uri.parse('$urlBase/usuarios/signup');
 
-    final response = await http.post(
+    final response = await ApiClient.postJson(
       url,
-      headers: const {'Content-Type': 'application/json'},
-      body: jsonEncode({
+      {
         'nome': nome.trim(),
         'username': username.trim().toLowerCase(),
         'dataNasc': _dataIso(dataNasc),
@@ -118,15 +123,10 @@ class AuthService {
         'senha': senha,
         'estado': estado.trim(),
         'cidade': cidade.trim(),
-      }),
+      },
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      // O cadastro do backend responde 201 sem corpo: entra em seguida.
-      if (response.body.trim().isEmpty) {
-        return entrar(email: email, senha: senha);
-      }
-
       return _lerResposta(response.body);
     }
 
@@ -142,11 +142,71 @@ class AuthService {
   }
 
   // ============================================================
+  // SESSÃO
+  // ============================================================
+
+  /// Prova um token guardado e devolve o dono dele.
+  ///
+  /// É o que a abertura do app chama: `null` significa token recusado (expirado
+  /// ou revogado) e a pessoa volta para a tela de acesso. Sem API ligada não há
+  /// token para provar — o modo demonstração guarda o progresso em memória.
+  static Future<Usuario?> validarToken(String token) async {
+    if (!AppConfig.usarApi) return null;
+
+    final usuario = await AuthService().minhaConta(token: token);
+
+    return usuario;
+  }
+
+  /// `GET /usuarios/eu`: o perfil de quem está com o token.
+  ///
+  /// [token] existe para a sondagem de abertura, em que o token ainda não é a
+  /// sessão. O 401 vira `null` (token recusado) em vez de exceção: quem decide
+  /// o que fazer com isso é o [AuthSession], e para a tela tanto faz.
+  Future<Usuario?> minhaConta({String? token}) async {
+    if (!AppConfig.usarApi) return null;
+
+    final url = Uri.parse('$urlBase/usuarios/eu');
+
+    final response = await ApiClient.get(url, token: token);
+
+    if (response.statusCode == 200) {
+      return Usuario.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+
+    return null;
+  }
+
+  /// Revoga o token no servidor.
+  ///
+  /// Não lança exceção de propósito: quem chama é o botão de sair, e falhar
+  /// o logout por causa da rede prenderia a pessoa logada no app.
+  Future<void> encerrarSessao({bool emTodosOsLugares = false}) async {
+    if (!AppConfig.usarApi) return;
+
+    final rota = emTodosOsLugares
+        ? 'logout-em-todos-os-lugares'
+        : 'logout';
+
+    try {
+      await ApiClient.post(Uri.parse('$urlBase/usuarios/$rota'));
+    } catch (_) {
+      // Sem rede o token continua válido no servidor até expirar; a sessão
+      // local é limpa de qualquer jeito.
+    }
+  }
+
+  // ============================================================
   // RESPOSTA
   // ============================================================
 
-  /// Aceita tanto `{"token": "...", "usuario": {...}}` quanto o próprio
-  /// `UsuarioDTO` solto, que é o que o backend devolve hoje.
+  /// Lê o `SessaoDTO { Token, Usuario }`.
+  ///
+  /// O backend grava em PascalCase (o nome dos campos do Java), mas o app
+  /// aceita as duas grafias: se um dia o JSON sair com nome minúsculo, o
+  /// login continua funcionando em vez de virar "Resposta inválida".
   ResultadoAutenticacao _lerResposta(String corpo) {
     final dynamic json = jsonDecode(corpo);
 
@@ -156,7 +216,7 @@ class AuthService {
 
     final dados = Map<String, dynamic>.from(json);
     final dynamic usuarioJson =
-        dados['usuario'] ?? dados['Usuario'] ?? dados['user'] ?? dados;
+        dados['Usuario'] ?? dados['usuario'] ?? dados['user'];
 
     if (usuarioJson is! Map) {
       throw const AuthException('Resposta inválida do servidor.');
@@ -164,7 +224,7 @@ class AuthService {
 
     return ResultadoAutenticacao(
       usuario: Usuario.fromJson(Map<String, dynamic>.from(usuarioJson)),
-      token: dados['token']?.toString() ?? dados['Token']?.toString(),
+      token: dados['Token']?.toString() ?? dados['token']?.toString(),
     );
   }
 

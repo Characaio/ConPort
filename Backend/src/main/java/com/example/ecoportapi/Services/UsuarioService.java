@@ -6,8 +6,11 @@ import com.example.ecoportapi.DTOs.Request.VisibilidadeDTO;
 import com.example.ecoportapi.DTOs.Request.LoginDTO;
 import com.example.ecoportapi.DTOs.Request.SignupDTO;
 import com.example.ecoportapi.DTOs.Response.AvatarResponseDTO;
+import com.example.ecoportapi.DTOs.Response.MensagemDTO;
+import com.example.ecoportapi.DTOs.Response.SessaoDTO;
 import com.example.ecoportapi.DTOs.Response.UsuarioDTO;
 import com.example.ecoportapi.DTOs.Response.UsuarioResumoDTO;
+import com.example.ecoportapi.Exceptions.CredenciaisInvalidas;
 import com.example.ecoportapi.Exceptions.UsuarioNaoEncontrado;
 import com.example.ecoportapi.Models.Enums.StatusRelacionamento;
 import com.example.ecoportapi.Models.Enums.VisibilidadeSeguidores;
@@ -35,6 +38,8 @@ public class UsuarioService {
   private final ImagemService imagemService;
   private final CatalogoMissoes catalogoMissoes;
   private final NotificacaoService notificacaoService;
+  private final SenhaService senhaService;
+  private final TokenService tokenService;
 
   public UsuarioService(
       UsuarioRepository usuarioRepository,
@@ -42,13 +47,17 @@ public class UsuarioService {
       UsuarioSegueRepository usuarioSegueRepository,
       ImagemService imagemService,
       CatalogoMissoes catalogoMissoes,
-      NotificacaoService notificacaoService) {
+      NotificacaoService notificacaoService,
+      SenhaService senhaService,
+      TokenService tokenService) {
     this.usuarioRepository = usuarioRepository;
     this.relacionamentoRepository = relacionamentoRepository;
     this.usuarioSegueRepository = usuarioSegueRepository;
     this.imagemService = imagemService;
     this.catalogoMissoes = catalogoMissoes;
     this.notificacaoService = notificacaoService;
+    this.senhaService = senhaService;
+    this.tokenService = tokenService;
   }
 
   public void CalcularReputação() {}
@@ -56,14 +65,23 @@ public class UsuarioService {
   public ResponseEntity<?> Signup(SignupDTO signupDTO) {
     Usuario usuario = new Usuario();
 
-    if (usuarioRepository.existePorEmailESenha(signupDTO.email(), signupDTO.senha())) {
+    String email = signupDTO.email() == null ? "" : signupDTO.email().trim().toLowerCase();
+
+    // Só o e-mail: a checagem antiga comparava e-mail **e** senha, entao
+    // cadastrar o mesmo e-mail com outra senha passava e criava uma conta
+    // duplicada.
+    if (usuarioRepository.existePorEmail(email)) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body("Usuario Ja existe");
+    }
+
+    if (signupDTO.senha() == null || signupDTO.senha().length() < 6) {
+      return ResponseEntity.badRequest().body("A senha deve ter ao menos 6 caracteres");
     }
 
     usuario.setNome(signupDTO.nome());
     usuario.setDataNasc(signupDTO.dataNasc());
-    usuario.setEmail(signupDTO.email());
-    usuario.setSenha(signupDTO.senha());
+    usuario.setEmail(email);
+    usuario.setSenha(senhaService.gerarHash(signupDTO.senha()));
     usuario.setEstado(signupDTO.estado());
     usuario.setCidade(signupDTO.cidade());
     usuario.setConfiavel(false);
@@ -101,17 +119,54 @@ public class UsuarioService {
             + "meio ambiente."
     );
 
-    return ResponseEntity.status(HttpStatus.CREATED).build();
+    // O cadastro já devolve a sessão pronta: senão o app teria que fazer login
+    // logo em seguida com a senha que acabou de mandar.
+    String token = tokenService.emitir(salvo);
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(new SessaoDTO(token, montarDto(salvo, salvo.getId())));
   }
 
   public ResponseEntity<?> Login(LoginDTO loginDTO) {
-    Usuario usuario =
-        usuarioRepository
-            .buscarPorEmailESenha(loginDTO.email(), loginDTO.senha())
-            .orElseThrow(() -> new UsuarioNaoEncontrado("Usuario não encontrado"));
-    // Sem sessão ainda não existe "quem está vendo": o app abre a própria tela
-    // logo depois e o perfil neutro serve.
-    return ResponseEntity.ok(montarDto(usuario, null));
+    String email = loginDTO.email() == null ? "" : loginDTO.email().trim().toLowerCase();
+
+    // E-mail inexistente e senha errada dão a MESMA resposta: se devolvessem
+    // status diferentes, dava para descobrir quem tem conta no ConPort só
+    // olhando o 404 contra o 401.
+    Usuario usuario = usuarioRepository.buscarPorEmail(email).orElse(null);
+
+    if (usuario == null || !senhaService.conferir(loginDTO.senha(), usuario.getSenha())) {
+      throw new CredenciaisInvalidas("E-mail ou senha incorretos.");
+    }
+
+    // A conta antiga guardava a senha em texto puro. Agora que deu certo,
+    // reescreve a coluna com o hash e a migração acaba aqui.
+    if (senhaService.precisaMigrar(usuario.getSenha())) {
+      usuario.setSenha(senhaService.gerarHash(loginDTO.senha()));
+      usuarioRepository.save(usuario);
+    }
+
+    String token = tokenService.emitir(usuario);
+
+    return ResponseEntity.ok(new SessaoDTO(token, montarDto(usuario, usuario.getId())));
+  }
+
+  /** O "minha conta" da sessão atual. */
+  public UsuarioDTO minhaConta(Long usuarioId) {
+    return montarDto(buscarUsuario(usuarioId), usuarioId);
+  }
+
+  /** Encerra a sessão do token atual. */
+  public ResponseEntity<?> Logout(String token) {
+    tokenService.revogar(token);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  /** Encerra todas as sessões da conta. */
+  public ResponseEntity<?> LogoutDeTodosOsLugares(Long usuarioId) {
+    int revogadas = tokenService.revogarTodas(usuarioId);
+
+    return ResponseEntity.ok(new MensagemDTO(revogadas + " sessões encerradas."));
   }
 
   // ~ Cae
@@ -417,16 +472,15 @@ public class UsuarioService {
         return ResponseEntity.badRequest().body("A senha deve ter ao menos 6 caracteres");
       }
 
-      // As rotas ainda nao tem autenticacao: sem conferir a senha atual,
-      // qualquer um trocaria a senha de qualquer conta so pelo id da URL.
-      String atual = dto.senhaAtual() == null ? "" : dto.senhaAtual();
-
-      if (!usuario.getSenha().equals(atual)) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body("Senha atual incorreta");
+      // Conferir a senha atual e obrigatorio mesmo agora que existe token:
+      // roubar uma sessao ja aberta e mais facil do que adivinhar a senha,
+      // e quem abriu sessao em equipamento alheio nao deve poder travar a
+      // conta de fora.
+      if (!senhaService.conferir(dto.senhaAtual(), usuario.getSenha())) {
+        throw new CredenciaisInvalidas("Senha atual incorreta.");
       }
 
-      usuario.setSenha(nova);
+      usuario.setSenha(senhaService.gerarHash(nova));
     }
 
     Usuario salvo = usuarioRepository.save(usuario);

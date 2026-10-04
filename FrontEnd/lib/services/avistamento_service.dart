@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:conport/core/session/api_client.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,13 +9,17 @@ import 'multipart_media_type.dart';
 
 import '../config/app_config.dart';
 
+/// Avistamento da sessão.
+///
+/// O autor sai do token: o DTO não tem mais `UsuarioId`, então não existe mais
+/// como registrar avistamento em nome de outra pessoa nem em nome de ninguém
+/// (sem sessão a chamada volta 401).
 class AvistamentoService {
   const AvistamentoService();
 
   Future<void> enviar({
     required XFile imagem,
     required int unidadeId,
-    required int usuarioId,
     double? latitude,
     double? longitude,
   }) async {
@@ -32,9 +37,6 @@ class AvistamentoService {
 
     final dto = <String, dynamic>{
       'UnidadeId': unidadeId,
-      // O usuarioId vai dentro do DTO: é de lá que o backend lê, e mandar
-      // num campo separado ele simplesmente ignorava.
-      'UsuarioId': usuarioId,
       'Origem': _determinarOrigem(
         latitude: latitude,
         longitude: longitude,
@@ -68,7 +70,7 @@ class AvistamentoService {
       ),
     );
 
-    final response = await request.send();
+    final response = await ApiClient.multipart(request);
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception(
@@ -88,3 +90,4 @@ class AvistamentoService {
     return 'NAO_INFORMADA';
   }
 }
+

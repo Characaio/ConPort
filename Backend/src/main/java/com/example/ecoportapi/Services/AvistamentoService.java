@@ -46,11 +46,14 @@ public class AvistamentoService {
     public ResponseEntity<?> CriarAvistamento(
             AvistamentoCreateDTO avistamentoDTO,
             MultipartFile imagem,
-            Long unidadeId) throws IOException {
+            Long unidadeId,
+            Long usuarioId) throws IOException {
         Avistamento avistamento = new Avistamento();
 
+              // O usuario vem do token (veja AvistamentoController), nunca do
+              // corpo da requisicao.
               Usuario usuario = usuarioRepository.findById(
-                avistamentoDTO.UsuarioId()
+                usuarioId
             ).orElseThrow(
                 () -> new UsuarioNaoEncontrado("Usuario não encontrado")
             );

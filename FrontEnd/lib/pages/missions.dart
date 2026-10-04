@@ -40,7 +40,7 @@ class _MissionsState extends State<Missions> {
     }
 
     try {
-      final lista = await _missaoService.listarMissoes(usuario.id);
+      final lista = await _missaoService.listarMissoes();
       if (!mounted) return;
       setState(() {
         missions = lista;

@@ -5,6 +5,8 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:conport/config/app_config.dart';
+import 'package:conport/core/session/api_client.dart';
+import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/mocks/report_mock.dart';
 import 'package:conport/services/multipart_media_type.dart';
 import 'package:conport/models/report.dart';
@@ -12,6 +14,10 @@ import 'package:conport/models/report_lista.dart';
 
 class ReportService {
   final String urlBase = AppConfig.apiUrl;
+
+  /// Quem está logado: só o mock precisa, para o report criado em memória ter
+  /// um autor. Na API o autor sai do token.
+  int get usuarioDaSessao => AuthSession.instance.usuario?.id ?? 0;
 
   // ============================================================
   // LISTAR REPORTS DA UNIDADE
@@ -24,7 +30,7 @@ class ReportService {
 
     final url = Uri.parse('$urlBase/unidade/$unidadeId/reports');
 
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
 
     if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
@@ -39,16 +45,17 @@ class ReportService {
   // LISTAR MEUS REPORTS
   // ============================================================
 
-  /// Reports enviados pelo usuário, em qualquer unidade. É o que a tela
-  /// "Seus Reports" usa: não é a lista da unidade.
-  Future<List<ReportLista>> buscarMeusReports(int usuarioId) async {
+  /// Reports enviados por quem está logado, em qualquer unidade. É o que a
+  /// tela "Seus Reports" usa: não é a lista da unidade, e não é a de outra
+  /// pessoa — a rota é `/usuarios/eu` e quem é a conta vem do token.
+  Future<List<ReportLista>> buscarMeusReports() async {
     if (!AppConfig.usarApi) {
       return ReportMock.buscarMeusReports();
     }
 
-    final url = Uri.parse('$urlBase/usuarios/$usuarioId/reports');
+    final url = Uri.parse('$urlBase/usuarios/eu/reports');
 
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
 
     if (response.statusCode == 200) {
       final lista = jsonDecode(response.body) as List;
@@ -72,7 +79,7 @@ class ReportService {
   Future<Report> buscarReport(int unidadeId, int reportId) async {
     final url = Uri.parse('$urlBase/unidade/$unidadeId/reports/$reportId');
 
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
 
     if (response.statusCode == 200) {
       return Report.fromJson(jsonDecode(response.body));
@@ -91,7 +98,6 @@ class ReportService {
 
   Future<Report> postarReport({
     required int unidadeId,
-    required int usuarioId,
     required String tipo,
     required String descricao,
     required double urgencia,
@@ -106,7 +112,7 @@ class ReportService {
 
       return ReportMock.postarReport(
         unidadeId: unidadeId,
-        usuarioId: usuarioId,
+        usuarioId: usuarioDaSessao,
         tipo: tipo,
         descricao: descricao,
         dataDoOcorrido: dataDoOcorrido,
@@ -124,7 +130,8 @@ class ReportService {
       // inteiro fazia o Jackson falhar e o report não era criado.
       'Prioridade': _prioridadeDe(urgencia),
       'DataDoOcorrido': dataDoOcorrido.toIso8601String(),
-      'UsuarioId': usuarioId,
+      // Sem UsuarioId: quem envia é o usuário do token, e mandar o campo
+      // deixaria a porta aberta para postar em nome de outra pessoa.
     };
 
     request.files.add(
@@ -167,9 +174,7 @@ class ReportService {
       );
     }
 
-    final streamedResponse = await request.send();
-
-    final response = await http.Response.fromStream(streamedResponse);
+    final response = await ApiClient.multipart(request);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return Report.fromJson(jsonDecode(response.body));

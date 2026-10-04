@@ -41,6 +41,10 @@ dependencies:
   flutter_map_vector_tiles: ^2.9.0
 
   http: ^1.5.0
+  # Guarda o token de sessao em Keychain/Keystore, em vez de arquivo em texto
+  # puro. E o que faz a sessao sobreviver ao fechar o app sem virar &
+  # segredo de tela de bloqueio.
+  flutter_secure_storage: ^11.2.0
   image_picker: ^1.2.3
   url_launcher: ^6.3.2
 

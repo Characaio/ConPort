@@ -48,10 +48,8 @@ class _AmigosState extends State<Amigos> {
 
   Future<void> _carregar() async {
     try {
-      final a = await widget.usuarioService.listarAmigos(widget.usuarioId);
-      final s = await widget.usuarioService.listarSolicitacoes(
-        widget.usuarioId,
-      );
+      final a = await widget.usuarioService.listarAmigos();
+      final s = await widget.usuarioService.listarSolicitacoes();
       if (!mounted) return;
       setState(() {
         amigos = a;
@@ -128,7 +126,7 @@ class _AmigosState extends State<Amigos> {
     if (confirmou != true || !mounted) return;
     
     try {
-      await widget.usuarioService.remover(widget.usuarioId, amigo.id);
+      await widget.usuarioService.removerAmigo(amigo.id);
     } catch (e) {
       if (mounted) _mensagem('Não foi possível remover ${amigo.nome}.');
       return;
@@ -147,7 +145,7 @@ class _AmigosState extends State<Amigos> {
     }
 
     try {
-      await widget.usuarioService.aceitar(widget.usuarioId, relacaoId);
+      await widget.usuarioService.aceitar(relacaoId);
     } catch (e) {
       if (mounted) _mensagem('Não foi possível aceitar ${amigo.nome}.');
       return;
@@ -170,7 +168,7 @@ class _AmigosState extends State<Amigos> {
     }
 
     try {
-      await widget.usuarioService.recusar(widget.usuarioId, relacaoId);
+      await widget.usuarioService.recusar(relacaoId);
     } catch (e) {
       if (mounted) _mensagem('Não foi possível recusar ${amigo.nome}.');
       return;
@@ -189,7 +187,6 @@ class _AmigosState extends State<Amigos> {
       barrierColor: Colors.black54,
       builder: (_) => _BuscarUsuarioDialog(
         usuarioService: widget.usuarioService,
-        usuarioId: widget.usuarioId,
       ),
     );
 
@@ -751,12 +748,8 @@ class _BotaoPilula extends StatelessWidget {
 /// escolhido — e é lá que mora a diferença entre seguir e ser amigo.
 class _BuscarUsuarioDialog extends StatefulWidget {
   final UsuarioService usuarioService;
-  final int usuarioId;
 
-  const _BuscarUsuarioDialog({
-    required this.usuarioService,
-    required this.usuarioId,
-  });
+  const _BuscarUsuarioDialog({required this.usuarioService});
 
   @override
   State<_BuscarUsuarioDialog> createState() => _BuscarUsuarioDialogState();
@@ -800,10 +793,7 @@ class _BuscarUsuarioDialogState extends State<_BuscarUsuarioDialog> {
     });
 
     try {
-      final lista = await widget.usuarioService.buscar(
-        termo,
-        usuarioId: widget.usuarioId,
-      );
+      final lista = await widget.usuarioService.buscar(termo);
 
       if (!mounted || id != _buscaAtual) return;
 
