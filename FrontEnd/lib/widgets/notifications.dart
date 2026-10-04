@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:conport/core/notificacoes/notificacao_controller.dart';
 import 'package:conport/core/theme/app_theme.dart';
 
 // ============================================================
@@ -15,60 +16,11 @@ Future<void> mostrarNotificacoes(BuildContext context) {
 }
 
 // ============================================================
-// MODELO + MOCK (temporário, até existir na API)
-// Quando o backend tiver o endpoint, mova Notificacao para
-// lib/models/notificacao.dart e crie um NotificacaoService.
-// ============================================================
-
-class Notificacao {
-  final int id;
-  final String titulo;
-  final String texto;
-  final DateTime data;
-  final bool lida;
-
-  const Notificacao({
-    required this.id,
-    required this.titulo,
-    required this.texto,
-    required this.data,
-    this.lida = false,
-  });
-
-  Notificacao copyWith({bool? lida}) {
-    return Notificacao(
-      id: id,
-      titulo: titulo,
-      texto: texto,
-      data: data,
-      lida: lida ?? this.lida,
-    );
-  }
-}
-
-class _NotificacoesMock {
-  static const String _lorem =
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-      'Nunc commodo turpis leo, ut fringilla lorem posuere a.';
-
-  static List<Notificacao> listar() {
-    final agora = DateTime.now();
-
-    return [
-      for (int i = 1; i <= 6; i++)
-        Notificacao(
-          id: i,
-          titulo: 'Notificação',
-          texto: _lorem,
-          data: agora.subtract(Duration(hours: i * 5)),
-          lida: i != 1, // só a primeira é não lida
-        ),
-    ];
-  }
-}
-
-// ============================================================
 // POPUP
+//
+// A lista vem do NotificacaoController (que por sua vez chama a API), então o
+// popup só desenha: o model e o mock saíram daqui e foram para
+// lib/models/notificacao.dart e lib/mocks/notificacao_mock.dart.
 // ============================================================
 
 class _NotificacoesPopup extends StatefulWidget {
@@ -79,29 +31,33 @@ class _NotificacoesPopup extends StatefulWidget {
 }
 
 class _NotificacoesPopupState extends State<_NotificacoesPopup> {
-  late List<Notificacao> notificacoes;
+  final NotificacaoController _controller = NotificacaoController.instance;
 
   @override
   void initState() {
     super.initState();
 
-    notificacoes = _NotificacoesMock.listar()
-      ..sort((a, b) => b.data.compareTo(a.data));
+    _controller.addListener(_mudou);
+
+    // Busca ao abrir: é o que traz as notificações novas e atualiza o sino.
+    _controller.carregar();
   }
 
-  void _marcarComoLida(int id) {
-    setState(() {
-      notificacoes = [
-        for (final n in notificacoes) n.id == id ? n.copyWith(lida: true) : n,
-      ];
-    });
+  @override
+  void dispose() {
+    _controller.removeListener(_mudou);
+    super.dispose();
+  }
 
-    // TODO: avisar a API que a notificação foi lida.
+  void _mudou() {
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final notificacoes = _controller.notificacoes;
+
     return Dialog(
       backgroundColor: colors.surfaceContainerHighest,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
@@ -117,16 +73,55 @@ class _NotificacoesPopupState extends State<_NotificacoesPopup> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.only(left: 4),
-                child: Text(
-                  'Notificações',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Notificações',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (_controller.temNaoLidas)
+                      TextButton(
+                        onPressed: _controller.marcarTodasComoLidas,
+                        child: const Text(
+                          'Marcar todas como lidas',
+                          style: TextStyle(fontSize: 11),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
 
-              if (notificacoes.isEmpty)
+              // Falha de rede: avisa e mantém a lista antiga, em vez de
+              // fingir que o usuário não tem notificações.
+              if (_controller.erro != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8, left: 4),
+                  child: Text(
+                    _controller.erro!,
+                    style: TextStyle(fontSize: 11, color: colors.error),
+                  ),
+                ),
+
+              if (_controller.carregando && notificacoes.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24, horizontal: 4),
+                  child: Center(
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              else if (notificacoes.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 24, horizontal: 4),
                   child: Text(
@@ -136,20 +131,26 @@ class _NotificacoesPopupState extends State<_NotificacoesPopup> {
                 )
               else
                 Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    // espaço para o ponto vermelho, que fica um pouco para fora
-                    padding: const EdgeInsets.only(top: 4, right: 4),
-                    itemCount: notificacoes.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final n = notificacoes[index];
+                  child: RefreshIndicator(
+                    onRefresh: _controller.carregar,
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      // Sem isso o puxar-para-atualizar não funciona quando a
+                      // lista é curta demais para rolar.
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      // espaço para o ponto vermelho, que fica um pouco para fora
+                      padding: const EdgeInsets.only(top: 4, right: 4),
+                      itemCount: notificacoes.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final n = notificacoes[index];
 
-                      return _CardNotificacao(
-                        notificacao: n,
-                        onTap: () => _marcarComoLida(n.id),
-                      );
-                    },
+                        return _CardNotificacao(
+                          notificacao: n,
+                          onTap: () => _controller.marcarComoLida(n.id),
+                        );
+                      },
+                    ),
                   ),
                 ),
             ],

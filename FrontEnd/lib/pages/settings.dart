@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/notificacoes/notificacao_controller.dart';
 import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/core/settings/app_settings.dart';
 import 'package:conport/widgets/topbar.dart';
@@ -251,6 +252,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _sairDaConta() {
     AuthSession.instance.encerrar();
+
+    // A lista de notificações fica em memória: sem limpar aqui, a conta que
+    // entrar depois veria as notificações da conta que saiu.
+    NotificacaoController.instance.limpar();
 
     // Mostra a mensagem antes de navegar: o mensageiro fica acima do
     // Navigator e o aviso sobrevive à troca de rota.

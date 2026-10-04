@@ -70,6 +70,14 @@ public class GlobalExceptionHandler {
                 .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
+    @ExceptionHandler(NotificacaoNaoEncontrada.class)
+    public ResponseEntity<String> NotificacaoNaoEncontrada(NotificacaoNaoEncontrada exception){
+        erroLoggerService.registrarErro(exception);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
+    }
+
     @ExceptionHandler(RequisicaoInvalida.class)
     public ResponseEntity<String> RequisicaoInvalida(RequisicaoInvalida exception){
         erroLoggerService.registrarErro(exception);
