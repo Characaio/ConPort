@@ -1,12 +1,15 @@
 package com.example.ecoportapi.Services;
 
 import com.example.ecoportapi.DTOs.Request.AtualizarPerfilDTO;
+import com.example.ecoportapi.DTOs.Request.AtualizarPreferenciasDTO;
+import com.example.ecoportapi.DTOs.Request.ExcluirContaDTO;
 import com.example.ecoportapi.DTOs.Request.ImagemProcessada;
 import com.example.ecoportapi.DTOs.Request.VisibilidadeDTO;
 import com.example.ecoportapi.DTOs.Request.LoginDTO;
 import com.example.ecoportapi.DTOs.Request.SignupDTO;
 import com.example.ecoportapi.DTOs.Response.AvatarResponseDTO;
 import com.example.ecoportapi.DTOs.Response.MensagemDTO;
+import com.example.ecoportapi.DTOs.Response.PreferenciasDTO;
 import com.example.ecoportapi.DTOs.Response.SessaoDTO;
 import com.example.ecoportapi.DTOs.Response.UsuarioDTO;
 import com.example.ecoportapi.DTOs.Response.UsuarioResumoDTO;
@@ -17,9 +20,15 @@ import com.example.ecoportapi.Models.Enums.VisibilidadeSeguidores;
 import com.example.ecoportapi.Models.Usuario;
 import com.example.ecoportapi.Models.UsuarioRelacionamento;
 import com.example.ecoportapi.Models.UsuarioSegue;
+import com.example.ecoportapi.Repositories.AvistamentoRepository;
+import com.example.ecoportapi.Repositories.ConquistaDesbloqueadaRepository;
+import com.example.ecoportapi.Repositories.MissaoRepository;
+import com.example.ecoportapi.Repositories.NotificacaoRepository;
 import com.example.ecoportapi.Repositories.RelacionamentoRepository;
+import com.example.ecoportapi.Repositories.ReportRepository;
 import com.example.ecoportapi.Repositories.UsuarioRepository;
 import com.example.ecoportapi.Repositories.UsuarioSegueRepository;
+import com.example.ecoportapi.Repositories.UsuarioTokenRepository;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
@@ -27,6 +36,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -40,6 +50,12 @@ public class UsuarioService {
   private final NotificacaoService notificacaoService;
   private final SenhaService senhaService;
   private final TokenService tokenService;
+  private final ReportRepository reportRepository;
+  private final NotificacaoRepository notificacaoRepository;
+  private final ConquistaDesbloqueadaRepository conquistaRepository;
+  private final MissaoRepository missaoRepository;
+  private final AvistamentoRepository avistamentoRepository;
+  private final UsuarioTokenRepository usuarioTokenRepository;
 
   public UsuarioService(
       UsuarioRepository usuarioRepository,
@@ -49,7 +65,13 @@ public class UsuarioService {
       CatalogoMissoes catalogoMissoes,
       NotificacaoService notificacaoService,
       SenhaService senhaService,
-      TokenService tokenService) {
+      TokenService tokenService,
+      ReportRepository reportRepository,
+      NotificacaoRepository notificacaoRepository,
+      ConquistaDesbloqueadaRepository conquistaRepository,
+      MissaoRepository missaoRepository,
+      AvistamentoRepository avistamentoRepository,
+      UsuarioTokenRepository usuarioTokenRepository) {
     this.usuarioRepository = usuarioRepository;
     this.relacionamentoRepository = relacionamentoRepository;
     this.usuarioSegueRepository = usuarioSegueRepository;
@@ -58,6 +80,12 @@ public class UsuarioService {
     this.notificacaoService = notificacaoService;
     this.senhaService = senhaService;
     this.tokenService = tokenService;
+    this.reportRepository = reportRepository;
+    this.notificacaoRepository = notificacaoRepository;
+    this.conquistaRepository = conquistaRepository;
+    this.missaoRepository = missaoRepository;
+    this.avistamentoRepository = avistamentoRepository;
+    this.usuarioTokenRepository = usuarioTokenRepository;
   }
 
   public void CalcularReputação() {}
@@ -173,6 +201,35 @@ public class UsuarioService {
   public UsuarioDTO pegarUsuario(Long usuarioId, Long visorId) {
     Usuario usuario = buscarUsuario(usuarioId);
 
+    boolean euMesmo = visorId != null && visorId.equals(usuarioId);
+
+    // Perfil privado: quem não é a própria pessoa só recebe o suficiente para
+    // a tela mostrar "este perfil não está disponível" — sem e-mail, cidade,
+    // data de nascimento e números. Isso é decisão de quem tem a conta, então a
+    // regra mora aqui e não no app (que poderia ser contornado).
+    if (!usuario.isPerfilPublico() && !euMesmo) {
+      return new UsuarioDTO(
+          usuario.getId(),
+          usuario.getNome(),
+          usuario.getUsername(),
+          null,
+          null,
+          null,
+          null,
+          usuario.getAvatar(),
+          usuario.getDataCadastro(),
+          false,
+          0,
+          0,
+          0,
+          0,
+          0,
+          null,
+          false,
+          false,
+          false);
+    }
+
     return montarDto(usuario, visorId);
   }
 
@@ -248,6 +305,19 @@ public class UsuarioService {
         .orElseThrow(() -> new UsuarioNaoEncontrado("Usuario não encontrado"));
 
     var existente = relacionamentoRepository.buscar(usuarioId, alvoId);
+
+    // Quem desligou "permitir solicitações" não quer receber convites. A
+    // checagem é aqui porque o app pode ser ignorado: a regra vale para quem
+    // chamar a rota, não para quem abriu a tela.
+    Usuario alvoDoPedido =
+        usuarioRepository
+            .findById(alvoId)
+            .orElseThrow(() -> new UsuarioNaoEncontrado("Usuario não encontrado"));
+
+    if (!alvoDoPedido.isPermiteSolicitacoes()) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN)
+          .body("Esta conta não está aceitando solicitações de amizade");
+    }
 
     if (existente.isPresent()) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -572,6 +642,89 @@ public class UsuarioService {
             false,
             false,
             false));
+  }
+
+  // ============================================================
+  // PREFERÊNCIAS DE CONTA
+  // ============================================================
+
+  /** Lê as preferências da própria conta, já com os padrões aplicados. */
+  public PreferenciasDTO minhasPreferencias(Long usuarioId) {
+    return new PreferenciasDTO(buscarUsuario(usuarioId));
+  }
+
+  /**
+   * Grava só o que veio no corpo. Devolve o estado completo depois da gravação,
+   * para o app não ter que adivinhar o que o banco escolheu (a coluna nula de
+   * uma conta antiga, por exemplo).
+   */
+  public ResponseEntity<?> atualizarPreferencias(Long usuarioId, AtualizarPreferenciasDTO dto) {
+    if (dto == null || dto.vazio()) {
+      return ResponseEntity.badRequest().body("Informe ao menos uma preferência");
+    }
+
+    Usuario usuario = buscarUsuario(usuarioId);
+
+    if (dto.perfilPublico() != null) usuario.setPerfilPublico(dto.perfilPublico());
+    if (dto.permiteSolicitacoes() != null)
+      usuario.setPermiteSolicitacoes(dto.permiteSolicitacoes());
+    if (dto.notificarNoApp() != null) usuario.setNotificarNoApp(dto.notificarNoApp());
+    if (dto.notificarEmail() != null) usuario.setNotificarEmail(dto.notificarEmail());
+    if (dto.compartilharLocalizacao() != null)
+      usuario.setCompartilharLocalizacao(dto.compartilharLocalizacao());
+    if (dto.dadosDeUsoAnonimo() != null)
+      usuario.setDadosDeUsoAnonimo(dto.dadosDeUsoAnonimo());
+
+    usuarioRepository.save(usuario);
+
+    return ResponseEntity.ok(new PreferenciasDTO(usuario));
+  }
+
+  // ============================================================
+  // EXCLUIR CONTA
+  // ============================================================
+
+  /**
+   * Apaga a conta e tudo que aponta para ela.
+   *
+   * <p>Uma transação só: se a conta sumisse e sobrasse um report órfão, o
+   * banco ficaria com dado de alguém que não existe mais. Se qualquer limpeza
+   * falhar, nada é gravado.
+   *
+   * <p>A ordem importa e vai dos filhos para o pai — o report aponta para o
+   * usuário, então apagar o usuário antes deixaria a linha com chave estrangeira
+   * quebrada.
+   */
+  @Transactional
+  public ResponseEntity<?> excluirConta(Long usuarioId, ExcluirContaDTO dto) {
+    Usuario usuario = buscarUsuario(usuarioId);
+
+    // A senha é a confirmação. A rota se autentica pelo token, e o token fica
+    // na tela de quem abriu a sessão: sem esta checagem, um aparelho emprestado
+    // com a sessão aberta apagaria a conta.
+    if (dto == null || !senhaService.conferir(dto.senha(), usuario.getSenha())) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body(new MensagemDTO("Senha incorreta."));
+    }
+
+    // Avatar antes do usuário: o arquivo fica em disco e a imagem é referenciada
+    // pela linha que ainda existe.
+    if (usuario.getAvatar() != null && !usuario.getAvatar().isBlank()) {
+      imagemService.RemoverImagem(usuario.getAvatar());
+    }
+
+    reportRepository.apagarDoUsuario(usuarioId);
+    avistamentoRepository.apagarDoUsuario(usuarioId);
+    missaoRepository.apagarDoUsuario(usuarioId);
+    conquistaRepository.apagarDoUsuario(usuarioId);
+    notificacaoRepository.apagarDoUsuario(usuarioId);
+    usuarioSegueRepository.apagarDoUsuario(usuarioId);
+    relacionamentoRepository.apagarDoUsuario(usuarioId);
+    usuarioTokenRepository.apagarDoUsuario(usuarioId);
+
+    usuarioRepository.delete(usuario);
+
+    return ResponseEntity.ok(new MensagemDTO("Conta excluída."));
   }
 
   /**

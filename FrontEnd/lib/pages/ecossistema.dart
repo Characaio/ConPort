@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:conport/models/especie.dart';
 import 'package:conport/services/especie_service.dart';
 import 'package:conport/widgets/topbar.dart';
+import 'package:conport/core/settings/app_settings.dart';
 import 'package:conport/core/theme/app_theme.dart';
 
 /// Espécies registradas na unidade.
@@ -101,7 +102,9 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
                 child: GestureDetector(
                   onTap: _fecharGaveta,
                   child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 350),
+                    duration: AppSettings.instance.duracao(
+                      const Duration(milliseconds: 350),
+                    ),
                     opacity: gavetaAberta ? 0.35 : 0,
                     child: Container(
                       color: colors.scrim.withValues(alpha: 0.35),
@@ -115,7 +118,9 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
             // ==========================================
             if (especieSelecionada != null)
               AnimatedPositioned(
-                duration: const Duration(milliseconds: 450),
+                duration: AppSettings.instance.duracao(
+                  const Duration(milliseconds: 450),
+                ),
                 curve: Curves.easeOutCubic,
                 left: 0,
                 right: 0,
@@ -290,7 +295,9 @@ class _EcossistemaPageState extends State<EcossistemaPage> {
         _abrirGaveta(especie);
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: AppSettings.instance.duracao(
+          const Duration(milliseconds: 150),
+        ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
           border: selecionada

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/core/settings/app_settings.dart';
+import 'package:conport/core/settings/preferencias_conta.dart';
 import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/services/auth_service.dart';
 
@@ -43,9 +44,16 @@ class _AberturaState extends State<Abertura> {
   /// nunca responde, rede fora, erro inesperado — pode deixar esta tela de
   /// carregamento na frente para sempre. O desfecho ruim aceitável é abrir sem
   /// sessão e deixar a pessoa entrar de novo.
+  ///
+  /// As configurações entram na mesma espera, e pela mesma razão: se o
+  /// [AppSettings] carregasse depois do primeiro quadro, o app abriria no tema
+  /// padrão e piscaria para o tema escolhido. Aqui não há quadro nenhum ainda.
   Future<void> _restaurar() async {
     try {
-      await AuthSession.instance.restaurar(sonda: AuthService.validarToken);
+      await Future.wait([
+        AuthSession.instance.restaurar(sonda: AuthService.validarToken),
+        AppSettings.instance.carregar(),
+      ]);
     } catch (e) {
       debugPrint('ABERTURA: não deu para restaurar a sessão: $e');
     } finally {
@@ -114,6 +122,10 @@ class _ConportState extends State<Conport> {
 
     final sessao = AuthSession.instance;
 
+    // As preferências de conta são da pessoa que está saindo: sem limpar, quem
+    // entrar depois veria os interruptores da conta anterior.
+    PreferenciasConta.instance.limpar();
+
     if (sessao.expirada) {
       navigatorKey.currentState?.pushNamedAndRemoveUntil(
         PageLoader.welcome,
@@ -145,10 +157,12 @@ class _ConportState extends State<Conport> {
       theme: AppTheme.lightThemeFor(
         useMaterial3: settings.useMaterial3,
         highContrast: settings.highContrast,
+        semAnimacao: settings.reduceMotion,
       ),
       darkTheme: AppTheme.darkThemeFor(
         useMaterial3: settings.useMaterial3,
         highContrast: settings.highContrast,
+        semAnimacao: settings.reduceMotion,
       ),
       themeMode: settings.themeMode,
       builder: (context, child) {
@@ -156,6 +170,11 @@ class _ConportState extends State<Conport> {
         return MediaQuery(
           data: mediaQuery.copyWith(
             textScaler: TextScaler.linear(settings.fontScale),
+            // `disableAnimations` é o sinal de "não anime" que o Material já
+            // respeita em vários lugares (o `AnimatedContainer` do tema, o
+            // botão, o indicador de progresso). Não substitui
+            // [AppSettings.duracao], mas cobre tudo que já pede isso.
+            disableAnimations: settings.reduceMotion,
           ),
           child: child ?? const SizedBox.shrink(),
         );

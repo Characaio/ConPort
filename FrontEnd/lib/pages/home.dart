@@ -35,20 +35,13 @@ class Home extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               spacing: 4.0,
               children: [
-                Topbar(
-                  hasLogo: true,
-                  hasReturn: false,
-                  text: '',
-                ),
+                Topbar(hasLogo: true, hasReturn: false, text: ''),
 
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: 1,
                   children: [
-                    const Text(
-                      'Olá,',
-                      style: TextStyle(fontSize: 20),
-                    ),
+                    const Text('Olá,', style: TextStyle(fontSize: 20)),
                     Text(
                       '$nome!',
                       style: const TextStyle(
@@ -62,7 +55,6 @@ class Home extends StatelessWidget {
                 // ========================================================
                 // MAPA
                 // ========================================================
-
                 Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16.0),
@@ -116,13 +108,13 @@ class Home extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500,
-                                        color: colors.surface,
+                                        color: colors.onSurface,
                                       ),
                                     ),
                                     Icon(
                                       Symbols.keyboard_arrow_right_rounded,
                                       weight: 300,
-                                      color: colors.surface,
+                                      color: colors.onSurface,
                                     ),
                                   ],
                                 ),
@@ -140,7 +132,6 @@ class Home extends StatelessWidget {
                 // ========================================================
                 // CARDS PRINCIPAIS
                 // ========================================================
-
                 LayoutBuilder(
                   builder: (context, constraints) {
                     return SizedBox(
@@ -169,7 +160,6 @@ class Home extends StatelessWidget {
                                 // ==================================================
                                 // ENVIAR AVISTAMENTO
                                 // ==================================================
-
                                 Expanded(
                                   child: HomeCard(
                                     icon: Symbols.remove_red_eye,
@@ -180,8 +170,9 @@ class Home extends StatelessWidget {
                                           AuthSession.instance.usuario;
 
                                       if (usuario == null) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           const SnackBar(
                                             content: Text(
                                               'Você precisa estar logado para enviar um avistamento.',
@@ -204,7 +195,6 @@ class Home extends StatelessWidget {
                                 // ==================================================
                                 // AMIGOS
                                 // ==================================================
-
                                 Expanded(
                                   child: HomeCard(
                                     icon: Symbols.people,
@@ -224,25 +214,16 @@ class Home extends StatelessWidget {
 
                 const SizedBox(height: 4),
 
-                const Center(
-                  child: SizedBox(
-                    width: 150,
-                    child: Divider(),
-                  ),
-                ),
+                const Center(child: SizedBox(width: 150, child: Divider())),
 
                 const SizedBox(height: 16),
 
                 // ========================================================
                 // TRILHA
                 // ========================================================
-
                 const Text(
                   'Continue sua Trilha',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                 ),
 
                 const SizedBox(height: 8),
@@ -300,10 +281,7 @@ class Home extends StatelessWidget {
         ),
       ),
 
-      bottomNavigationBar: const SafeArea(
-        top: false,
-        child: Footer(),
-      ),
+      bottomNavigationBar: const SafeArea(top: false, child: Footer()),
     );
   }
 }

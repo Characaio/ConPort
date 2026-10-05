@@ -139,6 +139,7 @@ class AppTheme {
   static ThemeData lightThemeFor({
     bool useMaterial3 = true,
     bool highContrast = false,
+    bool semAnimacao = false,
   }) {
     final colors = AppColors.forBrightness(
       Brightness.light,
@@ -172,12 +173,13 @@ class AppTheme {
       errorContainer: const Color(0xFFFFDAD6),
       onErrorContainer: const Color(0xFF410002),
     );
-    return _themeData(scheme, colors, useMaterial3);
+    return _themeData(scheme, colors, useMaterial3, semAnimacao: semAnimacao);
   }
 
   static ThemeData darkThemeFor({
     bool useMaterial3 = true,
     bool highContrast = false,
+    bool semAnimacao = false,
   }) {
     final colors = AppColors.forBrightness(
       Brightness.dark,
@@ -211,14 +213,15 @@ class AppTheme {
       errorContainer: const Color(0xFF93000A),
       onErrorContainer: const Color(0xFFFFDAD6),
     );
-    return _themeData(scheme, colors, useMaterial3);
+    return _themeData(scheme, colors, useMaterial3, semAnimacao: semAnimacao);
   }
 
   static ThemeData _themeData(
     ColorScheme scheme,
     AppColors colors,
-    bool useMaterial3,
-  ) {
+    bool useMaterial3, {
+    bool semAnimacao = false,
+  }) {
     return ThemeData(
       useMaterial3: useMaterial3,
       brightness: scheme.brightness,
@@ -230,6 +233,21 @@ class AppTheme {
       cardColor: colors.cardBackground,
       dividerColor: scheme.outlineVariant,
       shadowColor: Colors.black,
+      // Trocar de página sem deslizar é o movimento mais irritante para quem
+      // pediu menos animação: ele acontece em toda navegação e é o que mais
+      // incomoda. Sem transição, a troca continua sendo uma troca.
+      pageTransitionsTheme: semAnimacao
+          ? const PageTransitionsTheme(
+              builders: {
+                TargetPlatform.android: _SemTransicao(),
+                TargetPlatform.iOS: _SemTransicao(),
+                TargetPlatform.linux: _SemTransicao(),
+                TargetPlatform.macOS: _SemTransicao(),
+                TargetPlatform.windows: _SemTransicao(),
+                TargetPlatform.fuchsia: _SemTransicao(),
+              },
+            )
+          : null,
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.inputBackground,
@@ -244,4 +262,22 @@ class AppTheme {
       ),
     );
   }
+}
+
+/// Troca de página sem animação nenhuma.
+///
+/// Transição zerada não é o mesmo que transição curta: a curva continua
+/// existindo, só que instantânea. Aqui a rota nova aparece pronta, que é o que
+/// quem pediu "Reduzir animações" quer — nenhuma mudança de tela visível.
+class _SemTransicao extends PageTransitionsBuilder {
+  const _SemTransicao();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => child;
 }

@@ -4,6 +4,7 @@ import com.example.ecoportapi.Models.UsuarioSegue;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -62,4 +63,18 @@ public interface UsuarioSegueRepository extends JpaRepository<UsuarioSegue, Long
           WHERE r.Seguidor.Id = :usuarioId
       """)
   long countSeguindo(@Param("usuarioId") Long usuarioId);
+
+  /**
+   * Apaga os vínculos de seguir em que a conta aparece, dos dois lados.
+   *
+   * <p>Os dois lados porque seguir é relação entre duas pessoas: se apagar só o
+   * "quem eu sigo", o "quem me segue" continuaria apontando para um usuário que
+   * não existe mais.
+   */
+  @Modifying
+  @Query("""
+        DELETE FROM UsuarioSegue s
+        WHERE s.Seguidor.Id = :usuarioId OR s.Seguindo.Id = :usuarioId
+    """)
+  int apagarDoUsuario(@Param("usuarioId") Long usuarioId);
 }

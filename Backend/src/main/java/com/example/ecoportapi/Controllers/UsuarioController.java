@@ -5,6 +5,8 @@ package com.example.ecoportapi.Controllers;
 
 import com.example.ecoportapi.Annotations.ExigeSessao;
 import com.example.ecoportapi.DTOs.Request.AtualizarPerfilDTO;
+import com.example.ecoportapi.DTOs.Request.AtualizarPreferenciasDTO;
+import com.example.ecoportapi.DTOs.Request.ExcluirContaDTO;
 import com.example.ecoportapi.DTOs.Request.LoginDTO;
 import com.example.ecoportapi.DTOs.Request.SignupDTO;
 import com.example.ecoportapi.DTOs.Request.VisibilidadeDTO;
@@ -131,6 +133,32 @@ public class UsuarioController {
   public ResponseEntity<?> AtualizarPrivacidade(
       @RequestBody VisibilidadeDTO dto, HttpServletRequest request) {
     return usuarioService.atualizarVisibilidade(euId(request), dto);
+  }
+
+  @GetMapping("/eu/preferencias")
+  @ExigeSessao
+  public ResponseEntity<?> MinhasPreferencias(HttpServletRequest request) {
+    return ResponseEntity.ok(usuarioService.minhasPreferencias(euId(request)));
+  }
+
+  /** Atualização parcial: só os campos que vieram no corpo mudam. */
+  @PutMapping("/eu/preferencias")
+  @ExigeSessao
+  public ResponseEntity<?> AtualizarPreferencias(
+      @RequestBody AtualizarPreferenciasDTO dto, HttpServletRequest request) {
+    return usuarioService.atualizarPreferencias(euId(request), dto);
+  }
+
+  /**
+   * Apaga a conta. Exige a senha no corpo mesmo com token válido: quem
+   * encontrou o aparelho desbloqueado não deve conseguir apagar a conta de
+   * quem o deixou aberto.
+   */
+  @DeleteMapping("/eu")
+  @ExigeSessao
+  public ResponseEntity<?> ExcluirConta(
+      @RequestBody ExcluirContaDTO dto, HttpServletRequest request) {
+    return usuarioService.excluirConta(euId(request), dto);
   }
 
   @GetMapping("/eu/reports")

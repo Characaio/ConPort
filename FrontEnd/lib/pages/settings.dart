@@ -1,15 +1,25 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:conport/core/notificacoes/notificacao_controller.dart';
 import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/core/settings/app_settings.dart';
+import 'package:conport/core/settings/preferencias_conta.dart';
+import 'package:conport/models/preferencias.dart';
 import 'package:conport/models/usuario.dart';
 import 'package:conport/services/usuarioService.dart';
 import 'package:conport/widgets/topbar.dart';
 
+/// Menu de configurações.
+///
+/// Duas famílias de opção, e a diferença é deliberada: o que pertence à
+/// **tela** ([AppSettings]) é salvo no aparelho, e o que pertence à **conta**
+/// ([PreferenciasConta]) vai para o banco. Por isso só o segundo grupo mostra
+/// o botão de "salvando" e pode voltar atrás sozinho se o servidor recusar.
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -19,20 +29,31 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final settings = AppSettings.instance;
+  final conta = PreferenciasConta.instance;
+  final usuarioService = const UsuarioService();
 
   @override
   void initState() {
     super.initState();
-    settings.addListener(_settingsChanged);
+
+    settings.addListener(_mudou);
+    conta.addListener(_mudou);
+
+    // Só busca se ainda não tem o que mostrar: voltar para as configurações
+    // não deve custar uma chamada à rede a cada visita.
+    if (conta.atual == null && AuthSession.instance.temSessao) {
+      conta.carregar();
+    }
   }
 
   @override
   void dispose() {
-    settings.removeListener(_settingsChanged);
+    settings.removeListener(_mudou);
+    conta.removeListener(_mudou);
     super.dispose();
   }
 
-  void _settingsChanged() {
+  void _mudou() {
     if (mounted) setState(() {});
   }
 
@@ -61,187 +82,22 @@ class _SettingsPageState extends State<SettingsPage> {
                     constraints: const BoxConstraints(maxWidth: 600),
                     child: Column(
                       children: [
-                        _SettingsSection(
-                          icon: Icons.palette_outlined,
-                          title: 'Tema',
-                          subtitle: 'Cores e estilo do aplicativo',
-                          children: [
-                            _ThemeSelector(
-                              value: settings.themeMode,
-                              onChanged: settings.setThemeMode,
-                            ),
-                            const SizedBox(height: 12),
-                            _SettingsSwitch(
-                              title: 'Usar Material 3',
-                              subtitle:
-                                  'Ativa os componentes mais recentes do Material.',
-                              value: settings.useMaterial3,
-                              onChanged: settings.setUseMaterial3,
-                            ),
-                          ],
-                        ),
-                        _SettingsSection(
-                          icon: Icons.text_fields,
-                          title: 'Tamanho de fonte',
-                          subtitle: 'Ajuste o tamanho dos textos na tela',
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Pequena',
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                                Text(
-                                  '${(settings.fontScale * 100).round()}%',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const Text(
-                                  'Grande',
-                                  style: TextStyle(fontSize: 14),
-                                ),
-                              ],
-                            ),
-                            Slider(
-                              value: settings.fontScale,
-                              min: 0.85,
-                              max: 1.3,
-                              divisions: 9,
-                              label: '${(settings.fontScale * 100).round()}%',
-                              onChanged: settings.setFontScale,
-                            ),
-                          ],
-                        ),
-                        _SettingsSection(
-                          icon: Icons.visibility_outlined,
-                          title: 'Aparência',
-                          subtitle: 'Preferências de leitura e animação',
-                          children: [
-                            _SettingsSwitch(
-                              title: 'Alto contraste',
-                              subtitle:
-                                  'Aumenta a diferença entre textos e fundos.',
-                              value: settings.highContrast,
-                              onChanged: settings.setHighContrast,
-                            ),
-                            _SettingsSwitch(
-                              title: 'Reduzir animações',
-                              subtitle:
-                                  'Diminui movimentos e transições da interface.',
-                              value: settings.reduceMotion,
-                              onChanged: settings.setReduceMotion,
-                            ),
-                          ],
-                        ),
-                        _SettingsSection(
-                          icon: Icons.manage_accounts_outlined,
-                          title: 'Ações da conta',
-                          subtitle: 'Ações disponíveis para sua conta',
-                          children: [
-                            _ActionButton(
-                              icon: Icons.person_outline,
-                              label: 'Editar perfil',
-                              onPressed: () {
-                                PageLoader.go(
-                                  context,
-                                  PageLoader.editarPerfil,
-                                );
-                              },
-                            ),
-                            SizedBox(height: 16),
-                            _ActionButton(
-                              icon: Icons.logout,
-                              label: 'Sair da conta',
-                              onPressed: _sairDaConta,
-                            ),
-                            SizedBox(height: 16),
-                            _ActionButton(
-                              icon: Icons.phonelink_erase,
-                              label: 'Sair de todos os lugares',
-                              onPressed: _sairDeTodosOsLugares,
-                            ),
-                            SizedBox(height: 16),
-                            _ActionButton(
-                              icon: Icons.delete_outline,
-                              label: 'Excluir conta',
-                              destructive: true,
-                              onPressed: _confirmAccountDeletion,
-                            ),
-                          ],
-                        ),
-                        _SettingsSection(
-                          icon: Icons.notifications_none,
-                          title: 'Notificações',
-                          subtitle: 'Escolha como deseja receber novidades',
-                          children: [
-                            _SettingsSwitch(
-                              title: 'Notificações no aplicativo',
-                              subtitle:
-                                  'Alertas sobre missões, reports e novidades.',
-                              value: settings.pushNotifications,
-                              onChanged: settings.setPushNotifications,
-                            ),
-                            _SettingsSwitch(
-                              title: 'Notificações por e-mail',
-                              subtitle: 'Receba um resumo ocasional por e-mail.',
-                              value: settings.emailNotifications,
-                              onChanged: settings.setEmailNotifications,
-                            ),
-                          ],
-                        ),
-                        _SettingsSection(
-                          icon: Icons.person_outline,
-                          title: 'Perfil',
-                          subtitle: 'Controle como outras pessoas encontram você',
-                          children: [
-                            _SettingsSwitch(
-                              title: 'Perfil público',
-                              subtitle:
-                                  'Permite que outros usuários vejam seu perfil.',
-                              value: settings.profilePublic,
-                              onChanged: settings.setProfilePublic,
-                            ),
-                            _SettingsSwitch(
-                              title: 'Permitir solicitações de amizade',
-                              subtitle:
-                                  'Outros usuários poderão enviar convites.',
-                              value: settings.allowFriendRequests,
-                              onChanged: settings.setAllowFriendRequests,
-                            ),
-                          ],
-                        ),
-                        _SettingsSection(
-                          icon: Icons.lock_outline,
-                          title: 'Privacidade',
-                          subtitle: 'Controle o uso de seus dados',
-                          children: [
-                            _VisibilidadeSeguidores(
-                              usuarioService: const UsuarioService(),
-                            ),
-                            _SettingsSwitch(
-                              title: 'Compartilhar localização',
-                              subtitle:
-                                  'Usa sua localização em recursos compatíveis.',
-                              value: settings.shareLocation,
-                              onChanged: settings.setShareLocation,
-                            ),
-                            _SettingsSwitch(
-                              title: 'Dados de uso anônimos',
-                              subtitle:
-                                  'Ajuda a melhorar o aplicativo sem identificar você.',
-                              value: settings.analytics,
-                              onChanged: settings.setAnalytics,
-                            ),
-                          ],
-                        ),
+                        _aparencia(),
+                        const SizedBox(height: 12),
+                        _mapa(),
+                        const SizedBox(height: 12),
+                        _notificacoes(),
+                        const SizedBox(height: 12),
+                        _privacidade(),
+                        const SizedBox(height: 12),
+                        _contaUi(),
+                        const SizedBox(height: 12),
+                        _sobre(),
                         const SizedBox(height: 8),
                         _LegalLinks(onMessage: _showMessage),
                         const SizedBox(height: 10),
                         Text(
-                          'ConPort • configurações desta sessão',
+                          'ConPort ${_versao()}',
                           style: TextStyle(
                             color: colors.onSurface.withValues(alpha: 0.55),
                             fontSize: 9,
@@ -259,10 +115,246 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // ============================================================
+  // SEÇÕES
+  // ============================================================
+
+  Widget _aparencia() => _SettingsSection(
+    icon: Icons.palette_outlined,
+    title: 'Aparência',
+    subtitle: 'Cores, texto e movimento — salvo neste aparelho',
+    initiallyExpanded: true,
+    children: [
+      _SettingsSwitch(
+        title: 'Seguir tema do sistema',
+        subtitle: 'Usa claro ou escuro automático do aparelho.',
+        value: settings.seguirTemaSistema,
+        onChanged: settings.setSeguirTemaSistema,
+      ),
+      if (!settings.seguirTemaSistema)
+        _ThemeSelector(
+          value: settings.themeMode,
+          onChanged: settings.setThemeMode,
+        ),
+      if (!settings.seguirTemaSistema)
+        const SizedBox(height: 12),
+      _SettingsSwitch(
+        title: 'Usar Material 3',
+        subtitle: 'Ativa os componentes mais recentes do Material.',
+        value: settings.useMaterial3,
+        onChanged: settings.setUseMaterial3,
+      ),
+      _SettingsSwitch(
+        title: 'Alto contraste',
+        subtitle: 'Aumenta a diferença entre textos e fundos.',
+        value: settings.highContrast,
+        onChanged: settings.setHighContrast,
+      ),
+      _SettingsSwitch(
+        title: 'Reduzir animações',
+        subtitle: 'Troca de página e abre gaveta sem deslizar.',
+        value: settings.reduceMotion,
+        onChanged: settings.setReduceMotion,
+      ),
+      const SizedBox(height: 12),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('Pequena', style: TextStyle(fontSize: 10)),
+          Text(
+            '${(settings.fontScale * 100).round()}%',
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          ),
+          const Text('Grande', style: TextStyle(fontSize: 14)),
+        ],
+      ),
+      Slider(
+        value: settings.fontScale,
+        min: 0.85,
+        max: 1.3,
+        divisions: 9,
+        label: '${(settings.fontScale * 100).round()}%',
+        onChanged: settings.setFontScale,
+      ),
+      const SizedBox(height: 4),
+      Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        alignment: WrapAlignment.center,
+        children: [
+          for (final (label, escala) in AppSettings.tamanhosFonte)
+            _FontSizePreset(
+              label: label,
+              escala: escala,
+              selecionado: settings.fontScale == escala,
+              onSelect: () => settings.setFontScale(escala),
+            ),
+        ],
+      ),
+    ],
+  );
+
+  Widget _mapa() => _SettingsSection(
+    icon: Icons.map_outlined,
+    title: 'Mapa',
+    subtitle: 'Como as distâncias e o fundo do mapa aparecem',
+    children: [
+      const _Subtitulo('Unidade de distância'),
+      _OpcoesEscolha<UnidadeDistancia>(
+        rotulos: [for (final u in UnidadeDistancia.values) u.rotulo],
+        selecionado: settings.unidadeDistancia,
+        indiceDe: (u) => u == UnidadeDistancia.quilometros ? 0 : 1,
+        aoTocar: (i) =>
+            settings.setUnidadeDistancia(UnidadeDistancia.values[i]),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        settings.unidadeDistancia.descricao,
+        style: const TextStyle(fontSize: 9),
+      ),
+      const SizedBox(height: 16),
+      const _Subtitulo('Estilo do mapa'),
+      for (final estilo in EstiloMapa.values)
+        _EscolhaUnica(
+          titulo: estilo.rotulo,
+          descricao: estilo.descricao,
+          selecionado: estilo == settings.estiloMapa,
+          onTap: () => settings.setEstiloMapa(estilo),
+        ),
+    ],
+  );
+
+  Widget _notificacoes() => _SettingsSection(
+    icon: Icons.notifications_none,
+    title: 'Notificações',
+    subtitle: 'Salvo na conta — vale em qualquer aparelho',
+    children: [
+      _Preferencia(
+        chave: PreferenciasChave.notificarNoApp,
+        prefs: conta,
+        titulo: 'Notificações no aplicativo',
+        descricao: 'Alertas no sino sobre missões, reports e conquistas.',
+      ),
+      _SettingsSwitch(
+        title: 'Notificações push',
+        subtitle:
+            'Push via FCM ainda não está configurado — o toggle salva a '
+            'preferência e servirá quando o serviço de push for adicionado.',
+        value: settings.notificarPush,
+        onChanged: settings.setNotificarPush,
+      ),
+      _Preferencia(
+        chave: PreferenciasChave.notificarEmail,
+        prefs: conta,
+        titulo: 'Notificações por e-mail',
+        descricao:
+            'A preferência fica gravada e o app respeita, mas nenhum e-mail '
+            'é enviado ainda: não há serviço de e-mail ligado ao servidor.',
+      ),
+      if (conta.erro != null) _AvisoErro(conta.erro!),
+    ],
+  );
+
+  Widget _privacidade() => _SettingsSection(
+    icon: Icons.lock_outline,
+    title: 'Privacidade',
+    subtitle: 'Quem te vê e o que é usado',
+    children: [
+      _Preferencia(
+        chave: PreferenciasChave.perfilPublico,
+        prefs: conta,
+        titulo: 'Perfil público',
+        descricao:
+            'Desligado, outras pessoas não veem seu e-mail, cidade nem '
+            'data de nascimento.',
+      ),
+      _Preferencia(
+        chave: PreferenciasChave.permiteSolicitacoes,
+        prefs: conta,
+        titulo: 'Permitir solicitações de amizade',
+        descricao: 'Desligado, ninguém consegue te mandar um convite.',
+      ),
+      _Preferencia(
+        chave: PreferenciasChave.compartilharLocalizacao,
+        prefs: conta,
+        titulo: 'Compartilhar localização',
+        descricao:
+            'Desligado, o mapa não pede o GPS sozinho ao abrir.',
+      ),
+      _Preferencia(
+        chave: PreferenciasChave.dadosDeUsoAnonimo,
+        prefs: conta,
+        titulo: 'Dados de uso anônimos',
+        descricao: 'Ajuda a melhorar o aplicativo sem identificar você.',
+      ),
+      const SizedBox(height: 12),
+      const Divider(height: 1),
+      const SizedBox(height: 12),
+      _VisibilidadeSeguidores(usuarioService: usuarioService),
+    ],
+  );
+
+  Widget _contaUi() => _SettingsSection(
+    icon: Icons.manage_accounts_outlined,
+    title: 'Conta',
+    subtitle: 'Ações disponíveis para a sua conta',
+    children: [
+      _ActionButton(
+        icon: Icons.person_outline,
+        label: 'Editar perfil',
+        onPressed: () => PageLoader.go(context, PageLoader.editarPerfil),
+      ),
+      const SizedBox(height: 16),
+      _ActionButton(
+        icon: Icons.logout,
+        label: 'Sair da conta',
+        onPressed: _sairDaConta,
+      ),
+      const SizedBox(height: 16),
+      _ActionButton(
+        icon: Icons.phonelink_erase,
+        label: 'Sair de todos os lugares',
+        onPressed: _sairDeTodosOsLugares,
+      ),
+      const SizedBox(height: 16),
+      _ActionButton(
+        icon: Icons.delete_outline,
+        label: 'Excluir conta',
+        destructive: true,
+        onPressed: _confirmAccountDeletion,
+      ),
+    ],
+  );
+
+  // ============================================================
+  // AÇÕES
+  // ============================================================
+
+  static final _repositorio = Uri.parse(
+    'https://github.com/characaio/conport',
+  );
+
+  /// Versão vinda do `pubspec.yaml` pelo nome do pacote: evita o número
+  /// estar escrito em dois lugares e divergir na próxima release.
+  String _versao() {
+    const version = String.fromEnvironment(
+      'conport.versao',
+      defaultValue: '1.0.0+1',
+    );
+
+    return version;
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _abrir(Uri uri, ValueChanged<String> onMessage) async {
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+    if (!opened) onMessage('Não foi possível abrir o navegador.');
   }
 
   Future<void> _sairDaConta() async {
@@ -270,9 +362,10 @@ class _SettingsPageState extends State<SettingsPage> {
     // saída acontece: a pessoa pediu para sair, não para rezar pelo 500.
     await AuthSession.instance.sairDaConta();
 
-    // A lista de notificações fica em memória: sem limpar aqui, a conta que
-    // entrar depois veria as notificações da conta que saiu.
+    // Lista de notificações e preferências ficam em memória: sem limpar aqui, a
+    // conta que entrar depois veria o que é da conta que saiu.
     NotificacaoController.instance.limpar();
+    conta.limpar();
 
     // Mostra a mensagem antes de navegar: o mensageiro fica acima do
     // Navigator e o aviso sobrevive à troca de rota.
@@ -308,19 +401,149 @@ class _SettingsPageState extends State<SettingsPage> {
     await AuthSession.instance.sairDeTodosOsLugares();
 
     NotificacaoController.instance.limpar();
+    conta.limpar();
 
     _showMessage('Sessões encerradas em todos os aparelhos.');
 
     PageLoader.replace(context, PageLoader.welcome);
   }
 
+  Widget _sobre() => _SettingsSection(
+    icon: Icons.info_outline,
+    title: 'Sobre',
+    subtitle: 'Versão, seus dados e o botão de arrependimento',
+    children: [
+      _InfoItem(
+        icon: Icons.info_outline,
+        titulo: 'Versão do aplicativo',
+        valor: _versao(),
+      ),
+      _InfoItem(
+        icon: Icons.code,
+        titulo: 'Código-fonte',
+        valor: 'Licença e código no GitHub',
+        onTap: () => _abrir(_repositorio, _showMessage),
+      ),
+      const SizedBox(height: 16),
+      _ActionButton(
+        icon: Icons.file_download_outlined,
+        label: 'Exportar meus dados',
+        onPressed: _exportarDados,
+      ),
+      const SizedBox(height: 16),
+      _ActionButton(
+        icon: Icons.restart_alt,
+        label: 'Restaurar configurações padrão',
+        onPressed: _confirmarRestaurarPadroes,
+      ),
+    ],
+  );
+
+  /// Apaga a conta — de verdade, com a senha confirmada.
+  ///
+  /// A senha não é decoração: o servidor recusa com 401 e a pessoa continua
+  /// dentro da conta. É o que impede que um aparelho emprestado, com a sessão
+  /// ainda aberta, apague a conta de quem o deixou aberto.
   Future<void> _confirmAccountDeletion() async {
-    final shouldDelete = await showDialog<bool>(
+    final senha = await showDialog<String>(
+      context: context,
+      builder: (context) => _DialogoSenha(
+        titulo: 'Excluir conta',
+        texto:
+            'Isto apaga a conta, seus reports, missões, conquistas e '
+            'notificações. Não dá para desfazer.',
+        textoBotao: 'Excluir definitivamente',
+      ),
+    );
+
+    // Cancelar devolve `null`; uma senha vazia também não deve chegar ao
+    // servidor como pedido de exclusão.
+    if (senha == null || senha.isEmpty || !mounted) return;
+
+    try {
+      await usuarioService.excluirConta(senha);
+    } catch (e) {
+      if (!mounted) return;
+
+      // A senha errada volta com a mensagem do servidor, que é o que a pessoa
+      // precisa saber para tentar de novo.
+      _showMessage('$e');
+
+      return;
+    }
+
+    // Só desloga depois do 200: até lá a conta existe e a sessão vale.
+    await AuthSession.instance.sairDaConta();
+    NotificacaoController.instance.limpar();
+    conta.limpar();
+
+    if (!mounted) return;
+
+    _showMessage('Sua conta foi excluída.');
+    PageLoader.replace(context, PageLoader.welcome);
+  }
+
+  /// Monta o retrato dos dados e oferece para copiar.
+  ///
+  /// Não grava arquivo no aparelho: sem `share_plus`/`path_provider` não há
+  /// para onde mandar, e fingir que exportou seria pior do que mostrar o
+  /// conteúdo para a pessoa copiar.
+  Future<void> _exportarDados() async {
+    _showMessage('Juntando seus dados...');
+
+    String texto;
+
+    try {
+      final dados = await usuarioService.exportarDados();
+      texto = const JsonEncoder.withIndent('  ').convert(dados);
+    } catch (e) {
+      if (!mounted) return;
+      _showMessage('Não foi possível exportar agora.');
+      return;
+    }
+
+    if (!mounted) return;
+
+    await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir conta?'),
+        title: const Text('Seus dados'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: SelectableText(
+              texto,
+              style: const TextStyle(fontSize: 10, fontFamily: 'monospace'),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: texto));
+
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Copiar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmarRestaurarPadroes() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Restaurar padrões?'),
         content: const Text(
-          'Esta ação será conectada ao backend posteriormente. Nenhum dado será excluído agora.',
+          'Volta tema, tamanho da fonte, alto contraste, animações, mapa e '
+          'unidade de distância para o que vem de fábrica. Suas preferências '
+          'de conta e o conteúdo dela não mudam.',
         ),
         actions: [
           TextButton(
@@ -329,22 +552,29 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Entendi'),
+            child: const Text('Restaurar'),
           ),
         ],
       ),
     );
 
-    if (shouldDelete == true && mounted) {
-      _showMessage('Exclusão de conta disponível em breve.');
-    }
+    if (confirmar != true || !mounted) return;
+
+    await settings.restaurarPadroes();
+
+    if (mounted) _showMessage('Configurações restauradas.');
   }
 }
+
+// ============================================================
+// WIDGETS
+// ============================================================
 
 class _SettingsSection extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final bool initiallyExpanded;
   final List<Widget> children;
 
   const _SettingsSection({
@@ -352,6 +582,7 @@ class _SettingsSection extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.children,
+    this.initiallyExpanded = false,
   });
 
   @override
@@ -366,6 +597,9 @@ class _SettingsSection extends StatelessWidget {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
+          // "Aparência" vem aberta: é o que a pessoa procura primeiro, e as
+          // outras sete seções fechadas continuam deixando a página curta.
+          initiallyExpanded: initiallyExpanded,
           tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
           childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
           leading: Icon(icon, size: 22),
@@ -407,57 +641,140 @@ class _SettingsSwitch extends StatelessWidget {
   }
 }
 
-class _ThemeSelector extends StatelessWidget {
-  final ThemeMode value;
-  final ValueChanged<ThemeMode> onChanged;
+class _Subtitulo extends StatelessWidget {
+  final String texto;
 
-  const _ThemeSelector({required this.value, required this.onChanged});
+  const _Subtitulo(this.texto);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 6, top: 2),
+    child: Text(
+      texto,
+      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+    ),
+  );
+}
+
+class _AvisoErro extends StatelessWidget {
+  final String mensagem;
+
+  const _AvisoErro(this.mensagem);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 6),
+    child: Text(
+      mensagem,
+      style: TextStyle(
+        fontSize: 9,
+        color: Theme.of(context).colorScheme.error,
+      ),
+    ),
+  );
+}
+
+/// Um interruptor de preferência de **conta**.
+///
+/// Fica escondendo nada: enquanto as preferências não chegam do servidor não há
+/// botão nenhum, porque mostrar o padrão e trocar na frente da pessoa seria
+/// pior que esperar.
+class _Preferencia extends StatelessWidget {
+  final PreferenciasChave chave;
+  final PreferenciasConta prefs;
+  final String titulo;
+  final String descricao;
+
+  const _Preferencia({
+    required this.chave,
+    required this.prefs,
+    required this.titulo,
+    required this.descricao,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final atual = prefs.atual;
+
+    if (atual == null) return const SizedBox.shrink();
+
+    return Stack(
       children: [
-        Expanded(
-          child: _ThemeChoice(
-            label: 'Claro',
-            icon: Icons.light_mode_outlined,
-            selected: value == ThemeMode.light,
-            onTap: () => onChanged(ThemeMode.light),
-          ),
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          title: Text(titulo, style: const TextStyle(fontSize: 11)),
+          subtitle: Text(descricao, style: const TextStyle(fontSize: 9)),
+          value: atual.valorDe(chave),
+          onChanged: prefs.salvando
+              ? null
+              : (v) => prefs.definir(chave, v),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _ThemeChoice(
-            label: 'Escuro',
-            icon: Icons.dark_mode_outlined,
-            selected: value == ThemeMode.dark,
-            onTap: () => onChanged(ThemeMode.dark),
+        // Fica sobre o interruptor para travar o toque enquanto grava, sem
+        // desabilitar o widget inteiro (que escureceria o texto da seção).
+        if (prefs.salvando)
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 14),
+                  child: SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _ThemeChoice(
-            label: 'Sistema',
-            icon: Icons.settings_suggest_outlined,
-            selected: value == ThemeMode.system,
-            onTap: () => onChanged(ThemeMode.system),
-          ),
-        ),
       ],
     );
   }
 }
 
-class _ThemeChoice extends StatelessWidget {
+/// Opções em duas ou três caixas lado a lado (usado para a unidade de
+/// distância, que tem só duas escolhas).
+class _OpcoesEscolha<T> extends StatelessWidget {
+  final List<String> rotulos;
+  final T selecionado;
+  final int Function(T) indiceDe;
+  final ValueChanged<int> aoTocar;
+
+  const _OpcoesEscolha({
+    required this.rotulos,
+    required this.selecionado,
+    required this.indiceDe,
+    required this.aoTocar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (var i = 0; i < rotulos.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: _CaixaEscolha(
+              label: rotulos[i],
+              selecionado: indiceDe(selecionado) == i,
+              onTap: () => aoTocar(i),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _CaixaEscolha extends StatelessWidget {
   final String label;
-  final IconData icon;
-  final bool selected;
+  final bool selecionado;
   final VoidCallback onTap;
 
-  const _ThemeChoice({
+  const _CaixaEscolha({
     required this.label,
-    required this.icon,
-    required this.selected,
+    required this.selecionado,
     required this.onTap,
   });
 
@@ -469,21 +786,185 @@ class _ThemeChoice extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: AppSettings.instance.duracao(
+          const Duration(milliseconds: 180),
+        ),
         padding: const EdgeInsets.symmetric(vertical: 10),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected
+          color: selecionado
               ? colors.primary.withValues(alpha: 0.16)
               : colors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? colors.primary : colors.outlineVariant,
-            width: selected ? 2 : 1,
+            color: selecionado ? colors.primary : colors.outlineVariant,
+            width: selecionado ? 2 : 1,
+          ),
+        ),
+        child: Text(label, style: const TextStyle(fontSize: 10)),
+      ),
+    );
+  }
+}
+
+/// Uma opção que ocupa a linha inteira, com título e descrição.
+class _EscolhaUnica extends StatelessWidget {
+  final String titulo;
+  final String descricao;
+  final bool selecionado;
+  final VoidCallback onTap;
+
+  const _EscolhaUnica({
+    required this.titulo,
+    required this.descricao,
+    required this.selecionado,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              selecionado ? Icons.radio_button_checked : Icons.radio_button_off,
+              size: 16,
+              color: selecionado ? colors.primary : colors.outline,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(titulo, style: const TextStyle(fontSize: 11)),
+                  Text(
+                    descricao,
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoItem extends StatelessWidget {
+  final IconData icon;
+  final String titulo;
+  final String valor;
+  final VoidCallback? onTap;
+
+  const _InfoItem({
+    required this.icon,
+    required this.titulo,
+    required this.valor,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      leading: Icon(icon, size: 18),
+      title: Text(titulo, style: const TextStyle(fontSize: 11)),
+      subtitle: Text(
+        valor,
+        style: TextStyle(fontSize: 9, color: colors.onSurfaceVariant),
+      ),
+      trailing: onTap == null
+          ? null
+          : Icon(Icons.chevron_right, size: 16, color: colors.outline),
+      onTap: onTap,
+    );
+  }
+}
+
+class _ThemeSelector extends StatelessWidget {
+  final ThemeMode value;
+  final ValueChanged<ThemeMode> onChanged;
+
+  const _ThemeSelector({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _CaixaComIcone(
+            label: 'Claro',
+            icon: Icons.light_mode_outlined,
+            selecionado: value == ThemeMode.light,
+            onTap: () => onChanged(ThemeMode.light),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _CaixaComIcone(
+            label: 'Escuro',
+            icon: Icons.dark_mode_outlined,
+            selecionado: value == ThemeMode.dark,
+            onTap: () => onChanged(ThemeMode.dark),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CaixaComIcone extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selecionado;
+  final VoidCallback onTap;
+
+  const _CaixaComIcone({
+    required this.label,
+    required this.icon,
+    required this.selecionado,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: AppSettings.instance.duracao(
+          const Duration(milliseconds: 180),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: selecionado
+              ? colors.primary.withValues(alpha: 0.16)
+              : colors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selecionado ? colors.primary : colors.outlineVariant,
+            width: selecionado ? 2 : 1,
           ),
         ),
         child: Column(
           children: [
-            Icon(icon, size: 20, color: selected ? colors.primary : null),
+            Icon(icon, size: 20, color: selecionado ? colors.primary : null),
             const SizedBox(height: 4),
             Text(label, style: const TextStyle(fontSize: 10)),
           ],
@@ -528,13 +1009,172 @@ class _ActionButton extends StatelessWidget {
       ),
     );
   }
+}  /// Botão rápido de tamanho de fonte predefinido.
+  ///
+  /// Fica abaixo do slider: o slider continua para ajustes finos, os botões dão
+  /// acesso a tamanhos que cabem num texto só.
+  class _FontSizePreset extends StatelessWidget {
+    final String label;
+    final double escala;
+    final bool selecionado;
+    final VoidCallback onSelect;
+
+    const _FontSizePreset({
+      required this.label,
+      required this.escala,
+      required this.selecionado,
+      required this.onSelect,
+    });
+
+    @override
+    Widget build(BuildContext context) {
+      final colors = Theme.of(context).colorScheme;
+
+      return ChoiceChip(
+        label: Text(label, style: const TextStyle(fontSize: 10)),
+        selected: selecionado,
+        onSelected: (_) => onSelect(),
+        visualDensity: VisualDensity.compact,
+        labelStyle: TextStyle(
+          color: selecionado ? colors.onPrimary : colors.onSurfaceVariant,
+        ),
+      );
+    }
+  }
+
+  /// Pede a senha e devolve o que a pessoa digitou.
+  ///
+  /// `null` = cancelou. O botão de confirmar começa desligado e só liga com
+  /// algo digitado: assim "Excluir conta" nunca é alcançado por engano com o
+  /// campo vazio.
+  class _DialogoSenha extends StatefulWidget {
+  final String titulo;
+  final String texto;
+  final String textoBotao;
+
+  const _DialogoSenha({
+    required this.titulo,
+    required this.texto,
+    required this.textoBotao,
+  });
+
+  @override
+  State<_DialogoSenha> createState() => _DialogoSenhaState();
 }
+
+class _DialogoSenhaState extends State<_DialogoSenha> {
+  final _controller = TextEditingController();
+  bool _enviando = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.titulo),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.texto, style: const TextStyle(fontSize: 12)),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            obscureText: true,
+            autofocus: true,
+            enabled: !_enviando,
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (_) => _confirmar(),
+            decoration: const InputDecoration(
+              labelText: 'Sua senha',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _enviando ? null : () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: _enviando || _controller.text.isEmpty
+              ? null
+              : _confirmar,
+          child: Text(widget.textoBotao),
+        ),
+      ],
+    );
+  }
+
+  void _confirmar() {
+    setState(() => _enviando = true);
+    Navigator.pop(context, _controller.text);
+  }
+}
+
+class _LegalLinks extends StatelessWidget {
+  final ValueChanged<String> onMessage;
+
+  const _LegalLinks({required this.onMessage});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Informações legais',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: () => _abrirRepositorio(onMessage),
+          icon: const Icon(Icons.description_outlined, size: 16),
+          label: const Text('Termos de uso', style: TextStyle(fontSize: 10)),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: () => _abrirRepositorio(onMessage),
+          icon: const Icon(Icons.policy_outlined, size: 16),
+          label: const Text(
+            'Política de privacidade',
+            style: TextStyle(fontSize: 10),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _abrirRepositorio(ValueChanged<String> onMessage) async {
+    final opened = await launchUrl(
+      Uri.parse('https://github.com/characaio/conport'),
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!opened) {
+      onMessage('Não foi possível abrir o navegador.');
+    }
+  }
+}
+
+
+
+
+
 
 /// Quem pode abrir as listas de seguidores e de quem a pessoa segue.
 ///
-/// Vai para o banco, não para o [AppSettings]: as outras chaves daqui são
-/// desta sessão e somem ao fechar o app, mas escolher quem te vê é algo que
-/// a pessoa espera que continue valendo.
+/// Vai para o banco, e não para o [AppSettings], pelo mesmo motivo das outras
+/// preferências de conta: escolher quem te vê é algo que a pessoa espera que
+/// continue valendo em outro aparelho.
 class _VisibilidadeSeguidores extends StatefulWidget {
   final UsuarioService usuarioService;
 
@@ -670,69 +1310,8 @@ class _VisibilidadeSeguidoresState extends State<_VisibilidadeSeguidores> {
               style: const TextStyle(fontSize: 9),
             ),
           ),
-        if (_erro != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              _erro!,
-              style: TextStyle(fontSize: 9, color: colors.error),
-            ),
-          ),
-        const SizedBox(height: 8),
-        const Center(child: Icon(Symbols.lock_outline, size: 14)),
+        if (_erro != null) _AvisoErro(_erro!),
       ],
     );
-  }
-}
-
-class _LegalLinks extends StatelessWidget {
-  final ValueChanged<String> onMessage;
-
-  const _LegalLinks({required this.onMessage});
-
-  static final _repositoryUri = Uri.parse(
-    'https://github.com/characaio/conport',
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            'Informações legais',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          ),
-        ),
-        const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: () => _openRepository(onMessage),
-          icon: const Icon(Icons.description_outlined, size: 16),
-          label: const Text('Termos de uso', style: TextStyle(fontSize: 10)),
-        ),
-        const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: () => _openRepository(onMessage),
-          icon: const Icon(Icons.policy_outlined, size: 16),
-          label: const Text(
-            'Política de privacidade',
-            style: TextStyle(fontSize: 10),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _openRepository(ValueChanged<String> onMessage) async {
-    final opened = await launchUrl(
-      _repositoryUri,
-      mode: LaunchMode.externalApplication,
-    );
-
-    if (!opened) {
-      onMessage('Não foi possível abrir o navegador.');
-    }
   }
 }

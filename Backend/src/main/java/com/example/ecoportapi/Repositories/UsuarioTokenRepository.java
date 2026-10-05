@@ -55,4 +55,12 @@ public interface UsuarioTokenRepository extends JpaRepository<UsuarioToken, Long
           WHERE t.DataExpiracao < :agora
       """)
   int removerExpirados(@Param("agora") LocalDateTime agora);
+
+  /** Encerra as sessões abertas ao excluir a conta. */
+  @Modifying
+  @Query("""
+          DELETE FROM UsuarioToken t
+          WHERE t.Usuario.Id = :usuarioId
+      """)
+  int apagarDoUsuario(@Param("usuarioId") Long usuarioId);
 }

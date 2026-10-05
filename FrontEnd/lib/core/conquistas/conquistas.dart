@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:conport/core/notificacoes/notificacao_controller.dart';
+import 'package:conport/core/settings/preferencias_conta.dart';
 import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/mocks/conquista_mock.dart';
@@ -164,6 +165,13 @@ Future<void> _notificarConquista(Conquista conquista) async {
   final usuarioId = AuthSession.instance.usuario?.id ?? 0;
 
   if (usuarioId == 0) return;
+
+  // "Notificações no aplicativo" desligado: a conquista continua desbloqueada
+  // e visível na tela, mas não vira alerta no sino. É isso que a opção promete
+  // — quem desligou não quer ser interrompido, não quer perder o progresso.
+  final prefs = PreferenciasConta.instance.atual;
+
+  if (prefs != null && !prefs.notificarNoApp) return;
 
   try {
     await NotificacaoService().criar(

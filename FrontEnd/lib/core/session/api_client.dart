@@ -83,6 +83,22 @@ class ApiClient {
   static Future<http.Response> delete(Uri url, {String? token}) =>
       _enviar('DELETE', url, headers: cabecalhos(token: token));
 
+  /// DELETE com corpo.
+  ///
+  /// Existe para o `DELETE /usuarios/eu`, que exige a senha no corpo. A
+  /// alternativa (mandar a senha na query) colocaria a senha de alguém no log
+  /// do servidor proxy.
+  static Future<http.Response> deleteJson(
+    Uri url,
+    Object corpo, {
+    String? token,
+  }) => _enviar(
+    'DELETE',
+    url,
+    headers: cabecalhos(json: true, token: token),
+    body: jsonEncode(corpo),
+  );
+
   /// Envia um [http.MultipartRequest] já montado.
   ///
   /// O multipart recebe só o header de autorização: quem põe o Content-Type

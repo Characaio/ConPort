@@ -1,3 +1,4 @@
+import 'package:conport/models/preferencias.dart';
 import 'package:conport/models/usuario.dart';
 
 import 'amigo_mock.dart';
@@ -57,5 +58,30 @@ class UsuarioMock {
     _visibilidades[id] = valor;
   }
 
-  static void reiniciar() => _visibilidades.clear();
+  /// Preferências de conta no modo demonstração.
+  ///
+  /// É memória como o resto do mock: some ao fechar o app, e isso é aceitável
+  /// porque o modo demonstração não promete a mesma coisa entre execuções.
+  static final Map<int, Preferencias> _preferencias = {};
+
+  static Preferencias preferencias(int id) =>
+      _preferencias[id] ?? Preferencias.padroes();
+
+  static Preferencias definirPreferencias(
+    int id,
+    Map<PreferenciasChave, bool> mudancas,
+  ) {
+    var atual = preferencias(id);
+
+    for (final mudanca in mudancas.entries) {
+      atual = atual.com(mudanca.key, mudanca.value);
+    }
+
+    return _preferencias[id] = atual;
+  }
+
+  static void reiniciar() {
+    _visibilidades.clear();
+    _preferencias.clear();
+  }
 }

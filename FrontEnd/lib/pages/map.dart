@@ -5,6 +5,7 @@ import 'package:conport/widgets/mapembed.dart';
 import 'package:conport/models/unidade_mapa.dart';
 import 'package:conport/services/map_service.dart';
 import 'package:conport/core/navigation/page_loader.dart';
+import 'package:conport/core/settings/app_settings.dart';
 import 'package:conport/core/theme/app_theme.dart';
 
 class Map extends StatefulWidget {
@@ -327,7 +328,9 @@ class _MapState extends State<Map> {
                 child: GestureDetector(
                   onTap: _fecharGaveta,
                   child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 350),
+                    duration: AppSettings.instance.duracao(
+                      const Duration(milliseconds: 350),
+                    ),
                     opacity: _drawerSize >= 0.4 ? 1 : 0,
                     child: Container(
                       color: colors.scrim.withValues(alpha: 0.35),
@@ -341,7 +344,9 @@ class _MapState extends State<Map> {
             // GAVETA
             // ============================================================
             AnimatedPositioned(
-              duration: const Duration(milliseconds: 450),
+              duration: AppSettings.instance.duracao(
+                const Duration(milliseconds: 450),
+              ),
               curve: Curves.easeOutCubic,
               left: 0,
               right: 0,

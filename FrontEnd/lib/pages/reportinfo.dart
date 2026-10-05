@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:conport/core/settings/app_settings.dart';
 import 'package:conport/core/theme/app_theme.dart';
 import 'package:conport/models/report.dart';
 import 'package:conport/models/report_lista.dart';
@@ -451,7 +452,11 @@ class _BarraUrgenciaState extends State<_BarraUrgencia>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 650),
+      // A barra de urgência anima uma vez ao abrir; com "Reduzir animações"
+      // ligada ela vai direto ao valor final, que é o que interessa ler.
+      duration: AppSettings.instance.duracao(
+        const Duration(milliseconds: 650),
+      ),
     );
 
     _animacao = CurvedAnimation(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:conport/core/session/auth_session.dart';
+import 'package:conport/core/settings/preferencias_conta.dart';
 import 'package:conport/models/notificacao.dart';
 import 'package:conport/services/notificacaoService.dart';
 
@@ -45,6 +46,13 @@ class NotificacaoController extends ChangeNotifier {
   /// o melhor é avisar e manter o que já era conhecido.
   String? get erro => _erro;
 
+  /// A pessoa desligou as notificações no aplicativo.
+  bool get desligadas {
+    final prefs = PreferenciasConta.instance.atual;
+
+    return prefs != null && !prefs.notificarNoApp;
+  }
+
   /// Visitantes não têm conta: com a API, `/usuarios/0/...` seria 404.
   int get _usuarioId => AuthSession.instance.usuario?.id ?? 0;
 
@@ -65,6 +73,22 @@ class NotificacaoController extends ChangeNotifier {
     _carregando = true;
     _erro = null;
     notifyListeners();
+
+    // "Notificações no aplicativo" desligado: a lista volta vazia, então o sino
+    // não mostra nada — nem contador, nem popup. As notificações continuam
+    // guardadas no servidor e voltam se a opção for religada.
+    //
+    // Só vale quando as preferências já chegaram (`null` = ainda não
+    // carregadas): esconder o sino por um instante a cada abertura seria pior
+    // do que mostrar.
+    if (desligadas) {
+      _notificacoes = [];
+      _erro = null;
+      _carregando = false;
+      notifyListeners();
+
+      return;
+    }
 
     try {
       _notificacoes = await _service.listar(_usuarioId);

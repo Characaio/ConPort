@@ -5,6 +5,7 @@ import com.example.ecoportapi.Models.Missao;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -35,4 +36,12 @@ public interface MissaoRepository extends JpaRepository<Missao, Long> {
         WHERE m.Usuario.Id = :usuarioId
     """)
   boolean existeAlgumaDoUsuario(@Param("usuarioId") Long usuarioId);
+
+  /** Missões da conta, apagadas junto com ela. */
+  @Modifying
+  @Query("""
+        DELETE FROM Missao m
+        WHERE m.Usuario.Id = :usuarioId
+    """)
+  int apagarDoUsuario(@Param("usuarioId") Long usuarioId);
 }

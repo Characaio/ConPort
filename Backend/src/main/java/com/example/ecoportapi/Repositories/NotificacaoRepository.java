@@ -79,4 +79,12 @@ public interface NotificacaoRepository extends JpaRepository<Notificacao, Long> 
           AND n.Lida = false
     """)
     int marcarTodasComoLidas(@Param("usuarioId") Long usuarioId);
+
+  /** Apaga as notificações da conta, na exclusão do usuário. */
+  @Modifying
+  @Query("""
+        DELETE FROM Notificacao n
+        WHERE n.Usuario.Id = :usuarioId
+    """)
+  int apagarDoUsuario(@Param("usuarioId") Long usuarioId);
 }

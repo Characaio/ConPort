@@ -2,6 +2,7 @@ package com.example.ecoportapi.Repositories;
 
 import com.example.ecoportapi.Models.ConquistaDesbloqueada;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -34,4 +35,12 @@ public interface ConquistaDesbloqueadaRepository
             @Param("usuarioId") Long usuarioId,
             @Param("chave") String chave
     );
+
+  /** Conquistas da conta: some junto com ela, não têm sentido sem o dono. */
+  @Modifying
+  @Query("""
+        DELETE FROM ConquistaDesbloqueada c
+        WHERE c.Usuario.Id = :usuarioId
+    """)
+  int apagarDoUsuario(@Param("usuarioId") Long usuarioId);
 }

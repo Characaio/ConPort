@@ -5,6 +5,7 @@ import com.example.ecoportapi.Models.UsuarioRelacionamento;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -62,5 +63,17 @@ public interface RelacionamentoRepository extends JpaRepository<UsuarioRelaciona
       """)
   List<UsuarioRelacionamento> findComStatus(
       @Param("usuarioId") Long usuarioId, @Param("status") StatusRelacionamento status);
+
+  /**
+   * Apaga as relações de amizade/solicitação em que a conta aparece, nos dois
+   * lados — quem enviou e quem recebeu, pelo mesmo motivo do
+   * {@link UsuarioSegueRepository}.
+   */
+  @Modifying
+  @Query("""
+        DELETE FROM UsuarioRelacionamento r
+        WHERE r.Seguidor.Id = :usuarioId OR r.Seguindo.Id = :usuarioId
+    """)
+  int apagarDoUsuario(@Param("usuarioId") Long usuarioId);
 
 }

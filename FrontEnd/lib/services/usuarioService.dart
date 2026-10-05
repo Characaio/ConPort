@@ -2,12 +2,23 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:conport/models/amigo.dart';
+import 'package:conport/models/conquista.dart';
+import 'package:conport/models/mission.dart';
+import 'package:conport/models/notificacao.dart';
+import 'package:conport/models/preferencias.dart';
+import 'package:conport/models/report_lista.dart';
 import 'package:conport/models/usuario.dart';
 
 import '../config/app_config.dart';
 import '../core/session/api_client.dart';
 import '../core/session/auth_session.dart';
+import '../mocks/conquista_mock.dart';
 import '../mocks/usuario_mock.dart';
+import 'conquista_service.dart';
+import 'missaoService.dart';
+import 'notificacaoService.dart';
+import 'reportService.dart';
 import 'package:conport/mocks/amigo_mock.dart';
 import 'package:conport/models/amigo.dart';
 import 'multipart_media_type.dart';
@@ -414,6 +425,216 @@ class UsuarioService {
     return corpo.isNotEmpty && corpo.length <= 200
         ? corpo.replaceAll('"', '')
         : 'Esta lista é privada.';
+  }
+
+  // ============================================================
+  // PREFERÊNCIAS DE CONTA
+  // ============================================================
+
+  /// As preferências da conta logada, já com os padrões do servidor aplicados.
+  Future<Preferencias> pegarPreferencias() async {
+    if (!AppConfig.usarApi) {
+      return UsuarioMock.preferencias(_idDaSessao);
+    }
+
+    final response = await ApiClient.get(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/preferencias'),
+    );
+
+    if (response.statusCode == 200) {
+      return Preferencias.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+
+    throw _erroDoBackend(
+      response,
+      'Não foi possível carregar suas preferências.',
+    );
+  }
+
+  /// Manda só [mudancas] e devolve o estado completo que o servidor gravou.
+  Future<Preferencias> atualizarPreferencias(
+    Map<PreferenciasChave, bool> mudancas,
+  ) async {
+    if (mudancas.isEmpty) return pegarPreferencias();
+
+    if (!AppConfig.usarApi) {
+      return UsuarioMock.definirPreferencias(_idDaSessao, mudancas);
+    }
+
+    final corpo = Preferencias.padroes().toJsonParcial(mudancas);
+
+    final response = await ApiClient.putJson(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu/preferencias'),
+      corpo,
+    );
+
+    if (response.statusCode == 200) {
+      return Preferencias.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+
+    throw _erroDoBackend(response, 'Não foi possível salvar essa preferência.');
+  }
+
+  // ============================================================
+  // EXCLUIR CONTA
+  // ============================================================
+
+  /// Apaga a conta depois de confirmar a senha.
+  ///
+  /// A senha vai no corpo e não na URL: query string de senha acaba em log de
+  /// proxy. O backend responde 401 quando ela não bate, e o app só sai da conta
+  /// depois do 200 — assim uma senha errada não deixa a pessoa deslogada sem
+  /// conta nenhuma.
+  Future<void> excluirConta(String senha) async {
+    if (!AppConfig.usarApi) {
+      // No mock não há banco para apagar; confirmar e seguir é o que dá para
+      // fazer sem fingir que o servidor respondeu.
+      return;
+    }
+
+    final response = await ApiClient.deleteJson(
+      Uri.parse('${AppConfig.apiUrl}/usuarios/eu'),
+      {'senha': senha},
+    );
+
+    if (response.statusCode == 200) return;
+
+    throw _erroDoBackend(response, 'Não foi possível excluir a conta.');
+  }
+
+  // ============================================================
+  // EXPORTAR DADOS
+  // ============================================================
+
+  /// Um retrato de tudo que o backend guarda sobre a conta logada.
+  ///
+  /// Vai montado aqui (e não na tela) para que o formato do arquivo seja
+  /// testável e não dependa de widget nenhum.
+  Future<Map<String, dynamic>> exportarDados() async {
+    final conta = await minhaConta();
+
+    final dados = <String, dynamic>{
+      'exportado_em': DateTime.now().toIso8601String(),
+      'conta': {
+        'id': conta.id,
+        'nome': conta.nome,
+        'username': conta.username,
+        'email': conta.email,
+        'cidade': conta.cidade,
+        'estado': conta.estado,
+        'data_de_nascimento': conta.datanasc.toIso8601String(),
+        'data_de_cadastro': conta.datacadastro?.toIso8601String(),
+        'xp': conta.xp,
+        'level': conta.level,
+        'moedas': conta.moedas,
+        'confiavel': conta.confiavel,
+      },
+    };
+
+    // Cada bloco é independente: uma seção que falha não pode impedir o resto
+    // de sair. Um retrato parcial ainda é útil; um retrato que não saiu, não.
+    dados['amigos'] = await _exportar<Amigo>(
+      listarAmigos,
+      (a) => {
+        'id': a.id,
+        'nome': a.nome,
+        'username': a.username,
+        'nivel': a.nivel,
+      },
+    );
+
+    dados['missoes'] = await _exportar<Mission>(
+      () => MissaoService().listarMissoes(),
+      (m) => {
+        'id': m.id,
+        'titulo': m.title,
+        'status': m.status.name,
+        'progresso': m.progress,
+        'meta': m.goal,
+      },
+    );
+
+    dados['reports'] = await _exportar<ReportLista>(
+      () => ReportService().buscarMeusReports(),
+      (r) => {
+        'id': r.id,
+        'tipo': r.tipo.name,
+        'status': r.status.name,
+        'descricao': r.descricao,
+        'unidade': r.unidadeNome,
+        'latitude': r.latitude,
+        'longitude': r.longitude,
+        'data': r.dataDoOcorrido.toIso8601String(),
+      },
+    );
+
+    dados['conquistas'] = await _exportar<TipoConquista>(
+      () => ConquistaService().buscarDesbloqueadas(
+        _idDaSessao,
+        daSessao: true,
+      ),
+      // O serviço devolve só a chave de cada conquista; o título e a descrição
+      // vivem no catálogo local, e é dele que saem para o arquivo.
+      (c) {
+        final meta = ConquistaMock.todas
+            .where((d) => d.tipo == c)
+            .firstOrNull;
+
+        return {
+          'chave': c.chave,
+          'titulo': meta?.titulo,
+          'descricao': meta?.descricao,
+        };
+      },
+    );
+
+    dados['notificacoes'] = await _exportar<Notificacao>(
+      () => NotificacaoService().listar(_idDaSessao),
+      (n) => {
+        'titulo': n.titulo,
+        'texto': n.texto,
+        'data': n.data.toIso8601String(),
+        'lida': n.lida,
+      },
+    );
+
+    // As seis preferências entram pelo mesmo caminho das outras seções: uma
+    // falha aqui também vira lista vazia em vez de derrubar o arquivo.
+    final prefs = await _exportarPreferencias();
+    dados['preferencias'] = prefs;
+
+    return dados;
+  }
+
+  Future<Map<String, dynamic>> _exportarPreferencias() async {
+    try {
+      final prefs = await pegarPreferencias();
+
+      return prefs.toJsonParcial({
+        for (final chave in PreferenciasChave.values)
+          chave: prefs.valorDe(chave),
+      });
+    } catch (e) {
+      return {};
+    }
+  }
+
+  /// Roda [buscar] e converte em JSON, devolvendo lista vazia se falhar.
+  Future<List<Map<String, dynamic>>> _exportar<T>(
+    Future<List<T>> Function() buscar,
+    Map<String, dynamic> Function(T) converter,
+  ) async {
+    try {
+      return (await buscar()).map(converter).toList();
+    } catch (e) {
+      // Falha de rede aqui não pode impedir o arquivo de sair: o resto do
+      // retrato ainda é o que a pessoa pediu.
+      return [];
+    }
   }
 }
 

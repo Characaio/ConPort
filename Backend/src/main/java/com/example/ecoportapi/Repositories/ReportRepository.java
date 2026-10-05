@@ -3,6 +3,7 @@ package com.example.ecoportapi.Repositories;
 import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Models.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -75,4 +76,14 @@ public interface ReportRepository extends JpaRepository<Report,Long> {
     """)
     public Integer PegarQuantDeReports(@Param("unidadeId") Long unidadeId);
 
+  /**
+   * Apaga os reports da conta. Sem isso a exclusão da conta batia em violação
+   * de chave estrangeira: o report aponta para o usuário e o banco não deixa.
+   */
+  @Modifying
+  @Query("""
+        DELETE FROM Report r
+        WHERE r.Usuario.Id = :usuarioId
+    """)
+  int apagarDoUsuario(@Param("usuarioId") Long usuarioId);
 }

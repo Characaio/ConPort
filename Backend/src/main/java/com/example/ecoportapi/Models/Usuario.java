@@ -68,6 +68,38 @@ public class Usuario {
   @Column(name = "Visibilidade", nullable = true)
   private VisibilidadeSeguidores Visibilidade = VisibilidadeSeguidores.PUBLICO;
 
+  // ============================================================
+  // PREFERÊNCIAS
+  //
+  // Estas vão para o banco (e não para o aparelho) por um motivo só: quem
+  // entra na conta em outro celular espera encontrar as mesmas respostas de
+  // antes. As preferências de aparência — tema, fonte, alto contraste — são
+  // do aparelho, porque cada tela tem o próprio tamanho e a própria luz.
+  //
+  // Todo campo começa em `true` menos o compartilhamento de localização, que
+  // é o padrão que já valia antes de existir a opção: nada era compartilhado.
+  // Nulo no banco é lido como o padrão, então conta antiga não muda de
+  // comportamento por causa de uma coluna nova.
+  // ============================================================
+
+  @Column(name = "PerfilPublico", nullable = true)
+  private Boolean PerfilPublico = true;
+
+  @Column(name = "PermiteSolicitacoes", nullable = true)
+  private Boolean PermiteSolicitacoes = true;
+
+  @Column(name = "NotificarNoApp", nullable = true)
+  private Boolean NotificarNoApp = true;
+
+  @Column(name = "NotificarEmail", nullable = true)
+  private Boolean NotificarEmail = false;
+
+  @Column(name = "CompartilharLocalizacao", nullable = true)
+  private Boolean CompartilharLocalizacao = false;
+
+  @Column(name = "DadosDeUsoAnonimo", nullable = true)
+  private Boolean DadosDeUsoAnonimo = true;
+
   @PrePersist
   void prePersist() {
     if (DataCadastro == null) {
@@ -201,5 +233,57 @@ public class Usuario {
 
   public void setVisibilidade(VisibilidadeSeguidores visibilidade) {
     Visibilidade = visibilidade;
+  }
+
+  // Cada getter resolve o nulo para o padrão em vez de devolver null: assim
+  // quem lê não precisa repetir o "e se for null?" em toda parte, e a conta
+  // antiga se comporta como se a preferência tivesse sido sempre a padrão.
+
+  public boolean isPerfilPublico() {
+    return PerfilPublico == null || PerfilPublico;
+  }
+
+  public void setPerfilPublico(Boolean perfilPublico) {
+    PerfilPublico = perfilPublico;
+  }
+
+  public boolean isPermiteSolicitacoes() {
+    return PermiteSolicitacoes == null || PermiteSolicitacoes;
+  }
+
+  public void setPermiteSolicitacoes(Boolean permiteSolicitacoes) {
+    PermiteSolicitacoes = permiteSolicitacoes;
+  }
+
+  public boolean isNotificarNoApp() {
+    return NotificarNoApp == null || NotificarNoApp;
+  }
+
+  public void setNotificarNoApp(Boolean notificarNoApp) {
+    NotificarNoApp = notificarNoApp;
+  }
+
+  public boolean isNotificarEmail() {
+    return NotificarEmail != null && NotificarEmail;
+  }
+
+  public void setNotificarEmail(Boolean notificarEmail) {
+    NotificarEmail = notificarEmail;
+  }
+
+  public boolean isCompartilharLocalizacao() {
+    return CompartilharLocalizacao != null && CompartilharLocalizacao;
+  }
+
+  public void setCompartilharLocalizacao(Boolean compartilharLocalizacao) {
+    CompartilharLocalizacao = compartilharLocalizacao;
+  }
+
+  public boolean isDadosDeUsoAnonimo() {
+    return DadosDeUsoAnonimo == null || DadosDeUsoAnonimo;
+  }
+
+  public void setDadosDeUsoAnonimo(Boolean dadosDeUsoAnonimo) {
+    DadosDeUsoAnonimo = dadosDeUsoAnonimo;
   }
 }

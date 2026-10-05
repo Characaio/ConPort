@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
 import 'package:geolocator/geolocator.dart';
+import 'package:conport/core/settings/app_settings.dart';
+import 'package:conport/core/settings/preferencias_conta.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
@@ -38,6 +40,7 @@ class MapEmbedState extends State<MapEmbed> {
 
   Future<vt.Style>? _styleFuture;
   vt.Style? _style;
+  late final AppSettings _settings;
 
   // Posição usada quando ainda não foi possível obter a localização.
   // Santa Bárbara d'Oeste - SP
@@ -47,12 +50,47 @@ class MapEmbedState extends State<MapEmbed> {
   void initState() {
     super.initState();
 
-    _styleFuture = const vt.StyleReader(
-      uri: 'https://tiles.openfreemap.org/styles/liberty',
-    ).read().timeout(const Duration(seconds: 15));
+    _settings = AppSettings.instance;
+    _settings.addListener(_preferenciasMudaram);
+
+    _styleFuture = _lerEstilo(_settings.estiloMapa);
 
     // Tenta obter a localização sem impedir o mapa de carregar.
     _determinePosition();
+  }
+
+  /// Lê um estilo do OpenFreeMap.
+  ///
+  /// O timeout evita que uma rede ruim deixe o mapa girando para sempre: sem
+  /// estilo não há o que mostrar, e a tela de erro com "Tentar novamente" é
+  /// melhor do que um spinner eterno.
+  Future<vt.Style> _lerEstilo(EstiloMapa estilo) => vt.StyleReader(
+    uri: estilo.styleUri,
+  ).read().timeout(const Duration(seconds: 15));
+
+  /// A base do mapa mudou nas configurações: troca o estilo sem recarregar a
+  /// tela inteira.
+  void _preferenciasMudaram() {
+    if (!mounted) return;
+
+    final antigo = _style;
+
+    setState(() {
+      _styleFuture = _lerEstilo(_settings.estiloMapa);
+      // O [vt.Style] anterior segura recursos de tile; sem soltar aqui eles
+      // ficariam vivos até o widget ser descartado.
+      _style = null;
+    });
+
+    antigo?.dispose();
+  }
+
+  /// A pessoa desligou "Compartilhar localização": o mapa não pede o GPS
+  /// sozinho e abre na posição padrão.
+  bool get _localizacaoLiberada {
+    final prefs = PreferenciasConta.instance.atual;
+
+    return prefs == null || prefs.compartilharLocalizacao;
   }
 
   // ============================================================
@@ -81,6 +119,12 @@ class MapEmbedState extends State<MapEmbed> {
 
   Future<void> _fetchLocation() async {
     if (!mounted) {
+      return;
+    }
+
+    // Não pede permissão de GPS para quem desligou o compartilhamento: abrir
+    // o mapa não pode ser um jeito de pedir acesso à localização.
+    if (!_localizacaoLiberada) {
       return;
     }
 
@@ -318,6 +362,7 @@ class MapEmbedState extends State<MapEmbed> {
 
   @override
   void dispose() {
+    _settings.removeListener(_preferenciasMudaram);
     _style?.dispose();
     super.dispose();
   }
@@ -368,9 +413,7 @@ class MapEmbedState extends State<MapEmbed> {
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
-                        _styleFuture = const vt.StyleReader(
-                          uri: 'https://tiles.openfreemap.org/styles/liberty',
-                        ).read().timeout(const Duration(seconds: 15));
+                        _styleFuture = _lerEstilo(_settings.estiloMapa);
                       });
                     },
                     child: const Text('Tentar novamente'),
