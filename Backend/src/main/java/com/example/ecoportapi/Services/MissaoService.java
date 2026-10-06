@@ -5,21 +5,18 @@ import com.example.ecoportapi.DTOs.Response.MissaoDTO;
 import com.example.ecoportapi.Exceptions.MissaoJaConcluida;
 import com.example.ecoportapi.Exceptions.MissaoNaoEncontrada;
 import com.example.ecoportapi.Exceptions.RequisicaoInvalida;
-import com.example.ecoportapi.Exceptions.UsuarioNaoEncontrado;
 import com.example.ecoportapi.Models.Enums.StatusMissao;
 import com.example.ecoportapi.Models.Missao;
 import com.example.ecoportapi.Models.Usuario;
 import com.example.ecoportapi.Repositories.MissaoRepository;
 import com.example.ecoportapi.Repositories.UsuarioRepository;
-import java.util.List;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class MissaoService {
-
-    /** XP necessário para subir de nível. */
-    private static final int XP_POR_NIVEL = 100;
 
     private final MissaoRepository missaoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -29,15 +26,12 @@ public class MissaoService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public List<MissaoDTO> listarMissoes(Long usuarioId){
-        // Sem a missão não há usuário: garante 404 em vez de lista vazia.
-        usuarioRepository.findById(usuarioId).orElseThrow(
-                () -> new UsuarioNaoEncontrado("Usuario não encontrado")
+    public List<MissaoDTO> GerarMissoes(Long ignoredUsuarioId){
+        return List.of(
+                new MissaoDTO(missaoRepository.findById(1L).orElseThrow(
+                        () -> new MissaoNaoEncontrada("Missão não encontrada")
+                ))
         );
-
-        return missaoRepository.listarDoUsuario(usuarioId).stream()
-                .map(MissaoDTO::new)
-                .toList();
     }
 
     public MissaoDTO PegarMissao(Long id){
@@ -49,23 +43,19 @@ public class MissaoService {
     }
 
     private void entregarRecompensa(Missao missao){
-        Usuario usuario = usuarioRepository.findById(missao.getUsuario().getId())
-                .orElseThrow(
-                        () -> new UsuarioNaoEncontrado("Usuario não encontrado"));
+        Usuario usuario = missao.getUsuario();
 
         usuario.setXP(
-                (usuario.getXP() == null ? 0 : usuario.getXP())
-                        + missao.getXpRecompensa()
+                usuario.getXP() + missao.getXpRecompensa()
         );
 
-        while (usuario.getXP() >= XP_POR_NIVEL){
-            usuario.setXP(usuario.getXP() - XP_POR_NIVEL);
-            usuario.setLevel((usuario.getLevel() == null ? 0 : usuario.getLevel()) + 1);
+        if (usuario.getXP() >= 100){
+            usuario.setXP(usuario.getXP() - 100);
+            usuario.setLevel(usuario.getLevel() + 1);
         }
 
         usuario.setMoedas(
-                (usuario.getMoedas() == null ? 0 : usuario.getMoedas())
-                        + missao.getMoedaRecompensa()
+                usuario.getMoedas() + missao.getMoedaRecompensa()
         );
 
         usuarioRepository.save(usuario);
@@ -79,21 +69,19 @@ public class MissaoService {
 
         if (missao.getStatusMissao() == StatusMissao.CONCLUIDA ||
                 missao.getStatusMissao() == StatusMissao.EXPIRADA){
-            throw new MissaoJaConcluida("Esta missão já foi concluída ou está expirada");
+            throw new MissaoJaConcluida("Esta missão foi ou concluida ou esta expirada");
         }
 
-        if (progressoDTO == null ||
-                progressoDTO.Progresso() == null ||
-                progressoDTO.Progresso() <= 0){
-            throw new RequisicaoInvalida("O progresso precisa ser maior que zero");
+        if (progressoDTO.Progresso() == null || progressoDTO.Progresso() <= 0){
+            throw new RequisicaoInvalida("cara eu nem sei oq mais fazer, arruma dps caio");
         }
 
-        missao.setProgresso(missao.getProgresso() + progressoDTO.Progresso());
+        missao.setProgresso( missao.getProgresso() + progressoDTO.Progresso() );
 
         if (missao.getProgresso() >= missao.getMeta()){
             missao.setStatusMissao(StatusMissao.CONCLUIDA);
             entregarRecompensa(missao);
-        } else {
+        } else{
             missao.setStatusMissao(StatusMissao.EM_ANDAMENTO);
         }
 

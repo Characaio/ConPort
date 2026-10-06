@@ -25,10 +25,7 @@ public record ReportResumidoDTO(
                 report.getPrioridade(),
                 report.getStatus(),
                 report.getMotivoDaNegacao(),
-                // Um report ainda não analisado não tem supervisor.
-                report.getSupervisor() != null
-                        ? report.getSupervisor().getUsuario().getNome()
-                        : null
+                report.getSupervisor().getUsuario().getNome()
         );
     }
 }

@@ -3,7 +3,6 @@ package com.example.ecoportapi.Services;
 import com.drew.lang.GeoLocation;
 import com.drew.metadata.exif.GpsDirectory;
 import com.example.ecoportapi.DTOs.Request.ImagemProcessada;
-import com.example.ecoportapi.Exceptions.RequisicaoInvalida;
 import com.example.ecoportapi.Models.Enums.ImagemDadosParametros;
 import org.springframework.core.io.Resource;
 import jakarta.transaction.Transactional;
@@ -64,9 +63,7 @@ public class ImagemService {
     @Transactional
     public List<ImagemProcessada> SalvarImagens(List<MultipartFile> imagens) throws IOException{
         List<ImagemProcessada> imagensInfo = new ArrayList<>();
-        if(imagens == null){
-          return null;
-        }
+
         for (MultipartFile imagem : imagens){
             imagensInfo.add(SalvarImagem(imagem));
         }
@@ -76,48 +73,19 @@ public class ImagemService {
     @Transactional
     public ImagemProcessada SalvarImagem(MultipartFile imagem) throws IOException {
         if (imagem.isEmpty()) {
-            throw new RequisicaoInvalida("A imagem está vazia.");
+            throw new IllegalArgumentException("A imagem está vazia.");
         }
-
-        String nomeOriginal = imagem.getOriginalFilename();
-        String extensao = obterExtensao(nomeOriginal);
-
-        // O Content-Type da parte nem sempre vem: o multipart do app envia
-        // so o Content-Disposition quando o cliente nao informa o tipo. Sem
-        // isso cair, cai no tipo derivado do nome do arquivo em vez de
-        // recusar uma foto válida.
         String tipo = imagem.getContentType();
-
-        if (tipo == null || tipo.isBlank() || !TiposPermitidos.contains(tipo)) {
-            final String extensaoAtual = extensao;
-
-            String tipoPelaExtensao = TiposPermitidos.stream()
-                    .filter(t -> t.endsWith("/" + extensaoAtual))
-                    .findFirst()
-                    .orElse(null);
-
-            if (tipoPelaExtensao != null) {
-                tipo = tipoPelaExtensao;
-            }
-        }
-
-        final String tipoFinal = tipo;
-
-        if (!TiposPermitidos.contains(tipoFinal)) {
-            throw new RequisicaoInvalida(
-                    "Formato de imagem não permitido: "
-                            + (tipoFinal == null ? "não informado" : tipoFinal)
+        if (!TiposPermitidos.contains(tipo)) {
+            throw new IllegalArgumentException(
+                    "Formato de imagem não permitido"
             );
         }
 
         Files.createDirectories(diretorio);
 
-        // Nome sem extensão (o seletor às vezes entrega isso) ainda precisa
-        // gerar um arquivo com extensão, senão sobra "uuid." no disco.
-        if (extensao.isEmpty()) {
-            extensao = tipoFinal.endsWith("png") ? "png" : "jpg";
-        }
-
+        String nomeOriginal = imagem.getOriginalFilename();
+        String extensao = obterExtensao(nomeOriginal);
         String nomeArquivo = UUID.randomUUID() + "." + extensao;
 
         Path destino = diretorio.resolve(nomeArquivo);
@@ -151,44 +119,14 @@ public class ImagemService {
         return new ImagemProcessada(nomeArquivo,latitude,longitude);
     }
 
-    /**
-     * Apaga um arquivo do upload-dir.
-     *
-     * <p>Usado quando uma imagem deixa de ser referenciada (avatar trocado ou
-     * removido): sem isso o disco só cresce. Nome vazio ou arquivo já ausente
-     * não são erro — o objetivo é só liberar espaço.
-     */
-    public void RemoverImagem(String nomeArquivo) {
-        if (nomeArquivo == null || nomeArquivo.isBlank()) {
-            return;
-        }
-
-        try {
-            Path caminho = diretorio.resolve(nomeArquivo).normalize();
-
-            // resolve + normalize pode sair do upload-dir com "../"; não apaga
-            // fora da pasta.
-            if (!caminho.startsWith(diretorio)) {
-                return;
-            }
-
-            Files.deleteIfExists(caminho);
-        } catch (IOException e) {
-            System.err.println("Failed to delete image: " + e.getMessage());
-        }
-    }
-
     private String obterExtensao(String nomeArquivo) {
 
         if (nomeArquivo == null || !nomeArquivo.contains(".")) {
             return "";
         }
 
-        String extensao = nomeArquivo
+        return nomeArquivo
                 .substring(nomeArquivo.lastIndexOf(".")+1)
                 .toLowerCase();
-
-        // JPEG costuma chegar como .jpg ou .jpeg; o tipo aceito é o mesmo.
-        return extensao.equals("jpeg") ? "jpg" : extensao;
     }
 }

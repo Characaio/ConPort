@@ -8,11 +8,10 @@ import java.time.LocalDateTime;
 
 public record MissaoDTO(
         Long id,
-        Long usuarioId,
         String usuarioNome,
         String titulo,
         String descricao,
-        TipoMissao tipoDeMissao,
+        TipoMissao ttipoDeMissao,
         StatusMissao statusDeMissao,
         LocalDateTime tempoDeInicio,
         LocalDateTime tempoFechamento,
@@ -24,7 +23,6 @@ public record MissaoDTO(
     public MissaoDTO(Missao missao){
         this(
                 missao.getId(),
-                missao.getUsuario().getId(),
                 missao.getUsuario().getNome(),
                 missao.getTitulo(),
                 missao.getDescricao(),

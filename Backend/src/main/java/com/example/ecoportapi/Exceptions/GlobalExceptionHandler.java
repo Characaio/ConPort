@@ -9,10 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.io.IOException;
-import java.util.Map;
 
 
 @RestControllerAdvice
@@ -29,7 +27,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
     @ExceptionHandler(AvistamentoNaoEncontrado.class)
@@ -37,7 +35,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
     @ExceptionHandler(InformacoesNaoEncontrada.class)
@@ -45,7 +43,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
     @ExceptionHandler(MissaoJaConcluida.class)
@@ -53,7 +51,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
     @ExceptionHandler(MissaoNaoEncontrada.class)
@@ -61,7 +59,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
     @ExceptionHandler(ReportNaoEncontrado.class)
@@ -69,15 +67,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
-    }
-
-    @ExceptionHandler(NotificacaoNaoEncontrada.class)
-    public ResponseEntity<String> NotificacaoNaoEncontrada(NotificacaoNaoEncontrada exception){
-        erroLoggerService.registrarErro(exception);
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
     @ExceptionHandler(RequisicaoInvalida.class)
@@ -85,7 +75,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body("Eu tenho q trabalhar melhor nisso aqui, ta merda gamer" + exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
+                .body("Eu tenho q trabalhar melhor nisso aqui, ta merda gamer" + exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
     @ExceptionHandler(SupervisorNaoEncontrado.class)
@@ -93,7 +83,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
     @ExceptionHandler(UnidadeNaoEncontrada.class)
@@ -101,21 +91,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
-    }
-
-    /**
-     * Credencial errada no login ou senha atual errada na troca.
-     *
-     * <p>A resposta é JSON e sem stack trace: quem errou a senha nao precisa
-     * receber um despejo de classes do servidor.
-     */
-    @ExceptionHandler(CredenciaisInvalidas.class)
-    public ResponseEntity<Map<String, String>> CredenciaisInvalidas(CredenciaisInvalidas exception) {
-        erroLoggerService.registrarErro(exception);
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("mensagem", exception.getMessage()));
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
     @ExceptionHandler(UsuarioNaoEncontrado.class)
@@ -123,23 +99,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
-    }
-
-    /**
-     * Parametro de rota ou query que nao converts (tipo de especie invalido,
-     * por exemplo).
-     *
-     * <p>Sem este handler cai no IllegalArgumentException abaixo e responde 500:
-     * entrada errada da pessoa que chamou e erro do servidor sao coisas
-     * diferentes.
-     */
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<String> ParametroInvalido(MethodArgumentTypeMismatchException exception){
-        erroLoggerService.registrarErro(exception);
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body("Valor invalido para " + exception.getName() + ": " + exception.getValue());
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -147,7 +107,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
     @ExceptionHandler(IOException.class)
@@ -155,7 +115,7 @@ public class GlobalExceptionHandler {
         erroLoggerService.registrarErro(exception);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(exception.getMessage() + "\n" + java.util.Arrays.toString(exception.getStackTrace()));
+                .body(exception.getMessage() + "\n" + exception.getStackTrace());
     }
 
 }

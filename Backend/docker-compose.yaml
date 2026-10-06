@@ -9,6 +9,11 @@ services:
       POSTGRES_PASSWORD: conport
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U conport -d conport"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - conport-network
 
@@ -24,7 +29,8 @@ services:
       SPRING_DATASOURCE_USERNAME: conport
       SPRING_DATASOURCE_PASSWORD: conport
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - uploads:/app/uploads
     networks:

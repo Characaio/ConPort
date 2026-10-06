@@ -46,21 +46,16 @@ public class AvistamentoService {
     public ResponseEntity<?> CriarAvistamento(
             AvistamentoCreateDTO avistamentoDTO,
             MultipartFile imagem,
-            Long unidadeId,
-            Long usuarioId) throws IOException {
+            Long Id) throws IOException {
         Avistamento avistamento = new Avistamento();
 
-              // O usuario vem do token (veja AvistamentoController), nunca do
-              // corpo da requisicao.
-              Usuario usuario = usuarioRepository.findById(
-                usuarioId
-            ).orElseThrow(
-                () -> new UsuarioNaoEncontrado("Usuario não encontrado")
+        Usuario usuario = usuarioRepository.findById(Id)
+            .orElseThrow(
+                    () -> new UsuarioNaoEncontrado("Usuario não encontrada")
             );
-              UnidadeDeConservacao unidade = unidadeRepository.findById(
-                unidadeId
-            ).orElseThrow(
-                () -> new UnidadeNaoEncontrada("Unidade não encontrada")
+        UnidadeDeConservacao unidade = unidadeRepository.findById(Id)
+            .orElseThrow(
+                    () -> new UnidadeNaoEncontrada("Unidade não encontrada")
             );
 
         ImagemProcessada imagemAnexada = imagemService.SalvarImagem(imagem);
@@ -96,13 +91,13 @@ public class AvistamentoService {
 
     //METODO AINDA NÃO UTILIZADO, UTILIZAR AO CRIAR A LOGICA DE USUARIO VER SUAS COISAS
     public List<AvistamentoDTO> PegarAvistamentosDoUsaurio(Long usuarioId){
-        return avistamentoRepository.listarDoUsuario(usuarioId)
+        return avistamentoRepository.findAllByUsuario_Id(usuarioId)
                 .stream().map(AvistamentoDTO::new)
                 .toList();
     }
 
     public List<AvistamentoDTO> PegarAvistamentosDaUnidade(Long unidadeId){
-        return avistamentoRepository.listarDaUnidade(unidadeId)
+        return avistamentoRepository.findAllByUnidade_Id(unidadeId)
                 .stream().map(AvistamentoDTO::new)
                 .toList();
     }

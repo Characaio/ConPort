@@ -4,7 +4,6 @@ import java.time.LocalDate;
 
 public record SignupDTO(
         String nome,
-        String username,
         LocalDate dataNasc,
         String email,
         String senha,

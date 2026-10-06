@@ -1,6 +1,0 @@
-package com.example.ecoportapi.Models.Enums;
-
-public enum StatusRelacionamento {
-  PENDENTE,
-  ACEITO
-}

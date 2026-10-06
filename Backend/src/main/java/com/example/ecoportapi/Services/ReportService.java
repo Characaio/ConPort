@@ -6,7 +6,6 @@ import com.example.ecoportapi.DTOs.Request.LocalizacaoDTO;
 import com.example.ecoportapi.DTOs.Request.ReportCreateDTO;
 import com.example.ecoportapi.DTOs.Request.ReportStatusAnalise;
 import com.example.ecoportapi.DTOs.Response.ReportExpandidoDTO;
-import com.example.ecoportapi.DTOs.Response.ReportListaDTO;
 import com.example.ecoportapi.DTOs.Response.ReportResumidoDTO;
 import com.example.ecoportapi.Exceptions.ReportNaoEncontrado;
 import com.example.ecoportapi.Exceptions.SupervisorNaoEncontrado;
@@ -64,25 +63,17 @@ public class ReportService {
         );
     }
 
-    /**
-     * Confiança de que os dois reports descrevem o MESMO incidente.
-     *
-     * <p>Tipo, distância e data não podem ser somados: localização (até 45)
-     * e data (até 70) sozinhas já passam de 70, então qualquer report dava
-     * duplicado. O tipo agora é uma condição, e o que pontua é a distância e
-     * a proximidade no tempo.
-     */
     private int CalcularConfianca(Report novoReport, Report reportExistente){
-
-        // Só compara com reports do mesmo tipo: uma queimada e um desmatamento
-        // na mesma esquina não são o mesmo report.
-        if (novoReport.getTipo() != reportExistente.getTipo()){
-            return 0;
-        }
 
         int confianca = 0;
 
-        if (novoReport.getLocalizacaoOrigem() != LocalizacaoOrigem.NAO_INFORMADA){
+        if (novoReport.getTipo().equals(reportExistente.getTipo())){
+            confianca += 25;
+        } else{
+            confianca -= 15;
+        }
+
+        if (!novoReport.getLocalizacaoOrigem().equals(LocalizacaoOrigem.NAO_INFORMADA)){
             confianca += CalcularConfiancaLocalizacao(novoReport,reportExistente);
         }
 
@@ -92,28 +83,16 @@ public class ReportService {
     }
 
     public List<ReportResumidoDTO> PegarReportsDaUnidade(Long unidadeId){
-        return reportRepository.listarDaUnidade(unidadeId)
+        return reportRepository.findAllByUnidade_Id(unidadeId)
                 .stream().map(ReportResumidoDTO::new).toList();
-    }
-
-    /** Reports enviados por um usuario, em qualquer unidade. */
-    public List<ReportListaDTO> PegarReportsDoUsuario(Long usuarioId){
-        // Sem a lista nao ha usuario: 404 em vez de lista vazia.
-        usuarioRepository.findById(usuarioId).orElseThrow(
-                () -> new UsuarioNaoEncontrado("Usuario não encontrado")
-        );
-
-        return reportRepository.listarDoUsuario(usuarioId)
-                .stream().map(ReportListaDTO::new).toList();
     }
 
     public ResponseEntity<?> PostarReport(
             ReportCreateDTO reportDTO,
             LocalizacaoDTO localizacaoDTO,
             List<MultipartFile> imagens,
-            Long unidadeId,
-            Long usuarioId) throws IOException {
-        Report report = CriarReport(reportDTO, localizacaoDTO, imagens, unidadeId, usuarioId);
+            Long unidadeId) throws IOException {
+        Report report = CriarReport(reportDTO,localizacaoDTO,imagens, unidadeId);
 
         if (VerificarReportDuplicado(report)){
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Report ja existe");
@@ -146,15 +125,13 @@ public class ReportService {
             ReportCreateDTO reportDTO,
             LocalizacaoDTO localizaoDTO,
             List<MultipartFile> imagens,
-            Long unidadeId,
-            Long usuarioId) throws IOException {
+            Long unidadeId) throws IOException {
         Report report = new Report();
         List<ImagemProcessada> imagensProcessadas = imagemService.SalvarImagens(imagens);
         UnidadeDeConservacao unidade = unidadeRepository.findById(unidadeId)
                 .orElseThrow(() -> new UnidadeNaoEncontrada("Unidade não encontrada"));
 
-        // O autor vem do token (veja ReportController), nunca do corpo.
-        Usuario usuario = usuarioRepository.findById(usuarioId)
+        Usuario usuario = usuarioRepository.findById(reportDTO.UsuarioId())
                 .orElseThrow(() -> new UsuarioNaoEncontrado("Usuario não encontrado"));
 
         report.setUnidade(unidade);
@@ -170,7 +147,7 @@ public class ReportService {
             report.setLongitude(localizaoDTO.Longitude());
             report.setLatitude(localizaoDTO.Latitude());
             report.setLocalizacaoOrigem(localizaoDTO.Origem());
-        } else if (imagens != null) {
+        } else {
             for (ImagemProcessada imagem : imagensProcessadas){
                 if (imagem.Latitude() != null && imagem.Longitude() != null){
                     report.setLatitude(imagem.Latitude());
@@ -180,15 +157,11 @@ public class ReportService {
                 }
             }
         }
-        if (imagensProcessadas != null){
-
         List<String> imagensCaminho = imagensProcessadas
                 .stream()
                 .map(ImagemProcessada::NomeArquivo)
                 .toList();
         report.setImagensAnexadas(imagensCaminho);
-        }
-        
         return report;
     }
     private double CalcularDistancia(
@@ -268,12 +241,9 @@ public class ReportService {
                 );
         for (Report report : reportsPossiveis){
             Integer confianca = CalcularConfianca(novoReport,report);
-
-            // O report precisa ter coordenadas: sem elas a localização não
-            // pontua e o report antigo ainda contaria como duplicado.
-            if (confianca >= 70 &&
-                    novoReport.getLatitude() != null &&
-                    novoReport.getLongitude() != null){
+            if (confianca >= 70){
+                // ARRUMAR OS POSSIVEIS BUGS DEPOISSSSSSSS
+                // #NÃO ESQUEÇA
                 return true;
             }
         }

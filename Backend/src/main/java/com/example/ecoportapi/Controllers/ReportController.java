@@ -3,10 +3,7 @@ package com.example.ecoportapi.Controllers;
 //Começar a trabalhar
 
 import com.example.ecoportapi.DTOs.Request.LocalizacaoDTO;
-import com.example.ecoportapi.Annotations.ExigeSessao;
 import com.example.ecoportapi.DTOs.Request.ReportCreateDTO;
-import com.example.ecoportapi.Services.SessaoInterceptor;
-import jakarta.servlet.http.HttpServletRequest;
 import com.example.ecoportapi.DTOs.Request.ReportStatusAnalise;
 import com.example.ecoportapi.Services.ReportService;
 import org.springframework.http.MediaType;
@@ -47,28 +44,16 @@ public class ReportController {
         return ResponseEntity.ok(reportService.PostarAnalise(reportId, reportStatusAnalise));
     }
 
-    /**
-     * Enviar report exige sessao: quem envia e o usuario do token, entao nao
-     * da para postar em nome de outra pessoa. Ler os reports da unidade e de
-     * um report especifico continua publico.
-     */
     @PostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    @ExigeSessao
     public ResponseEntity<?> PostarReport(
             @RequestPart("reportDTO") ReportCreateDTO reportDTO,
             @RequestPart(value="localizacao",required = false) LocalizacaoDTO localizacaoDTO,
             @RequestPart(value = "imagens",required = false) List<MultipartFile> imagens,
-            @PathVariable Long unidadeId,
-            HttpServletRequest request
+            @PathVariable Long unidadeId
     ) throws IOException {
-        return reportService.PostarReport(
-                reportDTO,
-                localizacaoDTO,
-                imagens,
-                unidadeId,
-                SessaoInterceptor.usuarioObrigatorio(request).getId());
+        return reportService.PostarReport(reportDTO,localizacaoDTO,imagens,unidadeId);
     }
 
 

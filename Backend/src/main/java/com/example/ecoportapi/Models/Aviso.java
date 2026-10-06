@@ -26,16 +26,6 @@ public class Aviso {
     @Column(name = "HorarioDoAviso", nullable = false)
     private LocalDateTime HorarioDoAviso;
 
-    // Fixo aparece no topo da lista de anuncios da unidade. A coluna e
-    // anulavel para o ddl-auto conseguir adicionar a coluna numa tabela que
-    // ja tem linhas.
-    @Column(name = "Fixo", nullable = true)
-    private Boolean Fixo = false;
-
-    // URL da foto do aviso; sem ela a tela mostra o card sem imagem.
-    @Column(name = "Imagem", nullable = true)
-    private String Imagem;
-
     public Long getId() {return Id; }
     public void setId(Long id) {Id = id;}
 
@@ -50,11 +40,5 @@ public class Aviso {
 
     public LocalDateTime getHorarioDoAviso() {return HorarioDoAviso;}
     public void setHorarioDoAviso(LocalDateTime horarioDoAviso) {HorarioDoAviso = horarioDoAviso;}
-
-    public Boolean getFixo() {return Fixo;}
-    public void setFixo(Boolean fixo) {Fixo = fixo;}
-
-    public String getImagem() {return Imagem;}
-    public void setImagem(String imagem) {Imagem = imagem;}
 
 }
