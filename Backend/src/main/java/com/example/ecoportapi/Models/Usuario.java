@@ -13,13 +13,13 @@ public class Usuario {
     @Column(name = "Id")
     private Long Id;
 
-    @Column(name = "Nome", nullable = false)
-    private String Nome;
+    @Column(name = "Username", nullable = false)
+    private String Username;
 
     @Column(name = "DataNasc", nullable = false)
     private LocalDate DataNasc;
 
-    @Column(name = "Email", nullable = false)
+    @Column(name = "Email", nullable = false,unique = true)
     private String Email;
 
     @Column(name = "Senha", nullable = false)
@@ -46,12 +46,15 @@ public class Usuario {
     @Column(name = "Reputacao",nullable = false)
     private Double Reputacao;
 
+    @Column(name = "AvatarImagemURL",nullable = true)
+    private String AvatarImagemCaminho;
+
 
     public Long getId() { return Id; }
     public void setId(Long id) { Id = id; }
 
-    public String getNome() { return Nome; }
-    public void setNome(String nome) { Nome = nome; }
+    public String getNome() { return Username; }
+    public void setNome(String username) { Username = username; }
 
     public LocalDate getDataNasc() { return DataNasc; }
     public void setDataNasc(LocalDate dataNasc) { DataNasc = dataNasc; }
@@ -82,4 +85,7 @@ public class Usuario {
 
     public Double getReputacao() { return Reputacao; }
     public void setReputacao(Double reputacao) { Reputacao = reputacao; }
+
+    public String getAvatarImagemCaminho(){ return AvatarImagemCaminho; }
+    public void setAvatarImagemCaminho(String avatarImagemCaminho){AvatarImagemCaminho = avatarImagemCaminho;}
 }

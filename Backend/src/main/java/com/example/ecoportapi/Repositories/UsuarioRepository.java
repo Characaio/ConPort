@@ -4,6 +4,7 @@ import com.example.ecoportapi.Models.Usuario;
 import com.example.ecoportapi.Models.Enums.StatusReport;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -11,7 +12,8 @@ import java.util.Optional;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
-    Optional<Usuario> findByEmailAndSenha(String Email, String Senha);
+    @Query("SELECT u FROM Usuario u WHERE u.Email = :Email")
+    Optional<Usuario> findByEmail(@Param("Email") String email);
     Boolean existsByEmailAndSenha(String Email, String Senha);
     @Query("""
         SELECT COUNT(r)

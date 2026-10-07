@@ -1,26 +1,30 @@
 package com.example.ecoportapi.Services;
 
-import com.example.ecoportapi.DTOs.Request.LoginDTO;
-import com.example.ecoportapi.DTOs.Request.SignupDTO;
+import com.example.ecoportapi.DTOs.Request.UsuarioCreateDTO;
 import com.example.ecoportapi.Exceptions.UsuarioNaoEncontrado;
-import com.example.ecoportapi.Models.Enums.StatusMissao;
-import com.example.ecoportapi.Models.Enums.StatusReport;
 import com.example.ecoportapi.Models.Usuario;
 import com.example.ecoportapi.Repositories.MissaoRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.example.ecoportapi.DTOs.Response.UsuarioDTO;
 import com.example.ecoportapi.Repositories.UsuarioRepository;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Service
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final MissaoRepository missaoRepository;
-    public UsuarioService(UsuarioRepository usuarioRepository, MissaoRepository missaoRepository){
+    private final ImagemService imagemService;
+    private final PasswordEncoder passwordEncoder;
+
+    public UsuarioService(UsuarioRepository usuarioRepository, MissaoRepository missaoRepository, ImagemService imagemService, PasswordEncoder passwordEncoder){
         this.usuarioRepository = usuarioRepository;
         this.missaoRepository = missaoRepository;
+        this.imagemService = imagemService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UsuarioDTO pegarUsuario(Long usuarioId){
@@ -28,42 +32,34 @@ public class UsuarioService {
                 .orElseThrow(
                         () -> new UsuarioNaoEncontrado("Usuario não encontrado")
                 );
+
         return new UsuarioDTO(usuario);
     }
 
-    public void CalcularReputação(){
+    public Usuario CriarUsuario(UsuarioCreateDTO usuarioDTO, MultipartFile avatarImagem) throws IOException {
+        String imagemCaminho = imagemService.SalvarImagem(avatarImagem).NomeArquivo();
 
-    }
-
-    public ResponseEntity<?> Signup(SignupDTO signupDTO){
         Usuario usuario = new Usuario();
 
-        if (usuarioRepository.existsByEmailAndSenha(signupDTO.email(), signupDTO.senha())){
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Usuario Ja existe");
-        }
-
-        usuario.setNome(signupDTO.nome());
-        usuario.setDataNasc(signupDTO.dataNasc());
-        usuario.setEmail(signupDTO.email());
-        usuario.setSenha(signupDTO.senha());
-        usuario.setEstado(signupDTO.estado());
-        usuario.setCidade(signupDTO.cidade());
+        usuario.setNome(usuarioDTO.username());
+        usuario.setDataNasc(usuarioDTO.dataNasc());
+        usuario.setEmail(usuarioDTO.email());
+        usuario.setSenha(passwordEncoder.encode(usuarioDTO.senha()));
+        usuario.setCidade(usuarioDTO.cidade());
+        usuario.setEstado(usuarioDTO.estado());
         usuario.setConfiavel(false);
-        usuario.setXP(0);
         usuario.setLevel(0);
+        usuario.setXP(0);
         usuario.setMoedas(0);
         usuario.setReputacao(0D);
+        usuario.setAvatarImagemCaminho(imagemCaminho);
 
-        usuarioRepository.save(usuario);
-
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return usuarioRepository.save(usuario);
     }
 
-    public ResponseEntity<?> Login(LoginDTO loginDTO){
-        Usuario usuario = usuarioRepository
-                .findByEmailAndSenha(loginDTO.email(), loginDTO.senha()).orElseThrow(
-                        () -> new UsuarioNaoEncontrado("Usuario não encontrado")
-                );
-        return ResponseEntity.ok(new UsuarioDTO(usuario));
+    public void CalcularReputação(){
+        return;
     }
 }
+
+

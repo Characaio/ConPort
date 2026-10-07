@@ -2,12 +2,9 @@ package com.example.ecoportapi.Controllers;
 
 //TRABALHAR DE MANEIRA SERIA NESSA CONTROLLER APÓS A QUARTA-FEIRA
 
-import com.example.ecoportapi.DTOs.Request.LoginDTO;
-import com.example.ecoportapi.DTOs.Request.SignupDTO;
+import com.example.ecoportapi.Services.AuthService;
 import com.example.ecoportapi.Services.MissaoService;
 import com.example.ecoportapi.Services.UsuarioService;
-import org.apache.catalina.connector.Response;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,19 +28,6 @@ public class UsuarioController {
     @PostMapping("/{id}/missoes/gerar")
     public ResponseEntity<?> GerarMissoes(@PathVariable Long id){
         return ResponseEntity.ok(missaoService.GerarMissoes(id));
-    }
-
-    @PostMapping("/signup")
-    public ResponseEntity<?> Signup(
-            @RequestBody SignupDTO signupDTO
-            ){
-        return usuarioService.Signup(signupDTO);
-    }
-    @PostMapping("/login")
-    public ResponseEntity<?> Login(
-            @RequestBody LoginDTO loginDTO
-    ){
-        return usuarioService.Login(loginDTO);
     }
 
 }
