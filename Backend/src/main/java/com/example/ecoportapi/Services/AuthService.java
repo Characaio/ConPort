@@ -16,6 +16,7 @@ import com.example.ecoportapi.Repositories.RefreshTokenRepository;
 import com.example.ecoportapi.Repositories.UsuarioRepository;
 import com.example.ecoportapi.Security.JwtService;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -42,8 +43,6 @@ public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final ImagemService imagemService;
-    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
@@ -53,8 +52,6 @@ public class AuthService {
     public AuthService(
             UsuarioRepository usuarioRepository,
             RefreshTokenRepository refreshTokenRepository,
-            ImagemService imagemService,
-            PasswordEncoder passwordEncoder,
             JwtService jwtService,
             AuthenticationManager authenticationManager,
             UserDetailsService userDetailsService,
@@ -62,8 +59,6 @@ public class AuthService {
     ){
         this.usuarioRepository = usuarioRepository;
         this.refreshTokenRepository = refreshTokenRepository;
-        this.imagemService = imagemService;
-        this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
@@ -103,6 +98,7 @@ public class AuthService {
         UserDetails userDetails =
                 (UserDetails) authentication.getPrincipal();
 
+        assert userDetails != null;
         return jwtService.GenerateToken(userDetails);
     }
 
@@ -148,6 +144,18 @@ public class AuthService {
                 refreshToken,
                 token
         );
+    }
+
+    public ResponseEntity<?> Logout(RefreshTokenDTO refreshTokenDTO){
+        RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(
+                GerarHash(refreshTokenDTO.refreshToken())
+        ).orElseThrow(
+                () -> new RefreshTokenNaoEncontrado("Refresh token não encontrado")
+        );
+
+        refreshTokenRepository.delete(refreshToken);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Usuario deslogado com sucesso");
     }
 
     public TokenDTO Signup(UsuarioCreateDTO usuarioDTO, MultipartFile avatarImagem) throws IOException {
@@ -203,6 +211,8 @@ public class AuthService {
         Instant agora = Instant.now();
 
         if (refreshToken.getExpiraEm().isBefore(agora)){
+            refreshToken.setRevogado(true);
+            refreshTokenRepository.save(refreshToken);
             throw new TokenInvalido("Refresh token expirado");
         }
 

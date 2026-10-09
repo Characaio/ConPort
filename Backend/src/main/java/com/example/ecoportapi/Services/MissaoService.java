@@ -11,6 +11,7 @@ import com.example.ecoportapi.Models.Usuario;
 import com.example.ecoportapi.Repositories.MissaoRepository;
 import com.example.ecoportapi.Repositories.UsuarioRepository;
 import jakarta.transaction.Transactional;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public class MissaoService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public List<MissaoDTO> GerarMissoes(Long ignoredUsuarioId){
+    public List<MissaoDTO> GerarMissoes(Authentication authentication){
         return List.of(
                 new MissaoDTO(missaoRepository.findById(1L).orElseThrow(
                         () -> new MissaoNaoEncontrada("Missão não encontrada")
