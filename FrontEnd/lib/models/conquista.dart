@@ -9,7 +9,8 @@ enum TipoConquista {
   avistamentoEnviado('avistamento_enviado'),
   recompensaResgatada('recompensa_resgatada'),
   videoAssistido('video_assistido'),
-  amigoAdicionado('amigo_adicionado');
+  amigoAdicionado('amigo_adicionado'),
+  missaoConcluida('missao_concluida');
 
   final String chave;
 

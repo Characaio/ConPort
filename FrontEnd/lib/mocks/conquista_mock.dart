@@ -15,6 +15,12 @@ class ConquistaMock {
 
   static const List<Conquista> todas = [
     Conquista(
+      tipo: TipoConquista.missaoConcluida,
+      titulo: 'Protetor da Natureza',
+      descricao: 'Conclua sua primeira missão ambiental.',
+      icone: Symbols.park,
+    ),
+    Conquista(
       tipo: TipoConquista.reportEnviado,
       titulo: 'Alerta!',
       descricao: 'Envie um report.',

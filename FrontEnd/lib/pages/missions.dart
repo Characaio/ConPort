@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import 'mission_submission.dart';
 import 'package:conport/core/navigation/page_loader.dart';
 import 'package:conport/core/session/auth_session.dart';
 import 'package:conport/core/theme/app_theme.dart';
@@ -136,13 +137,8 @@ class _MissionsState extends State<Missions> {
                             _MissionCard(mission: mission),
                             const SizedBox(height: 12),
                           ],
-                        ],
-                        const SizedBox(height: 8),
-                        _RewardsShortcut(
-                          onTap: () {
-                            PageLoader.go(context, PageLoader.rewards);
-                          },
-                        ),
+                        ],                     
+                      
                       ],
                     ),
                   ),
@@ -369,22 +365,33 @@ class _MissionCard extends StatelessWidget {
               ),
               const SizedBox(width: 7),
               _RewardPill(icon: Symbols.stars, text: '${mission.xpReward} XP'),
-              const Spacer(),
-              TextButton(
-                onPressed: () {
-                  PageLoader.go(context, PageLoader.rewards);
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: colors.primary,
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              const Spacer(),    
+                TextButton(
+                 onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MissionSubmissionPage(
+                          missionId: mission.id,
+                          missionTitle: mission.title,
+                        ),
+                      ),
+                    );  
+                  },
+                   style: TextButton.styleFrom(
+                      foregroundColor: colors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                   ),
+                  child: const Text(
+                    'Concluir missão (enviar Foto)',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-                child: const Text(
-                  'Ver recompensas',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-                ),
-              ),
             ],
           ),
         ],
@@ -479,43 +486,3 @@ class _RewardPill extends StatelessWidget {
   }
 }
 
-class _RewardsShortcut extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _RewardsShortcut({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final appColors =
-        Theme.of(context).extension<AppColors>() ?? AppColors.light;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-        decoration: BoxDecoration(
-          color: appColors.accentBrown,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: [
-            Icon(Symbols.redeem, color: appColors.onAccent, size: 21),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Veja como usar suas recompensas',
-                style: TextStyle(
-                  color: appColors.onAccent,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            Icon(Symbols.chevron_right, color: appColors.onAccent, size: 21),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -63,7 +63,7 @@ public class CriadorDeValoresMock implements CommandLineRunner {
     unidade.setLatitude(10D);
     unidade.setLongitude(8D);
 
-    unidade.setDescricao("Gourmet");
+    unidade.setDescricao("preservação estadual e pública");
 
     unidade.setImagem(IMAGEM_UNIDADE);
 

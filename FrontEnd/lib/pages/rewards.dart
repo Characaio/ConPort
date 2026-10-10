@@ -33,7 +33,7 @@ class Rewards extends StatelessWidget {
       available: false,
     ),
     _MockReward(
-      title: 'Guardião da natureza',
+      title: 'Protetor da natureza',
       description: 'Conquista especial para quem completa 10 missões.',
       cost: 0,
       icon: Symbols.workspace_premium,
@@ -91,28 +91,6 @@ class Rewards extends StatelessWidget {
                           _RewardCard(reward: reward),
                           const SizedBox(height: 12),
                         ],
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 36,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              PageLoader.go(context, PageLoader.missions);
-                            },
-                            icon: Icon(Symbols.flag, size: 16),
-                            label: Text(
-                              'Voltar para missões',
-                              style: TextStyle(fontSize: 11),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: colors.primary,
-                              side: BorderSide(color: colors.primary),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
