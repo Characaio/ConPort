@@ -135,20 +135,6 @@ class AuthSession extends ChangeNotifier {
     }
   }
 
-  void entrarComoVisitante() {
-    _usuario = null;
-    _token = null;
-    _visitante = true;
-    _expirada = false;
-
-    // Visitante não é sessão de verdade: o token anterior (de outra conta,
-    // talvez) sai do cofre, senão a próxima abertura ressuscita a conta que a
-    // pessoa acabou de deixar.
-    unawaited(TokenStore.instancia.apagar());
-
-    notifyListeners();
-  }
-
   /// Esquece a sessão na memória e no cofre. Não fala com o servidor.
   ///
   /// Use [sairDaConta] quando for o logout tocado na tela.
@@ -201,3 +187,4 @@ class AuthSession extends ChangeNotifier {
     if (avisar) debugPrint('SESSAO token recusado pelo servidor');
   }
 }
+

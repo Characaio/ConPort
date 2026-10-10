@@ -12,15 +12,11 @@ import 'package:conport/widgets/auth_ui.dart';
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
-  void _entrar(BuildContext context) => PageLoader.go(context, PageLoader.login);
+  void _entrar(BuildContext context) =>
+      PageLoader.go(context, PageLoader.login);
 
   void _criarConta(BuildContext context) =>
       PageLoader.go(context, PageLoader.register);
-
-  void _explorarSemConta(BuildContext context) {
-    AuthSession.instance.entrarComoVisitante();
-    PageLoader.replace(context, PageLoader.home);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,24 +103,6 @@ class WelcomePage extends StatelessWidget {
                           onPressed: () => _criarConta(context),
                         ),
                         const SizedBox(height: 8),
-                        Center(
-                          child: TextButton(
-                            onPressed: () => _explorarSemConta(context),
-                            child: const Text(
-                              'Explorar sem conta',
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ),
-                        ),
-                        Center(
-                          child: Text(
-                            'Você pode criar uma conta depois.',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),

@@ -72,6 +72,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 hasLogo: false,
                 hasReturn: true,
                 text: 'Configurações',
+                showActions: false,
               ),
             ),
             Expanded(
@@ -136,8 +137,7 @@ class _SettingsPageState extends State<SettingsPage> {
           value: settings.themeMode,
           onChanged: settings.setThemeMode,
         ),
-      if (!settings.seguirTemaSistema)
-        const SizedBox(height: 12),
+      if (!settings.seguirTemaSistema) const SizedBox(height: 12),
       _SettingsSwitch(
         title: 'Usar Material 3',
         subtitle: 'Ativa os componentes mais recentes do Material.',
@@ -178,7 +178,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       const SizedBox(height: 4),
       Wrap(
-        spacing: 8,
+        spacing: 6,
         runSpacing: 4,
         alignment: WrapAlignment.center,
         children: [
@@ -278,8 +278,7 @@ class _SettingsPageState extends State<SettingsPage> {
         chave: PreferenciasChave.compartilharLocalizacao,
         prefs: conta,
         titulo: 'Compartilhar localização',
-        descricao:
-            'Desligado, o mapa não pede o GPS sozinho ao abrir.',
+        descricao: 'Desligado, o mapa não pede o GPS sozinho ao abrir.',
       ),
       _Preferencia(
         chave: PreferenciasChave.dadosDeUsoAnonimo,
@@ -330,9 +329,7 @@ class _SettingsPageState extends State<SettingsPage> {
   // AÇÕES
   // ============================================================
 
-  static final _repositorio = Uri.parse(
-    'https://github.com/characaio/conport',
-  );
+  static final _repositorio = Uri.parse('https://github.com/characaio/conport');
 
   /// Versão vinda do `pubspec.yaml` pelo nome do pacote: evita o número
   /// estar escrito em dois lugares e divergir na próxima release.
@@ -666,10 +663,7 @@ class _AvisoErro extends StatelessWidget {
     padding: const EdgeInsets.only(top: 6),
     child: Text(
       mensagem,
-      style: TextStyle(
-        fontSize: 9,
-        color: Theme.of(context).colorScheme.error,
-      ),
+      style: TextStyle(fontSize: 9, color: Theme.of(context).colorScheme.error),
     ),
   );
 }
@@ -706,9 +700,7 @@ class _Preferencia extends StatelessWidget {
           title: Text(titulo, style: const TextStyle(fontSize: 11)),
           subtitle: Text(descricao, style: const TextStyle(fontSize: 9)),
           value: atual.valorDe(chave),
-          onChanged: prefs.salvando
-              ? null
-              : (v) => prefs.definir(chave, v),
+          onChanged: prefs.salvando ? null : (v) => prefs.definir(chave, v),
         ),
         // Fica sobre o interruptor para travar o toque enquanto grava, sem
         // desabilitar o widget inteiro (que escureceria o texto da seção).
@@ -1009,45 +1001,47 @@ class _ActionButton extends StatelessWidget {
       ),
     );
   }
-}  /// Botão rápido de tamanho de fonte predefinido.
-  ///
-  /// Fica abaixo do slider: o slider continua para ajustes finos, os botões dão
-  /// acesso a tamanhos que cabem num texto só.
-  class _FontSizePreset extends StatelessWidget {
-    final String label;
-    final double escala;
-    final bool selecionado;
-    final VoidCallback onSelect;
+}
 
-    const _FontSizePreset({
-      required this.label,
-      required this.escala,
-      required this.selecionado,
-      required this.onSelect,
-    });
+/// Botão rápido de tamanho de fonte predefinido.
+///
+/// Fica abaixo do slider: o slider continua para ajustes finos, os botões dão
+/// acesso a tamanhos que cabem num texto só.
+class _FontSizePreset extends StatelessWidget {
+  final String label;
+  final double escala;
+  final bool selecionado;
+  final VoidCallback onSelect;
 
-    @override
-    Widget build(BuildContext context) {
-      final colors = Theme.of(context).colorScheme;
+  const _FontSizePreset({
+    required this.label,
+    required this.escala,
+    required this.selecionado,
+    required this.onSelect,
+  });
 
-      return ChoiceChip(
-        label: Text(label, style: const TextStyle(fontSize: 10)),
-        selected: selecionado,
-        onSelected: (_) => onSelect(),
-        visualDensity: VisualDensity.compact,
-        labelStyle: TextStyle(
-          color: selecionado ? colors.onPrimary : colors.onSurfaceVariant,
-        ),
-      );
-    }
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return ChoiceChip(
+      label: Text(label, style: const TextStyle(fontSize: 10)),
+      selected: selecionado,
+      onSelected: (_) => onSelect(),
+      visualDensity: VisualDensity.compact,
+      labelStyle: TextStyle(
+        color: selecionado ? colors.onPrimary : colors.onSurfaceVariant,
+      ),
+    );
   }
+}
 
-  /// Pede a senha e devolve o que a pessoa digitou.
-  ///
-  /// `null` = cancelou. O botão de confirmar começa desligado e só liga com
-  /// algo digitado: assim "Excluir conta" nunca é alcançado por engano com o
-  /// campo vazio.
-  class _DialogoSenha extends StatefulWidget {
+/// Pede a senha e devolve o que a pessoa digitou.
+///
+/// `null` = cancelou. O botão de confirmar começa desligado e só liga com
+/// algo digitado: assim "Excluir conta" nunca é alcançado por engano com o
+/// campo vazio.
+class _DialogoSenha extends StatefulWidget {
   final String titulo;
   final String texto;
   final String textoBotao;
@@ -1102,9 +1096,7 @@ class _DialogoSenhaState extends State<_DialogoSenha> {
           child: const Text('Cancelar'),
         ),
         FilledButton(
-          onPressed: _enviando || _controller.text.isEmpty
-              ? null
-              : _confirmar,
+          onPressed: _enviando || _controller.text.isEmpty ? null : _confirmar,
           child: Text(widget.textoBotao),
         ),
       ],
@@ -1164,11 +1156,6 @@ class _LegalLinks extends StatelessWidget {
     }
   }
 }
-
-
-
-
-
 
 /// Quem pode abrir as listas de seguidores e de quem a pessoa segue.
 ///
@@ -1273,10 +1260,7 @@ class _VisibilidadeSeguidoresState extends State<_VisibilidadeSeguidores> {
             const Expanded(
               child: Text(
                 'Quem pode ver suas listas',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
               ),
             ),
             if (_salvando)
@@ -1301,9 +1285,11 @@ class _VisibilidadeSeguidoresState extends State<_VisibilidadeSeguidores> {
             // ignore: deprecated_member_use
             groupValue: _atual,
             // ignore: deprecated_member_use
-            onChanged: _salvando ? null : (v) {
-              if (v != null) _trocar(v);
-            },
+            onChanged: _salvando
+                ? null
+                : (v) {
+                    if (v != null) _trocar(v);
+                  },
             title: Text(nivel.rotulo, style: const TextStyle(fontSize: 11)),
             subtitle: Text(
               nivel.descricao,
